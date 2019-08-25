@@ -5,6 +5,11 @@ D power-flag symbol +3.3V
 K Power Flag Symbol
 $ENDCMP
 #
+$CMP +5V
+D power-flag symbol
+K Power Flag Symbol
+$ENDCMP
+#
 $CMP ATmega128L-8AI
 D Atmel ATmega128L-8AI, 8bit AVR Microcontroller, 8MHz, 128 kB, 4 kB Flash, 64-Pin TQFP
 F http://ww1.microchip.com/downloads/en/devicedoc/2467s.pdf
@@ -69,6 +74,12 @@ K quartz ceramic resonator oscillator
 F ~
 $ENDCMP
 #
+$CMP D_Schottky
+D Schottky diode
+K diode Schottky
+F ~
+$ENDCMP
+#
 $CMP GND
 D Power flag, digital ground
 K power-flag
@@ -101,6 +112,11 @@ $CMP Q_Photo_NPN
 D NPN phototransistor, collector/emitter
 K phototransistor NPN
 F ~
+$ENDCMP
+#
+$CMP RT9193
+D 300mA, Ultra-Low Noise, Ultra-Fast CMOS LDO Regulator
+F http://www.richtek.com/assets/product_file/RT9193/DS9193-17.pdf
 $ENDCMP
 #
 $CMP R_Pack04
