@@ -1,0 +1,204 @@
+45421641263372
+Dreamstalker-Footprints
+ATTEND_112J-TDAR-R01
+
+
+0
+13
+10
+Dreamstalker-Footprints
+BatteryHolder_BH421-3A
+2xAAA cell battery holder, Keystone P/N 2468, http://www.keyelco.com/product-pdf.cfm?p=1033
+AAA battery cell holder
+0
+3
+2
+Dreamstalker-Footprints
+Buzzer_23x11.5RM10
+Generic Buzzer, D15mm height 7.5mm with RM7.6mm
+buzzer
+0
+2
+2
+Dreamstalker-Footprints
+CA04-41
+CA04-41CGKWA-4
+Display
+0
+20
+20
+Dreamstalker-Footprints
+CP_EIA-3216-18_Kemet-A
+Tantalum Capacitor SMD Kemet-A (3216-18 Metric), IPC_7351 nominal, (Body size from: http://www.kemet.com/Lists/ProductCatalog/Attachments/253/KEM_TC101_STD.pdf), generated with kicad-footprint-generator
+capacitor tantalum
+0
+2
+2
+Dreamstalker-Footprints
+C_0805_2012Metric
+Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC_7351 nominal, (Body size source: https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing), generated with kicad-footprint-generator
+capacitor
+0
+2
+2
+Dreamstalker-Footprints
+Crystal_C38-LF_D3.0mm_L8.0mm_Horizontal
+Crystal THT C38-LF 8.0mm length 3.0mm diameter
+['C38-LF']
+0
+2
+2
+Dreamstalker-Footprints
+Crystal_SMD_3215-2Pin_3.2x1.5mm
+SMD Crystal FC-135 https://support.epson.biz/td/api/doc_check.php?dl=brief_FC-135R_en.pdf
+SMD SMT Crystal
+0
+2
+2
+Dreamstalker-Footprints
+Crystal_SMD_5032-2Pin_5.0x3.2mm
+SMD Crystal SERIES SMD2520/2 http://www.icbase.com/File/PDF/HKC/HKC00061008.pdf, 5.0x3.2mm^2 package
+SMD SMT crystal
+0
+2
+2
+Dreamstalker-Footprints
+DCI_Phone_Jack_3.5mm_ST-033
+
+
+0
+5
+3
+Dreamstalker-Footprints
+D_SOD-123
+SOD-123
+SOD-123
+0
+2
+2
+Dreamstalker-Footprints
+JININ_ELECTRET_CONDENSER_MICROPHONE_ECM-30
+
+
+0
+3
+3
+Dreamstalker-Footprints
+LEDC3216X110N
+3.2x1.6mm SMD CHIP LED LAMP_2
+LED
+0
+2
+2
+Dreamstalker-Footprints
+LEDC3216X110N-TH
+KP-3216
+LED
+0
+3
+3
+Dreamstalker-Footprints
+LEDC3216X130N
+KP-3216
+LED
+0
+2
+2
+Dreamstalker-Footprints
+LEDC3216X130N-TH
+KP-3216
+LED
+0
+3
+3
+Dreamstalker-Footprints
+PinHeader_2x03_P2.54mm_Vertical
+Through hole straight pin header, 2x03, 2.54mm pitch, double rows
+Through hole pin header THT 2x03 2.54mm double row
+0
+6
+6
+Dreamstalker-Footprints
+PinHeader_2x05_P2.54mm_Vertical
+Through hole straight pin header, 2x05, 2.54mm pitch, double rows
+Through hole pin header THT 2x05 2.54mm double row
+0
+10
+10
+Dreamstalker-Footprints
+QFP50P900X900X160-48N
+QFP 7x7x1.4
+Integrated Circuit
+0
+48
+48
+Dreamstalker-Footprints
+QFP80P1600X1600X120-64N
+TQFP 64A
+Integrated Circuit
+0
+64
+64
+Dreamstalker-Footprints
+R_0603_1608Metric
+Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC_7351 nominal, (Body size source: http://www.tortai-tech.com/upload/download/2011102023233369053.pdf), generated with kicad-footprint-generator
+resistor
+0
+2
+2
+Dreamstalker-Footprints
+R_Array_Concave_4x0603
+Thick Film Chip Resistor Array, Wave soldering, Vishay CRA06P (see cra06p.pdf)
+resistor array
+0
+8
+8
+Dreamstalker-Footprints
+R_Array_Convex_4x0603
+Chip Resistor Network, ROHM MNR14 (see mnr_g.pdf)
+resistor array
+0
+8
+8
+Dreamstalker-Footprints
+SOIC127P600X175-8N
+CASE 751–05 (SO–8)
+Integrated Circuit
+0
+8
+8
+Dreamstalker-Footprints
+SOT94P279X130-5N
+SOT-23-5 Surface Mount Package
+Integrated Circuit
+0
+5
+5
+Dreamstalker-Footprints
+SOT95P230X110-3N
+SOT23, 3leads
+Transistor BJT NPN
+0
+3
+3
+Dreamstalker-Footprints
+SOT95P237X112-3N
+Micro3 (SOT23)
+MOSFET (N-Channel)
+0
+3
+3
+Dreamstalker-Footprints
+SW_PUSH_6mm
+https://www.omron.com/ecb/products/pdf/en-b3f.pdf
+tact sw push 6mm
+0
+4
+2
+Dreamstalker-Footprints
+VIBRO-MOTOR_SMD
+
+
+0
+3
+3

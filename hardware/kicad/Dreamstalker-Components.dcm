@@ -1,0 +1,237 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP +3V
+D power-flag symbol +3.3V
+K Power Flag Symbol
+$ENDCMP
+#
+$CMP +3V3
+D power-flag symbol +3.3V
+K Power Flag Symbol
+$ENDCMP
+#
+$CMP +5V
+D power-flag symbol
+K Power Flag Symbol
+$ENDCMP
+#
+$CMP AMS1117
+F http://www.advanced-monolithic.com/pdf/ds1117.pdf
+$ENDCMP
+#
+$CMP AMS1117-3.3
+D 1A Low dropout voltage regulator with fixed output 3.3V
+$ENDCMP
+#
+$CMP ATMEGA128L-8AI
+D Atmel ATmega128L-8AI, 8bit AVR Microcontroller, 8MHz, 128 kB, 4 kB Flash, 64-Pin TQFP
+F http://ww1.microchip.com/downloads/en/devicedoc/2467s.pdf
+$ENDCMP
+#
+$CMP ATTEND_112J-TDAR-R01
+D Micro SD Card Socket
+K connector SD microsd
+F https://cctupload.s3.amazonaws.com/attend.com.tw/upload/2015May/pdf/20150513151319778_1.pdf
+$ENDCMP
+#
+$CMP ATXMEGA128A4U-AU
+D MCU,AVRXMEGA,32MHz,128K+8K Flash,TQFP44 Atmel ATXMEGA128A4U-AU, 16 bit, 8 bit AVR Microcontroller, 32MHz, 2 kB, 132 kB Flash, 44-Pin TQFP
+F http://uk.rs-online.com/web/p/products/7617737
+$ENDCMP
+#
+$CMP AVR-PDI-6
+D Atmel 10-pin PDI connector
+K AVR PDI Connector
+F  ~
+$ENDCMP
+#
+$CMP AudioJack3
+D Audio Jack, 3 Poles (Stereo / TRS)
+K audio jack receptacle stereo headphones phones TRS connector
+F ~
+$ENDCMP
+#
+$CMP BC807
+D 0.8A Ic, 45V Vce, PNP Transistor, SOT-23
+K PNP Transistor
+F http://www.fairchildsemi.com/ds/BC/BC807.pdf
+$ENDCMP
+#
+$CMP Battery_Cell
+D single battery cell
+K battery cell
+F ~
+$ENDCMP
+#
+$CMP CA04-41
+D Kingbright CA04-41 4-Digit Numeric Display 10.16 mm (0.4 inch)
+F https://www.kingbright.com/attachments/file/psearch/000/00/00/CA04-41CGKWA(Ver.8A).pdf
+$ENDCMP
+#
+$CMP CP_Small
+D Polarised capacitor
+K cap capacitor
+F ~
+$ENDCMP
+#
+$CMP C_Small
+D Unpolarized capacitor
+K capacitor cap
+F ~
+$ENDCMP
+#
+$CMP Conn_01x02
+D Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)
+K connector
+F ~
+$ENDCMP
+#
+$CMP Conn_02x03_Odd_Even
+D Generic connector, double row, 02x03, odd/even pin numbering scheme (row 1 odd numbers, row 2 even numbers), script generated (kicad-library-utils/schlib/autogen/connector/)
+K connector
+F ~
+$ENDCMP
+#
+$CMP Conn_02x05_Odd_Even
+D Generic connector, double row, 02x05, odd/even pin numbering scheme (row 1 odd numbers, row 2 even numbers), script generated (kicad-library-utils/schlib/autogen/connector/)
+K connector
+F ~
+$ENDCMP
+#
+$CMP Crystal
+D Two pin crystal
+K quartz ceramic resonator oscillator
+F ~
+$ENDCMP
+#
+$CMP D_Schottky
+D Schottky diode
+K diode Schottky
+F ~
+$ENDCMP
+#
+$CMP D_Schottky_x2_Serial_AKC
+D Dual Schottky diode, anode/cathode/center
+K diode
+F ~
+$ENDCMP
+#
+$CMP D_x2_Serial_AKC
+D Dual diode, anode/cathode/center
+K diode
+F ~
+$ENDCMP
+#
+$CMP ESP-12F
+D ESP8266 ESP-12F module, 22 pins, 2mm, PCB antenna
+K MODULE ESP8266 ESP-8266
+F https://www.elecrow.com/download/ESP-12F.pdf
+$ENDCMP
+#
+$CMP GND
+D Power flag, digital ground
+K power-flag
+$ENDCMP
+#
+$CMP LED
+D LED generic
+K led diode
+F ~
+$ENDCMP
+#
+$CMP LM4818MX
+D 350mW Audio Power Amplifier with Shutdown Mode
+F http://www.ti.com/lit/gpn/LM4818
+$ENDCMP
+#
+$CMP LMV321M5_NOPB
+D Single channel general purpose, low voltage, rail-to-rail output operational amplifiers
+F http://www.ti.com/lit/ds/symlink/lmv321-n.pdf
+$ENDCMP
+#
+$CMP MC34119D
+D Audio Amplifiers
+F https://www.promelec.ru/datasheet/c/e/mc34119.pdf
+$ENDCMP
+#
+$CMP MCP73833
+D Charge Management Li-Ion/Li-Pol
+F https://componentsearchengine.com/Datasheets/1/MCP73833-FCI_UN.pdf
+$ENDCMP
+#
+$CMP Microphone_Condenser
+D Condenser microphone
+K capacitance condenser microphone
+F ~
+$ENDCMP
+#
+$CMP Microphone_Condenser_3pin
+D Condenser microphone
+K capacitance condenser microphone
+F ~
+$ENDCMP
+#
+$CMP Motor_DC_ALT
+D DC Motor, alternative symbol
+K DC Motor
+F ~
+$ENDCMP
+#
+$CMP Q_Photo_NPN
+D NPN phototransistor, collector/emitter
+K phototransistor NPN
+F ~
+$ENDCMP
+#
+$CMP RT9193
+D 300mA, Ultra-Low Noise, Ultra-Fast CMOS LDO Regulator
+F http://www.richtek.com/assets/product_file/RT9193/DS9193-17.pdf
+$ENDCMP
+#
+$CMP R_Pack04
+D 4 resistor network, parallel topology, DIP package
+K R network parallel topology isolated
+F ~
+$ENDCMP
+#
+$CMP R_Small
+D Resistor, small symbol
+K r resistor
+F ~
+$ENDCMP
+#
+$CMP SW_Push
+D Push button switch, generic, two pins
+K switch normally-open pushbutton push-button
+$ENDCMP
+#
+$CMP Speaker
+D Speaker
+K speaker sound
+F ~
+$ENDCMP
+#
+$CMP TestPoint
+D test point
+K test point tp
+F ~
+$ENDCMP
+#
+$CMP USB_B_Micro
+D USB Micro Type B connector
+K connector USB micro
+F ~
+$ENDCMP
+#
+$CMP USB_B_Mini
+D USB Mini Type B connector
+K connector USB mini
+F ~
+$ENDCMP
+#
+$CMP VS1002D
+D MP3 AUDIO CODEC
+F http://www.vlsi.fi/fileadmin/datasheets/vs1002.pdf
+$ENDCMP
+#
+#End Doc Library

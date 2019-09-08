@@ -1,0 +1,5 @@
+# add rules for git to ignore files and folders
+
+*.bak
+*-bak
+*.bck

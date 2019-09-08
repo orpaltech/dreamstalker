@@ -1,0 +1,2334 @@
+EESchema Schematic File Version 4
+LIBS:Dreamstalker-Ultra-v1-cache
+EELAYER 30 0
+EELAYER END
+$Descr A3 16535 11693
+encoding utf-8
+Sheet 1 1
+Title ""
+Date ""
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L Dreamstalker-Components:Conn_02x03_Odd_Even J2
+U 1 1 5D67760A
+P 8250 6900
+F 0 "J2" H 8280 6680 50  0000 C CNN
+F 1 "PDI connector" H 8210 7200 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:PinHeader_2x03_P2.54mm_Vertical" H 8250 6900 50  0001 C CNN
+F 3 "~" H 8250 6900 50  0001 C CNN
+	1    8250 6900
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	8050 6800 7450 6800
+Text Label 7450 6800 0    50   ~ 0
+PDI_DATA
+$Comp
+L Dreamstalker-Components:R_Small R27
+U 1 1 5D67E64C
+P 8530 7300
+F 0 "R27" V 8430 7300 50  0000 C CNN
+F 1 "100K" V 8630 7300 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:R_0603_1608Metric" H 8530 7300 50  0001 C CNN
+F 3 "~" H 8530 7300 50  0001 C CNN
+	1    8530 7300
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	8000 7300 8430 7300
+Text Label 7450 7000 0    50   ~ 0
+PDI_CLK
+$Comp
+L Dreamstalker-Components:GND #PWR0108
+U 1 1 5D696D76
+P 8900 7130
+F 0 "#PWR0108" H 8900 6880 50  0001 C CNN
+F 1 "GND" H 8900 6960 50  0000 C CNN
+F 2 "" H 8900 7130 50  0001 C CNN
+F 3 "" H 8900 7130 50  0001 C CNN
+	1    8900 7130
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	8900 7000 8900 7130
+Wire Wire Line
+	8550 7000 8900 7000
+Wire Wire Line
+	4170 8700 4000 8700
+Wire Wire Line
+	4600 9300 4370 9300
+Wire Wire Line
+	4900 8700 5500 8700
+Text Label 5500 8700 2    50   ~ 0
+LED1
+Wire Wire Line
+	4900 9000 5500 9000
+Text Label 5500 9000 2    50   ~ 0
+IRTX
+Wire Wire Line
+	4000 8700 4000 9000
+Wire Wire Line
+	4370 9000 4600 9000
+$Comp
+L Dreamstalker-Components:LED D1
+U 1 1 5E431522
+P 4750 8700
+F 0 "D1" H 4900 8630 50  0000 C CNN
+F 1 "KP-3216SURCK" H 4510 8810 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:LEDC3216X110N-TH" H 4750 8700 50  0001 C CNN
+F 3 "~" H 4750 8700 50  0001 C CNN
+	1    4750 8700
+	-1   0    0    1   
+$EndComp
+$Comp
+L Dreamstalker-Components:LED D3
+U 1 1 5E446C4B
+P 4750 9300
+F 0 "D3" H 4900 9230 50  0000 C CNN
+F 1 "KP-3216SURCK" H 4510 9410 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:LEDC3216X110N-TH" H 4750 9300 50  0001 C CNN
+F 3 "~" H 4750 9300 50  0001 C CNN
+	1    4750 9300
+	-1   0    0    1   
+$EndComp
+$Comp
+L Dreamstalker-Components:LED D6
+U 1 1 5E45C495
+P 4750 9000
+F 0 "D6" H 4900 8930 50  0000 C CNN
+F 1 "KP-3216F3C" H 4560 9110 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:LEDC3216X110N-TH" H 4750 9000 50  0001 C CNN
+F 3 "~" H 4750 9000 50  0001 C CNN
+	1    4750 9000
+	-1   0    0    1   
+$EndComp
+$Comp
+L Dreamstalker-Components:Q_Photo_NPN Q1
+U 1 1 5E46733E
+P 10610 8850
+F 0 "Q1" V 10460 8650 50  0000 C CNN
+F 1 "KP-3216P3C" V 10797 8850 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:LEDC3216X130N-TH" H 10760 8950 50  0001 C CNN
+F 3 "~" H 10560 8850 50  0001 C CNN
+	1    10610 8850
+	0    -1   -1   0   
+$EndComp
+$Comp
+L Dreamstalker-Components:GND #PWR0115
+U 1 1 5E4721BA
+P 11000 9330
+F 0 "#PWR0115" H 11000 9080 50  0001 C CNN
+F 1 "GND" H 11000 9160 50  0000 C CNN
+F 2 "" H 11000 9330 50  0001 C CNN
+F 3 "" H 11000 9330 50  0001 C CNN
+	1    11000 9330
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	11000 8800 11000 9300
+$Comp
+L Dreamstalker-Components:R_Small R29
+U 1 1 5E4A81A9
+P 10000 8800
+F 0 "R29" V 9900 8800 50  0000 C CNN
+F 1 "27K" V 10100 8800 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:R_0603_1608Metric" H 10000 8800 50  0001 C CNN
+F 3 "~" H 10000 8800 50  0001 C CNN
+	1    10000 8800
+	0    -1   1    0   
+$EndComp
+Wire Wire Line
+	10200 8500 9300 8500
+Text Label 9300 8500 0    50   ~ 0
+IRRX
+Wire Wire Line
+	4000 8400 4000 8700
+$Comp
+L Dreamstalker-Components:R_Small R1
+U 1 1 5E61F180
+P 4270 8700
+F 0 "R1" V 4170 8700 50  0000 C CNN
+F 1 "100" V 4350 8700 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:R_0603_1608Metric" H 4270 8700 50  0001 C CNN
+F 3 "~" H 4270 8700 50  0001 C CNN
+	1    4270 8700
+	0    -1   1    0   
+$EndComp
+Wire Wire Line
+	4370 8700 4600 8700
+$Comp
+L Dreamstalker-Components:R_Small R2
+U 1 1 5E6785D0
+P 4270 9000
+F 0 "R2" V 4170 9000 50  0000 C CNN
+F 1 "100" V 4350 9000 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:R_0603_1608Metric" H 4270 9000 50  0001 C CNN
+F 3 "~" H 4270 9000 50  0001 C CNN
+	1    4270 9000
+	0    -1   1    0   
+$EndComp
+$Comp
+L Dreamstalker-Components:R_Small R3
+U 1 1 5E678634
+P 4270 9300
+F 0 "R3" V 4170 9300 50  0000 C CNN
+F 1 "100" V 4360 9300 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:R_0603_1608Metric" H 4270 9300 50  0001 C CNN
+F 3 "~" H 4270 9300 50  0001 C CNN
+	1    4270 9300
+	0    -1   1    0   
+$EndComp
+Wire Wire Line
+	4000 9300 4170 9300
+Wire Wire Line
+	4170 9000 4000 9000
+Connection ~ 4000 9000
+Wire Wire Line
+	4000 9000 4000 9300
+$Comp
+L Dreamstalker-Components:Crystal Y1
+U 1 1 5E7450DA
+P 2300 8000
+F 0 "Y1" H 2300 7820 50  0000 C CNN
+F 1 "32768 KHz" H 2300 8180 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:Crystal_C38-LF_D3.0mm_L8.0mm_Horizontal" H 2300 8000 50  0001 C CNN
+F 3 "~" H 2300 8000 50  0001 C CNN
+	1    2300 8000
+	1    0    0    1   
+$EndComp
+Wire Wire Line
+	2000 8000 2000 7500
+Wire Wire Line
+	2600 8000 2600 7500
+Text Label 2000 7500 3    50   ~ 0
+TOSC1
+Text Label 2600 7500 3    50   ~ 0
+TOSC2
+Text Label 12300 8200 0    50   ~ 0
+SDCS
+$Comp
+L Dreamstalker-Components:GND #PWR0117
+U 1 1 5E8C568C
+P 15000 9130
+F 0 "#PWR0117" H 15000 8880 50  0001 C CNN
+F 1 "GND" H 15000 8960 50  0000 C CNN
+F 2 "" H 15000 9130 50  0001 C CNN
+F 3 "" H 15000 9130 50  0001 C CNN
+	1    15000 9130
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	13050 8300 12300 8300
+Text Label 12300 8300 0    50   ~ 0
+MOSI
+Wire Wire Line
+	13050 8500 12300 8500
+Text Label 12300 8500 0    50   ~ 0
+SCK
+Wire Wire Line
+	12300 8700 13050 8700
+Text Label 12300 8700 0    50   ~ 0
+MISO
+$Comp
+L Dreamstalker-Components:GND #PWR0119
+U 1 1 5E92A569
+P 12800 9130
+F 0 "#PWR0119" H 12800 8880 50  0001 C CNN
+F 1 "GND" H 12800 8960 50  0000 C CNN
+F 2 "" H 12800 9130 50  0001 C CNN
+F 3 "" H 12800 9130 50  0001 C CNN
+	1    12800 9130
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	12800 8600 13050 8600
+$Comp
+L Dreamstalker-Components:Motor_DC_ALT M1
+U 1 1 5EA4E8BC
+P 7500 8380
+F 0 "M1" H 7150 8380 50  0000 L CNN
+F 1 "Vibration Motor" H 6700 8280 50  0000 L CNN
+F 2 "Dreamstalker-Footprints:VIBRO-MOTOR_SMD" H 7500 8290 50  0001 C CNN
+F 3 "~" H 7500 8290 50  0001 C CNN
+	1    7500 8380
+	1    0    0    -1  
+$EndComp
+$Comp
+L Dreamstalker-Components:N-CHANNEL-MOSFET Q2
+U 1 1 5EA76FCC
+P 7500 8900
+F 0 "Q2" H 7220 9070 50  0000 L CNN
+F 1 "IRLML2402" H 6910 8970 50  0000 L CNN
+F 2 "Dreamstalker-Footprints:SOT95P237X112-3N" H 7500 8900 50  0001 C CNN
+F 3 "" H 7500 8900 50  0001 C CNN
+	1    7500 8900
+	1    0    0    -1  
+$EndComp
+$Comp
+L Dreamstalker-Components:R_Small R27
+U 1 1 5EA774F8
+P 7230 9300
+F 0 "R27" V 7130 9300 50  0000 C CNN
+F 1 "100K" V 7330 9300 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:R_0603_1608Metric" H 7230 9300 50  0001 C CNN
+F 3 "~" H 7230 9300 50  0001 C CNN
+	1    7230 9300
+	0    -1   1    0   
+$EndComp
+Text Label 6500 9000 0    50   ~ 0
+VIBRO
+Wire Wire Line
+	7000 9000 7000 9300
+Wire Wire Line
+	7000 9300 7130 9300
+Connection ~ 7000 9000
+Wire Wire Line
+	7000 9000 6500 9000
+$Comp
+L Dreamstalker-Components:GND #PWR0120
+U 1 1 5EAACC79
+P 7500 9430
+F 0 "#PWR0120" H 7500 9180 50  0001 C CNN
+F 1 "GND" H 7500 9260 50  0000 C CNN
+F 2 "" H 7500 9430 50  0001 C CNN
+F 3 "" H 7500 9430 50  0001 C CNN
+	1    7500 9430
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	7500 9100 7500 9300
+Wire Wire Line
+	7500 9300 7330 9300
+Wire Wire Line
+	7500 9300 7620 9300
+Connection ~ 7500 9300
+$Comp
+L Dreamstalker-Components:C_Small C22
+U 1 1 5EB4477D
+P 7720 9300
+F 0 "C22" V 7590 9250 50  0000 L CNN
+F 1 "0.1u" V 7830 9230 50  0000 L CNN
+F 2 "Dreamstalker-Footprints:C_0805_2012Metric" H 7720 9300 50  0001 C CNN
+F 3 "~" H 7720 9300 50  0001 C CNN
+	1    7720 9300
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	7500 9300 7500 9430
+$Comp
+L Dreamstalker-Components:SW_Push SW1
+U 1 1 61A77055
+P 10700 7000
+F 0 "SW1" H 10860 7180 50  0000 C CNN
+F 1 "~" H 10700 6900 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:SW_PUSH_6mm" H 10700 7200 50  0001 C CNN
+F 3 "" H 10700 7200 50  0001 C CNN
+	1    10700 7000
+	1    0    0    -1  
+$EndComp
+$Comp
+L Dreamstalker-Components:SW_Push SW2
+U 1 1 61A77376
+P 11300 7000
+F 0 "SW2" H 11470 7180 50  0000 C CNN
+F 1 "~" H 11300 6900 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:SW_PUSH_6mm" H 11300 7200 50  0001 C CNN
+F 3 "" H 11300 7200 50  0001 C CNN
+	1    11300 7000
+	-1   0    0    -1  
+$EndComp
+$Comp
+L Dreamstalker-Components:SW_Push SW3
+U 1 1 61A774A8
+P 11300 6700
+F 0 "SW3" H 11470 6870 50  0000 C CNN
+F 1 "~" H 11300 6600 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:SW_PUSH_6mm" H 11300 6900 50  0001 C CNN
+F 3 "" H 11300 6900 50  0001 C CNN
+	1    11300 6700
+	-1   0    0    -1  
+$EndComp
+Wire Wire Line
+	10500 7000 10000 7000
+Text Label 10000 7000 0    50   ~ 0
+SKEY
+Wire Wire Line
+	11500 7000 12000 7000
+Text Label 12000 7000 2    50   ~ 0
+FKEY
+Wire Wire Line
+	11500 6700 12000 6700
+Text Label 12000 6700 2    50   ~ 0
+CKEY
+Wire Wire Line
+	8550 6800 8700 6800
+$Comp
+L Dreamstalker-Components:GND #PWR0149
+U 1 1 5E1F512E
+P 11000 7130
+F 0 "#PWR0149" H 11000 6880 50  0001 C CNN
+F 1 "GND" H 11000 6960 50  0001 C CNN
+F 2 "" H 11000 7130 50  0001 C CNN
+F 3 "" H 11000 7130 50  0001 C CNN
+	1    11000 7130
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	11100 6700 11000 6700
+Wire Wire Line
+	11000 7000 10900 7000
+Wire Wire Line
+	11100 7000 11000 7000
+$Comp
+L Dreamstalker-Components:AudioJack3 J3
+U 1 1 5E4F5895
+P 14400 7000
+F 0 "J3" H 14121 7025 50  0000 R CNN
+F 1 "PJ-313D" H 14490 7260 50  0000 R CNN
+F 2 "Dreamstalker-Footprints:JACK_3.5_PJ313D-SMT" H 14400 7000 50  0001 C CNN
+F 3 "~" H 14400 7000 50  0001 C CNN
+	1    14400 7000
+	-1   0    0    1   
+$EndComp
+$Comp
+L Dreamstalker-Components:C_Small C19
+U 1 1 5E8C0230
+P 13320 7000
+F 0 "C19" V 13250 7100 50  0000 L CNN
+F 1 "1u" V 13390 7110 50  0000 L CNN
+F 2 "Dreamstalker-Footprints:C_0805_2012Metric" H 13320 7000 50  0001 C CNN
+F 3 "~" H 13320 7000 50  0001 C CNN
+	1    13320 7000
+	0    -1   1    0   
+$EndComp
+$Comp
+L Dreamstalker-Components:R_Small R26
+U 1 1 5E8EF5F8
+P 13670 7000
+F 0 "R26" V 13750 7040 50  0000 C CNN
+F 1 "1K" V 13570 6890 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:R_0603_1608Metric" H 13670 7000 50  0001 C CNN
+F 3 "~" H 13670 7000 50  0001 C CNN
+	1    13670 7000
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	13770 7000 14200 7000
+Wire Wire Line
+	13420 7000 13570 7000
+$Comp
+L Dreamstalker-Components:GND #PWR0154
+U 1 1 5EB5B215
+P 14000 7230
+F 0 "#PWR0154" H 14000 6980 50  0001 C CNN
+F 1 "GND" H 14000 7060 50  0001 C CNN
+F 2 "" H 14000 7230 50  0001 C CNN
+F 3 "" H 14000 7230 50  0001 C CNN
+	1    14000 7230
+	1    0    0    -1  
+$EndComp
+$Comp
+L Dreamstalker-Components:C_Small C20
+U 1 1 5D9E4CAC
+P 13320 6700
+F 0 "C20" V 13250 6800 50  0000 L CNN
+F 1 "1u" V 13390 6810 50  0000 L CNN
+F 2 "Dreamstalker-Footprints:C_0805_2012Metric" H 13320 6700 50  0001 C CNN
+F 3 "~" H 13320 6700 50  0001 C CNN
+	1    13320 6700
+	0    -1   1    0   
+$EndComp
+Wire Wire Line
+	13420 6700 13570 6700
+Wire Wire Line
+	15000 9000 14750 9000
+Wire Wire Line
+	15000 9000 15000 9130
+$Comp
+L Dreamstalker-Components:ATTEND_112J-TDAR-R01 J6
+U 1 1 5D670AF2
+P 13950 8400
+F 0 "J6" H 13240 9070 50  0000 C CNN
+F 1 "ATTEND_112J-TDAR-R01" H 13950 7600 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:ATTEND_112J-TDAR-R01" H 14000 7350 50  0001 C CNN
+F 3 "https://cctupload.s3.amazonaws.com/attend.com.tw/upload/2015May/pdf/20150513151319778_1.pdf" H 13300 9000 50  0001 C CNN
+F 4 "112J-TDAR-R01" H 13320 7150 50  0001 C CNN "Manufacturer_Part_Number"
+F 5 "ATTEND" H 13150 7250 50  0001 C CNN "Manufacturer_Name"
+F 6 "ATTEND MicroSD Socket 9-pin Push-Push Type" H 13000 7050 50  0001 L CNN "Description"
+	1    13950 8400
+	1    0    0    -1  
+$EndComp
+$Comp
+L Dreamstalker-Components:ESP-12F U3
+U 1 1 5D79BCB7
+P 8400 4600
+F 0 "U3" H 7910 5300 50  0000 C CNN
+F 1 "ESP-12F" H 8790 5300 50  0000 C CNN
+F 2 "" H 8400 4600 50  0001 C CNN
+F 3 "https://www.elecrow.com/download/ESP-12F.pdf" H 8400 4600 50  0001 C CNN
+	1    8400 4600
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9300 4300 9800 4300
+Wire Wire Line
+	9300 4400 9800 4400
+Text Label 9800 4300 2    50   ~ 0
+WFRXD
+Text Label 9800 4400 2    50   ~ 0
+WFTXD
+$Comp
+L Dreamstalker-Components:GND #PWR0156
+U 1 1 5E5573F1
+P 9400 5230
+F 0 "#PWR0156" H 9400 4980 50  0001 C CNN
+F 1 "GND" H 9400 5060 50  0001 C CNN
+F 2 "" H 9400 5230 50  0001 C CNN
+F 3 "" H 9400 5230 50  0001 C CNN
+	1    9400 5230
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9300 5000 9400 5000
+Wire Wire Line
+	9400 5000 9400 5230
+$Comp
+L Dreamstalker-Components:R_Small R21
+U 1 1 5E5F0E78
+P 9570 4900
+F 0 "R21" V 9660 4900 50  0000 C CNN
+F 1 "100K" V 9480 4900 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:R_0603_1608Metric" H 9570 4900 50  0001 C CNN
+F 3 "~" H 9570 4900 50  0001 C CNN
+	1    9570 4900
+	0    1    -1   0   
+$EndComp
+$Comp
+L Dreamstalker-Components:GND #PWR0157
+U 1 1 5E64A391
+P 9800 5230
+F 0 "#PWR0157" H 9800 4980 50  0001 C CNN
+F 1 "GND" H 9800 5060 50  0001 C CNN
+F 2 "" H 9800 5230 50  0001 C CNN
+F 3 "" H 9800 5230 50  0001 C CNN
+	1    9800 5230
+	1    0    0    -1  
+$EndComp
+$Comp
+L Dreamstalker-Components:C_Small C10
+U 1 1 5E73653A
+P 6620 4300
+F 0 "C10" V 6760 4210 50  0000 L CNN
+F 1 "1u" V 6460 4240 50  0000 L CNN
+F 2 "Dreamstalker-Footprints:C_0805_2012Metric" H 6620 4300 50  0001 C CNN
+F 3 "~" H 6620 4300 50  0001 C CNN
+	1    6620 4300
+	0    -1   -1   0   
+$EndComp
+$Comp
+L Dreamstalker-Components:P-CHANNEL-MOSFET Q3
+U 1 1 5E77512B
+P 6600 5000
+F 0 "Q3" V 6370 5040 50  0000 C CNN
+F 1 "IRLML6402" V 6270 5190 50  0000 C CNN
+F 2 "" V 6600 5000 50  0001 C CNN
+F 3 "" V 6600 5000 50  0001 C CNN
+	1    6600 5000
+	0    1    -1   0   
+$EndComp
+Wire Wire Line
+	6400 5000 6300 5000
+$Comp
+L Dreamstalker-Components:R_Small R32
+U 1 1 5E90E7E6
+P 6300 5230
+F 0 "R32" H 6160 5180 50  0000 C CNN
+F 1 "47K" H 6160 5270 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:R_0603_1608Metric" H 6300 5230 50  0001 C CNN
+F 3 "~" H 6300 5230 50  0001 C CNN
+	1    6300 5230
+	1    0    0    1   
+$EndComp
+Wire Wire Line
+	6300 5000 6300 5130
+Wire Wire Line
+	6500 5200 6500 5500
+Wire Wire Line
+	6500 5500 6300 5500
+Wire Wire Line
+	6300 5500 6300 5330
+Wire Wire Line
+	6300 5500 5800 5500
+Connection ~ 6300 5500
+Text Label 5800 5500 0    50   ~ 0
+WFEN
+$Comp
+L Dreamstalker-Components:GND #PWR0159
+U 1 1 5EA6E91F
+P 6300 4430
+F 0 "#PWR0159" H 6300 4180 50  0001 C CNN
+F 1 "GND" H 6300 4260 50  0001 C CNN
+F 2 "" H 6300 4430 50  0001 C CNN
+F 3 "" H 6300 4430 50  0001 C CNN
+	1    6300 4430
+	1    0    0    -1  
+$EndComp
+$Comp
+L Dreamstalker-Components:R_Small R18
+U 1 1 5EB36362
+P 7200 4770
+F 0 "R18" H 7050 4720 50  0000 C CNN
+F 1 "47K" H 7050 4820 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:R_0603_1608Metric" H 7200 4770 50  0001 C CNN
+F 3 "~" H 7200 4770 50  0001 C CNN
+	1    7200 4770
+	1    0    0    1   
+$EndComp
+Wire Wire Line
+	7200 4500 7200 4670
+Wire Wire Line
+	7200 4870 7200 5000
+Connection ~ 7200 5000
+Wire Wire Line
+	7200 5000 6900 5000
+$Comp
+L Dreamstalker-Components:R_Small R17
+U 1 1 5EBC608E
+P 6900 4770
+F 0 "R17" H 6750 4720 50  0000 C CNN
+F 1 "47K" H 6750 4820 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:R_0603_1608Metric" H 6900 4770 50  0001 C CNN
+F 3 "~" H 6900 4770 50  0001 C CNN
+	1    6900 4770
+	1    0    0    1   
+$EndComp
+Wire Wire Line
+	6900 4300 6900 4670
+Wire Wire Line
+	6900 4300 6720 4300
+Wire Wire Line
+	6900 5000 6900 4870
+Connection ~ 6900 5000
+Wire Wire Line
+	6900 5000 6800 5000
+$Comp
+L Dreamstalker-Components:C_Small C14
+U 1 1 5ED8C096
+P 7200 5220
+F 0 "C14" H 6940 5170 50  0000 L CNN
+F 1 "4.7u" H 6940 5280 50  0000 L CNN
+F 2 "Dreamstalker-Footprints:C_0805_2012Metric" H 7200 5220 50  0001 C CNN
+F 3 "~" H 7200 5220 50  0001 C CNN
+	1    7200 5220
+	-1   0    0    1   
+$EndComp
+$Comp
+L Dreamstalker-Components:GND #PWR0160
+U 1 1 5EDC55AF
+P 7200 5420
+F 0 "#PWR0160" H 7200 5170 50  0001 C CNN
+F 1 "GND" H 7200 5250 50  0001 C CNN
+F 2 "" H 7200 5420 50  0001 C CNN
+F 3 "" H 7200 5420 50  0001 C CNN
+	1    7200 5420
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	7200 5320 7200 5420
+Wire Wire Line
+	7200 5120 7200 5000
+Wire Wire Line
+	12300 8200 13050 8200
+Wire Wire Line
+	12800 8600 12800 8900
+Wire Wire Line
+	13100 2950 13100 3430
+$Comp
+L Dreamstalker-Components:GND #PWR0162
+U 1 1 5F7CCF86
+P 13100 3430
+F 0 "#PWR0162" H 13100 3180 50  0001 C CNN
+F 1 "GND" H 13100 3260 50  0001 C CNN
+F 2 "" H 13100 3430 50  0001 C CNN
+F 3 "" H 13100 3430 50  0001 C CNN
+	1    13100 3430
+	1    0    0    -1  
+$EndComp
+$Comp
+L Dreamstalker-Components:LMV321M5_NOPB U5
+U 1 1 5F4B835B
+P 13050 2700
+F 0 "U5" H 13230 3030 50  0000 C CNN
+F 1 "LMV321M5" H 13380 2930 50  0000 C CNN
+F 2 "SOT95P280X145-5N" H 14100 2800 50  0001 L CNN
+F 3 "http://www.ti.com/lit/ds/symlink/lmv321-n.pdf" H 14100 2700 50  0001 L CNN
+F 4 "Single channel general purpose, low voltage, rail-to-rail output operational amplifiers" H 14100 2600 50  0001 L CNN "Description"
+F 5 "1.45" H 14100 2500 50  0001 L CNN "Height"
+F 6 "Texas Instruments" H 14100 2400 50  0001 L CNN "Manufacturer_Name"
+F 7 "LMV321M5/NOPB" H 14100 2300 50  0001 L CNN "Manufacturer_Part_Number"
+F 8 "926-LMV321M5/NOPB" H 14100 2200 50  0001 L CNN "Mouser Part Number"
+F 9 "https://www.mouser.com/Search/Refine.aspx?Keyword=926-LMV321M5%2FNOPB" H 14100 2100 50  0001 L CNN "Mouser Price/Stock"
+F 10 "5338366P" H 14100 2000 50  0001 L CNN "RS Part Number"
+F 11 "http://uk.rs-online.com/web/p/products/5338366P" H 14100 1900 50  0001 L CNN "RS Price/Stock"
+	1    13050 2700
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	13400 2700 13500 2700
+$Comp
+L Dreamstalker-Components:R_Small R13
+U 1 1 5F8D9E61
+P 13270 3100
+F 0 "R13" V 13190 3120 50  0000 C CNN
+F 1 "1M" V 13350 3100 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:R_0603_1608Metric" H 13270 3100 50  0001 C CNN
+F 3 "~" H 13270 3100 50  0001 C CNN
+	1    13270 3100
+	0    -1   1    0   
+$EndComp
+Wire Wire Line
+	13100 2000 13100 2450
+$Comp
+L Dreamstalker-Components:R_Small R10
+U 1 1 5FAE6D42
+P 12200 2430
+F 0 "R10" H 12330 2370 50  0000 C CNN
+F 1 "1K" H 12310 2470 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:R_0603_1608Metric" H 12200 2430 50  0001 C CNN
+F 3 "~" H 12200 2430 50  0001 C CNN
+	1    12200 2430
+	1    0    0    1   
+$EndComp
+Wire Wire Line
+	12200 2530 12200 2600
+Wire Wire Line
+	12200 2330 12200 2200
+Connection ~ 13500 2700
+Wire Wire Line
+	12200 2600 12700 2600
+Wire Wire Line
+	12700 2600 12700 3100
+Connection ~ 12700 2600
+Wire Wire Line
+	12700 2600 12800 2600
+$Comp
+L Dreamstalker-Components:C_Small C6
+U 1 1 600CF0A8
+P 11900 2420
+F 0 "C6" H 11710 2400 50  0000 L CNN
+F 1 "47u" H 11690 2500 50  0000 L CNN
+F 2 "Dreamstalker-Footprints:C_0805_2012Metric" H 11900 2420 50  0001 C CNN
+F 3 "~" H 11900 2420 50  0001 C CNN
+	1    11900 2420
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	11900 2320 11900 2000
+Connection ~ 11900 2000
+Wire Wire Line
+	11900 2000 11600 2000
+$Comp
+L Dreamstalker-Components:GND #PWR0165
+U 1 1 601285D1
+P 11900 2830
+F 0 "#PWR0165" H 11900 2580 50  0001 C CNN
+F 1 "GND" H 11900 2660 50  0001 C CNN
+F 2 "" H 11900 2830 50  0001 C CNN
+F 3 "" H 11900 2830 50  0001 C CNN
+	1    11900 2830
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	11900 2520 11900 2830
+$Comp
+L Dreamstalker-Components:R_Small R11
+U 1 1 6023BB7C
+P 11600 2570
+F 0 "R11" H 11740 2500 50  0000 C CNN
+F 1 "1K" H 11720 2630 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:R_0603_1608Metric" H 11600 2570 50  0001 C CNN
+F 3 "~" H 11600 2570 50  0001 C CNN
+	1    11600 2570
+	1    0    0    1   
+$EndComp
+Wire Wire Line
+	11600 2470 11600 2000
+Connection ~ 11600 2000
+Wire Wire Line
+	11600 2000 11430 2000
+$Comp
+L Dreamstalker-Components:C_Small C11
+U 1 1 60269133
+P 11600 3220
+F 0 "C11" H 11680 3150 50  0000 L CNN
+F 1 "1u" H 11710 3290 50  0000 L CNN
+F 2 "Dreamstalker-Footprints:C_0805_2012Metric" H 11600 3220 50  0001 C CNN
+F 3 "~" H 11600 3220 50  0001 C CNN
+	1    11600 3220
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	11600 2670 11600 2900
+$Comp
+L Dreamstalker-Components:GND #PWR0166
+U 1 1 60296D49
+P 11600 3430
+F 0 "#PWR0166" H 11600 3180 50  0001 C CNN
+F 1 "GND" H 11600 3260 50  0001 C CNN
+F 2 "" H 11600 3430 50  0001 C CNN
+F 3 "" H 11600 3430 50  0001 C CNN
+	1    11600 3430
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	11600 3320 11600 3430
+$Comp
+L Dreamstalker-Components:R_Small R12
+U 1 1 603229E9
+P 11370 2900
+F 0 "R12" V 11460 2890 50  0000 C CNN
+F 1 "10K" V 11280 2900 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:R_0603_1608Metric" H 11370 2900 50  0001 C CNN
+F 3 "~" H 11370 2900 50  0001 C CNN
+	1    11370 2900
+	0    1    -1   0   
+$EndComp
+Wire Wire Line
+	11470 2900 11600 2900
+Connection ~ 11600 2900
+Wire Wire Line
+	11600 2900 11600 3120
+Wire Wire Line
+	11270 2900 11200 2900
+$Comp
+L Dreamstalker-Components:R_Small R8
+U 1 1 603AE265
+P 11330 2000
+F 0 "R8" V 11410 1990 50  0000 C CNN
+F 1 "100" V 11230 2000 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:R_0603_1608Metric" H 11330 2000 50  0001 C CNN
+F 3 "~" H 11330 2000 50  0001 C CNN
+	1    11330 2000
+	0    1    -1   0   
+$EndComp
+$Comp
+L Dreamstalker-Components:C_Small C5
+U 1 1 60591EB9
+P 11200 2480
+F 0 "C5" H 11010 2430 50  0000 L CNN
+F 1 "0.1u" H 10950 2570 50  0000 L CNN
+F 2 "Dreamstalker-Footprints:C_0805_2012Metric" H 11200 2480 50  0001 C CNN
+F 3 "~" H 11200 2480 50  0001 C CNN
+	1    11200 2480
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	11200 2200 11200 2380
+Wire Wire Line
+	11200 2200 12200 2200
+Wire Wire Line
+	11200 2900 11200 2580
+Connection ~ 11200 2900
+Text Label 14000 2000 3    50   ~ 0
+MICOUT
+Wire Wire Line
+	13700 3100 13700 3170
+Connection ~ 13700 3100
+Wire Wire Line
+	14000 3100 14000 2000
+Wire Wire Line
+	13700 3100 14000 3100
+Wire Wire Line
+	13700 3370 13700 3430
+$Comp
+L Dreamstalker-Components:GND #PWR0168
+U 1 1 5FCAD858
+P 13700 3430
+F 0 "#PWR0168" H 13700 3180 50  0001 C CNN
+F 1 "GND" H 13700 3260 50  0001 C CNN
+F 2 "" H 13700 3430 50  0001 C CNN
+F 3 "" H 13700 3430 50  0001 C CNN
+	1    13700 3430
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	13700 3030 13700 3100
+$Comp
+L Dreamstalker-Components:R_Small R16
+U 1 1 5FC83C08
+P 13700 3270
+F 0 "R16" H 13830 3230 50  0000 C CNN
+F 1 "1M" H 13810 3320 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:R_0603_1608Metric" H 13700 3270 50  0001 C CNN
+F 3 "~" H 13700 3270 50  0001 C CNN
+	1    13700 3270
+	1    0    0    1   
+$EndComp
+Wire Wire Line
+	13700 2700 13700 2830
+Wire Wire Line
+	13500 2700 13700 2700
+$Comp
+L Dreamstalker-Components:R_Small R14
+U 1 1 5FC31025
+P 13700 2930
+F 0 "R14" H 13820 2890 50  0000 C CNN
+F 1 "1M" H 13810 2980 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:R_0603_1608Metric" H 13700 2930 50  0001 C CNN
+F 3 "~" H 13700 2930 50  0001 C CNN
+	1    13700 2930
+	1    0    0    1   
+$EndComp
+$Comp
+L Dreamstalker-Components:MCP73833 U4
+U 1 1 60A269DF
+P 11750 4850
+F 0 "U4" H 11420 5410 50  0000 C CNN
+F 1 "MCP73833" H 11590 4290 50  0000 C CNN
+F 2 "SOP50P490X110-10N" H 11400 4000 50  0001 L CNN
+F 3 "https://componentsearchengine.com/Datasheets/1/MCP73833-FCI_UN.pdf" H 11400 3900 50  0001 L CNN
+F 4 "Charge Management Li-Ion/Li-Pol" H 11400 3800 50  0001 L CNN "Description"
+F 5 "Microchip" H 11400 3650 50  0001 L CNN "Manufacturer_Name"
+F 6 "MCP73833-FCI/UN" H 11400 3550 50  0001 L CNN "Manufacturer_Part_Number"
+	1    11750 4850
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	11100 4600 11000 4600
+Wire Wire Line
+	11000 4600 11000 4500
+Wire Wire Line
+	11000 4500 11100 4500
+Wire Wire Line
+	11000 4500 10600 4500
+Connection ~ 11000 4500
+Wire Wire Line
+	11100 4800 10600 4800
+Wire Wire Line
+	11100 4900 10600 4900
+Text Label 10600 4500 0    50   ~ 0
+VUSB
+Text Label 10600 4800 0    50   ~ 0
+STAT1
+Text Label 10600 4900 0    50   ~ 0
+STAT2
+Wire Wire Line
+	11100 5200 10600 5200
+Text Label 10600 5200 0    50   ~ 0
+~PG
+Wire Wire Line
+	12400 4500 12500 4500
+Wire Wire Line
+	12500 4500 12500 4600
+Wire Wire Line
+	12500 4600 12400 4600
+Connection ~ 12500 4600
+$Comp
+L Dreamstalker-Components:R_Small R19
+U 1 1 60C82015
+P 12570 4800
+F 0 "R19" V 12490 4790 50  0000 C CNN
+F 1 "10K" V 12630 4630 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:R_0603_1608Metric" H 12570 4800 50  0001 C CNN
+F 3 "~" H 12570 4800 50  0001 C CNN
+	1    12570 4800
+	0    -1   1    0   
+$EndComp
+$Comp
+L Dreamstalker-Components:R_Small R23
+U 1 1 60C83397
+P 12570 5000
+F 0 "R23" V 12490 5010 50  0000 C CNN
+F 1 "1K" V 12670 4960 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:R_0603_1608Metric" H 12570 5000 50  0001 C CNN
+F 3 "~" H 12570 5000 50  0001 C CNN
+	1    12570 5000
+	0    -1   1    0   
+$EndComp
+Wire Wire Line
+	12400 4800 12470 4800
+Wire Wire Line
+	12400 5000 12470 5000
+Wire Wire Line
+	12670 4800 12900 4800
+Wire Wire Line
+	12900 4800 12900 5000
+Wire Wire Line
+	12900 5000 12670 5000
+Wire Wire Line
+	12900 5200 12900 5000
+Connection ~ 12900 5000
+$Comp
+L Dreamstalker-Components:GND #PWR0169
+U 1 1 60D50E9D
+P 12900 5330
+F 0 "#PWR0169" H 12900 5080 50  0001 C CNN
+F 1 "GND" H 12900 5160 50  0001 C CNN
+F 2 "" H 12900 5330 50  0001 C CNN
+F 3 "" H 12900 5330 50  0001 C CNN
+	1    12900 5330
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	12900 5200 12900 5330
+Connection ~ 12900 5200
+Wire Wire Line
+	12400 5200 12900 5200
+$Comp
+L Dreamstalker-Components:AMS1117-3.3 U6
+U 1 1 60E7223B
+P 14100 4650
+F 0 "U6" H 14260 4390 50  0000 C CNN
+F 1 "AMS1117-3.3" H 14100 4850 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:SOT229P700X180-4N" H 13900 3900 50  0001 L CNN
+F 3 "" H 13900 3800 50  0001 L CNN
+F 4 "1A Low dropout voltage regulator" H 13900 4000 50  0001 L CNN "Description"
+F 5 "Advanced Monolithic Systems" H 13900 3700 50  0001 L CNN "Manufacturer_Name"
+F 6 "AMS1117" H 13900 3600 50  0001 L CNN "Manufacturer_Part_Number"
+	1    14100 4650
+	1    0    0    -1  
+$EndComp
+$Comp
+L Dreamstalker-Components:GND #PWR0170
+U 1 1 60FBE71C
+P 12700 4070
+F 0 "#PWR0170" H 12700 3820 50  0001 C CNN
+F 1 "GND" H 12700 3900 50  0001 C CNN
+F 2 "" H 12700 4070 50  0001 C CNN
+F 3 "" H 12700 4070 50  0001 C CNN
+	1    12700 4070
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	13600 4600 13600 4200
+Connection ~ 13600 4600
+Wire Wire Line
+	13600 4600 13800 4600
+$Comp
+L Dreamstalker-Components:GND #PWR0171
+U 1 1 612450BE
+P 14100 5330
+F 0 "#PWR0171" H 14100 5080 50  0001 C CNN
+F 1 "GND" H 14100 5160 50  0001 C CNN
+F 2 "" H 14100 5330 50  0001 C CNN
+F 3 "" H 14100 5330 50  0001 C CNN
+	1    14100 5330
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	13600 5200 14100 5200
+Wire Wire Line
+	14100 5200 14100 4900
+Connection ~ 13600 5200
+Wire Wire Line
+	14100 5200 14100 5330
+Wire Wire Line
+	14400 4600 14500 4600
+Wire Wire Line
+	14100 5200 14700 5200
+Connection ~ 14100 5200
+Wire Wire Line
+	14900 4600 14700 4600
+Wire Wire Line
+	13600 4200 13830 4200
+$Comp
+L Dreamstalker-Components:R_Small R17
+U 1 1 6148C68E
+P 14330 4200
+F 0 "R17" V 14240 4200 50  0000 C CNN
+F 1 "1M" V 14410 4190 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:R_0603_1608Metric" H 14330 4200 50  0001 C CNN
+F 3 "~" H 14330 4200 50  0001 C CNN
+	1    14330 4200
+	0    -1   1    0   
+$EndComp
+Wire Wire Line
+	14030 4200 14100 4200
+$Comp
+L Dreamstalker-Components:GND #PWR0173
+U 1 1 614C5638
+P 14700 4330
+F 0 "#PWR0173" H 14700 4080 50  0001 C CNN
+F 1 "GND" H 14700 4160 50  0001 C CNN
+F 2 "" H 14700 4330 50  0001 C CNN
+F 3 "" H 14700 4330 50  0001 C CNN
+	1    14700 4330
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	14700 4200 14700 4330
+Wire Wire Line
+	14430 4200 14700 4200
+Wire Wire Line
+	14100 4200 14100 4000
+Wire Wire Line
+	14100 4000 15000 4000
+Connection ~ 14100 4200
+Wire Wire Line
+	14100 4200 14230 4200
+Text Label 15000 4000 2    50   ~ 0
+VBAT
+Wire Wire Line
+	14400 4700 14500 4700
+Wire Wire Line
+	14500 4700 14500 4600
+Connection ~ 14500 4600
+Wire Wire Line
+	14500 4600 14700 4600
+Wire Wire Line
+	13400 5200 13600 5200
+$Comp
+L Dreamstalker-Components:Conn_01x02 J5
+U 1 1 5D9706DF
+P 13200 5100
+F 0 "J5" H 13200 4890 50  0000 C CNN
+F 1 "Battery" H 13200 4810 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:JST_PH_S2B-PH-SM4-TB_1x02-1MP_P2.00mm_Horizontal" H 13200 5100 50  0001 C CNN
+F 3 "~" H 13200 5100 50  0001 C CNN
+	1    13200 5100
+	-1   0    0    -1  
+$EndComp
+Connection ~ 12500 2000
+Wire Wire Line
+	12500 2000 11900 2000
+Wire Wire Line
+	12500 2000 13100 2000
+Wire Wire Line
+	12500 2270 12500 2000
+$Comp
+L Dreamstalker-Components:R_Small R9
+U 1 1 5F9F1D06
+P 12500 2370
+F 0 "R9" H 12620 2310 50  0000 C CNN
+F 1 "1M" H 12620 2410 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:R_0603_1608Metric" H 12500 2370 50  0001 C CNN
+F 3 "~" H 12500 2370 50  0001 C CNN
+	1    12500 2370
+	1    0    0    1   
+$EndComp
+$Comp
+L Dreamstalker-Components:LM4818MX U2
+U 1 1 5DE318F9
+P 8400 2700
+F 0 "U2" H 8700 3170 50  0000 C CNN
+F 1 "LM4818MX" H 8400 2220 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:SOIC127P600X175-8N" H 7885 1865 50  0001 L CNN
+F 3 "http://www.ti.com/lit/gpn/LM4818" H 7885 1765 50  0001 L CNN
+F 4 "350mW Audio Power Amplifier with Shutdown Mode" H 7885 1665 50  0001 L CNN "Description"
+F 5 "1.75" H 7890 1575 50  0001 L CNN "Height"
+F 6 "Texas Instruments" H 7885 1465 50  0001 L CNN "Manufacturer_Name"
+F 7 "LM4818MX" H 7885 1365 50  0001 L CNN "Manufacturer_Part_Number"
+	1    8400 2700
+	1    0    0    -1  
+$EndComp
+$Comp
+L Dreamstalker-Components:R_Small R6
+U 1 1 5E0187DE
+P 7430 2000
+F 0 "R6" V 7340 1990 50  0000 C CNN
+F 1 "10K" V 7510 2000 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:R_0603_1608Metric" H 7430 2000 50  0001 C CNN
+F 3 "~" H 7430 2000 50  0001 C CNN
+	1    7430 2000
+	0    -1   1    0   
+$EndComp
+$Comp
+L Dreamstalker-Components:R_Small R7
+U 1 1 5E01BABB
+P 7970 2000
+F 0 "R7" V 7880 1990 50  0000 C CNN
+F 1 "20K" V 8050 2000 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:R_0603_1608Metric" H 7970 2000 50  0001 C CNN
+F 3 "~" H 7970 2000 50  0001 C CNN
+	1    7970 2000
+	0    -1   1    0   
+$EndComp
+Wire Wire Line
+	7800 2500 7700 2500
+Wire Wire Line
+	7700 2500 7700 2000
+Wire Wire Line
+	7700 2000 7870 2000
+Wire Wire Line
+	7700 2000 7530 2000
+Connection ~ 7700 2000
+Wire Wire Line
+	9000 2400 9100 2400
+Wire Wire Line
+	8070 2000 9100 2000
+Wire Wire Line
+	9100 2000 9100 2400
+Connection ~ 9100 2400
+Wire Wire Line
+	9100 2400 9250 2400
+$Comp
+L Dreamstalker-Components:C_Small C2
+U 1 1 5E1CB950
+P 7120 2000
+F 0 "C2" V 7270 1950 50  0000 L CNN
+F 1 "0.39u" V 6990 1920 50  0000 L CNN
+F 2 "Dreamstalker-Footprints:C_0805_2012Metric" H 7120 2000 50  0001 C CNN
+F 3 "~" H 7120 2000 50  0001 C CNN
+	1    7120 2000
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	7220 2000 7330 2000
+$Comp
+L Dreamstalker-Components:C_Small C6
+U 1 1 5E325C19
+P 7320 2800
+F 0 "C6" V 7390 2890 50  0000 L CNN
+F 1 "1u" V 7250 2870 50  0000 L CNN
+F 2 "Dreamstalker-Footprints:C_0805_2012Metric" H 7320 2800 50  0001 C CNN
+F 3 "~" H 7320 2800 50  0001 C CNN
+	1    7320 2800
+	0    -1   -1   0   
+$EndComp
+$Comp
+L Dreamstalker-Components:GND #PWR0102
+U 1 1 5E3E83FC
+P 7000 3330
+F 0 "#PWR0102" H 7000 3080 50  0001 C CNN
+F 1 "GND" H 7000 3160 50  0001 C CNN
+F 2 "" H 7000 3330 50  0001 C CNN
+F 3 "" H 7000 3330 50  0001 C CNN
+	1    7000 3330
+	1    0    0    -1  
+$EndComp
+Text Label 6500 2500 0    50   ~ 0
+SNDOFF
+Wire Wire Line
+	7600 2800 7420 2800
+Connection ~ 7600 2800
+Wire Wire Line
+	7600 2400 7600 2800
+Wire Wire Line
+	7800 2400 7600 2400
+Wire Wire Line
+	7800 2800 7600 2800
+$Comp
+L Dreamstalker-Components:C_Small C8
+U 1 1 5E7EDA8C
+P 7700 3180
+F 0 "C8" H 7810 3120 50  0000 L CNN
+F 1 "47u" H 7800 3240 50  0000 L CNN
+F 2 "Dreamstalker-Footprints:C_0805_2012Metric" H 7700 3180 50  0001 C CNN
+F 3 "~" H 7700 3180 50  0001 C CNN
+	1    7700 3180
+	-1   0    0    1   
+$EndComp
+$Comp
+L Dreamstalker-Components:GND #PWR0105
+U 1 1 5E834D98
+P 9100 3330
+F 0 "#PWR0105" H 9100 3080 50  0001 C CNN
+F 1 "GND" H 9100 3160 50  0001 C CNN
+F 2 "" H 9100 3330 50  0001 C CNN
+F 3 "" H 9100 3330 50  0001 C CNN
+	1    9100 3330
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9100 3000 9100 3330
+Wire Wire Line
+	9000 3000 9100 3000
+$Comp
+L Dreamstalker-Components:Conn_01x02 J4
+U 1 1 5E945D94
+P 9450 2400
+F 0 "J4" H 9530 2392 50  0000 L CNN
+F 1 "Speaker" H 9530 2301 50  0000 L CNN
+F 2 "Dreamstalker-Footprints:Molex_PicoBlade_53261-0271_1x02-1MP_P1.25mm_Horizontal" H 9450 2400 50  0001 C CNN
+F 3 "~" H 9450 2400 50  0001 C CNN
+	1    9450 2400
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9000 2500 9250 2500
+Wire Wire Line
+	7400 3000 7700 3000
+Wire Wire Line
+	7700 3080 7700 3000
+Connection ~ 7700 3000
+Wire Wire Line
+	7700 3000 7800 3000
+$Comp
+L Dreamstalker-Components:GND #PWR0107
+U 1 1 5EC33D3C
+P 7700 3330
+F 0 "#PWR0107" H 7700 3080 50  0001 C CNN
+F 1 "GND" H 7700 3160 50  0001 C CNN
+F 2 "" H 7700 3330 50  0001 C CNN
+F 3 "" H 7700 3330 50  0001 C CNN
+	1    7700 3330
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	7700 3280 7700 3330
+Text Label 6500 2000 0    50   ~ 0
+DACL
+Wire Wire Line
+	7020 2000 6500 2000
+Wire Wire Line
+	7000 9000 7300 9000
+Wire Wire Line
+	7500 8700 7500 8680
+Wire Wire Line
+	7500 8180 7500 8100
+Wire Wire Line
+	7500 8100 7800 8100
+Wire Wire Line
+	12700 4070 12700 4180
+$Comp
+L Dreamstalker-Components:C_Small C14
+U 1 1 60F88073
+P 12700 4280
+F 0 "C14" H 12760 4370 50  0000 L CNN
+F 1 "1u" H 12760 4200 50  0000 L CNN
+F 2 "Dreamstalker-Footprints:C_0805_2012Metric" H 12700 4280 50  0001 C CNN
+F 3 "~" H 12700 4280 50  0001 C CNN
+	1    12700 4280
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	11000 4500 11000 4380
+$Comp
+L Dreamstalker-Components:C_Small C13
+U 1 1 60F4D585
+P 11000 4280
+F 0 "C13" H 10760 4200 50  0000 L CNN
+F 1 "1u" H 10800 4330 50  0000 L CNN
+F 2 "Dreamstalker-Footprints:C_0805_2012Metric" H 11000 4280 50  0001 C CNN
+F 3 "~" H 11000 4280 50  0001 C CNN
+	1    11000 4280
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	13600 5020 13600 5200
+$Comp
+L Dreamstalker-Components:C_Small C17
+U 1 1 611326A6
+P 13600 4920
+F 0 "C17" H 13370 4850 50  0000 L CNN
+F 1 "47u" H 13360 4990 50  0000 L CNN
+F 2 "Dreamstalker-Footprints:C_0805_2012Metric" H 13600 4920 50  0001 C CNN
+F 3 "~" H 13600 4920 50  0001 C CNN
+	1    13600 4920
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	14700 4600 14700 4820
+Wire Wire Line
+	14700 5200 14700 5020
+$Comp
+L Dreamstalker-Components:C_Small C16
+U 1 1 612E93FB
+P 14700 4920
+F 0 "C16" H 14470 4840 50  0000 L CNN
+F 1 "47u" H 14510 5000 50  0000 L CNN
+F 2 "Dreamstalker-Footprints:C_0805_2012Metric" H 14700 4920 50  0001 C CNN
+F 3 "~" H 14700 4920 50  0001 C CNN
+	1    14700 4920
+	-1   0    0    1   
+$EndComp
+$Comp
+L Dreamstalker-Components:R_Small R26
+U 1 1 5D87FACA
+P 10230 9300
+F 0 "R26" V 10130 9300 50  0000 C CNN
+F 1 "27K" V 10330 9300 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:R_0603_1608Metric" H 10230 9300 50  0001 C CNN
+F 3 "~" H 10230 9300 50  0001 C CNN
+	1    10230 9300
+	0    -1   1    0   
+$EndComp
+Wire Wire Line
+	10810 8800 11000 8800
+Wire Wire Line
+	10100 8800 10200 8800
+Wire Wire Line
+	10330 9300 11000 9300
+Connection ~ 11000 9300
+Wire Wire Line
+	11000 9300 11000 9330
+Wire Wire Line
+	10200 8500 10200 8800
+Connection ~ 10200 8800
+Wire Wire Line
+	10200 8800 10410 8800
+Wire Wire Line
+	9800 9300 10130 9300
+Wire Wire Line
+	9800 8800 9900 8800
+$Comp
+L Dreamstalker-Components:D_Schottky_x2_Serial_AKC D2
+U 1 1 5D7DF3D3
+P 9300 8900
+F 0 "D2" V 9500 8790 50  0000 L CNN
+F 1 "BAT54S" V 9050 8780 50  0000 L CNN
+F 2 "" H 9300 8900 50  0001 C CNN
+F 3 "~" H 9300 8900 50  0001 C CNN
+	1    9300 8900
+	0    1    -1   0   
+$EndComp
+Wire Wire Line
+	9800 9000 9800 9300
+Wire Wire Line
+	9800 8800 9800 9000
+Connection ~ 9800 9000
+Wire Wire Line
+	9600 9000 9800 9000
+Connection ~ 9800 8800
+Wire Wire Line
+	9600 8800 9800 8800
+Wire Wire Line
+	9100 8900 8800 8900
+Wire Wire Line
+	8800 8900 8800 8500
+Text Label 8800 8500 3    50   ~ 0
+IRPWR
+$Comp
+L Dreamstalker-Components:GND #PWR0109
+U 1 1 5D87ADF7
+P 11000 4070
+F 0 "#PWR0109" H 11000 3820 50  0001 C CNN
+F 1 "GND" H 11000 3900 50  0001 C CNN
+F 2 "" H 11000 4070 50  0001 C CNN
+F 3 "" H 11000 4070 50  0001 C CNN
+	1    11000 4070
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	11000 4070 11000 4180
+Wire Wire Line
+	14200 6900 14000 6900
+Wire Wire Line
+	14000 6900 14000 6700
+Wire Wire Line
+	13770 6700 14000 6700
+Wire Wire Line
+	13220 6700 12600 6700
+Text Label 12600 6700 0    50   ~ 0
+DACL
+Wire Wire Line
+	13220 7000 12600 7000
+Text Label 12600 7000 0    50   ~ 0
+DACR
+Wire Wire Line
+	14200 7100 14000 7100
+Wire Wire Line
+	14000 7230 14000 7100
+Connection ~ 14000 6700
+$Comp
+L Dreamstalker-Components:R_Small R22
+U 1 1 5DF5DF78
+P 14000 6470
+F 0 "R22" H 13850 6430 50  0000 C CNN
+F 1 "1M" H 13850 6520 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:R_0603_1608Metric" H 14000 6470 50  0001 C CNN
+F 3 "~" H 14000 6470 50  0001 C CNN
+	1    14000 6470
+	-1   0    0    1   
+$EndComp
+$Comp
+L Dreamstalker-Components:+3V3 #PWR0110
+U 1 1 5DF6629B
+P 14900 4600
+F 0 "#PWR0110" H 14900 4450 50  0001 C CNN
+F 1 "+3V3" V 14800 4660 50  0000 C CNN
+F 2 "" H 14900 4600 50  0001 C CNN
+F 3 "" H 14900 4600 50  0001 C CNN
+	1    14900 4600
+	0    1    1    0   
+$EndComp
+$Comp
+L Dreamstalker-Components:+3V3 #PWR0111
+U 1 1 5DF856D9
+P 14000 6300
+F 0 "#PWR0111" H 14000 6150 50  0001 C CNN
+F 1 "+3V3" H 13760 6430 50  0000 L CNN
+F 2 "" H 14000 6300 50  0001 C CNN
+F 3 "" H 14000 6300 50  0001 C CNN
+	1    14000 6300
+	-1   0    0    -1  
+$EndComp
+Wire Wire Line
+	14000 6370 14000 6300
+Wire Wire Line
+	14000 6700 15000 6700
+Text Label 15000 6700 2    50   ~ 0
+PMVOLT
+Text Label 4700 3500 2    50   ~ 0
+WFTXD
+Text Label 4700 3600 2    50   ~ 0
+WFRXD
+Text Label 4700 5600 2    50   ~ 0
+SKEY
+Wire Wire Line
+	3700 5600 4700 5600
+Text Label 4700 5500 2    50   ~ 0
+FKEY
+Wire Wire Line
+	3800 5500 4700 5500
+Text Label 4700 5300 2    50   ~ 0
+VIBRO
+Wire Wire Line
+	3900 5300 4700 5300
+Text Label 2000 5800 0    50   ~ 0
+SCK
+Wire Wire Line
+	3400 5800 2000 5800
+Text Label 2000 5700 0    50   ~ 0
+MISO
+Wire Wire Line
+	3300 5700 2000 5700
+Text Label 2000 5600 0    50   ~ 0
+MOSI
+Wire Wire Line
+	3200 5600 2000 5600
+Text Label 2000 5500 0    50   ~ 0
+SDCS
+Wire Wire Line
+	3100 5500 2000 5500
+Text Label 2000 5400 0    50   ~ 0
+DACREF
+Wire Wire Line
+	3000 5400 2000 5400
+Text Label 2000 5300 0    50   ~ 0
+SNDOFF
+Wire Wire Line
+	2900 5300 2000 5300
+Text Label 2000 4500 0    50   ~ 0
+LEDR
+Text Label 2000 4400 0    50   ~ 0
+LEDG
+Text Label 2000 4100 0    50   ~ 0
+DACR
+Text Label 2000 4000 0    50   ~ 0
+DACL
+Text Label 2000 3900 0    50   ~ 0
+WFEN
+Text Label 2000 3800 0    50   ~ 0
+AREF
+Text Label 2000 3600 0    50   ~ 0
+CKEY
+Wire Wire Line
+	2570 2500 2900 2500
+$Comp
+L Dreamstalker-Components:GND #PWR0103
+U 1 1 5DB7B017
+P 2570 2500
+F 0 "#PWR0103" H 2570 2250 50  0001 C CNN
+F 1 "GND" H 2570 2330 50  0001 C CNN
+F 2 "" H 2570 2500 50  0001 C CNN
+F 3 "" H 2570 2500 50  0001 C CNN
+	1    2570 2500
+	0    1    -1   0   
+$EndComp
+Text Label 2000 2400 0    50   ~ 0
+VBAT
+Wire Wire Line
+	3000 2400 2000 2400
+Wire Wire Line
+	3200 2200 2000 2200
+Text Label 2000 2200 0    50   ~ 0
+MICOUT
+Text Label 2000 3500 0    50   ~ 0
+IRPWR
+Text Label 2000 2300 0    50   ~ 0
+PMVOLT
+Wire Wire Line
+	3100 2300 2000 2300
+Text Label 2000 2100 0    50   ~ 0
+IRRX
+Wire Wire Line
+	3300 2100 2000 2100
+Text Label 5000 2200 2    50   ~ 0
+TOSC2
+Text Label 5000 2100 2    50   ~ 0
+TOSC1
+Wire Wire Line
+	3600 2100 5000 2100
+Wire Wire Line
+	3700 2200 5000 2200
+Text Label 5000 2400 2    50   ~ 0
+PDI_CLK
+Wire Wire Line
+	3800 2400 5000 2400
+Text Label 5000 2500 2    50   ~ 0
+PDI_DATA
+Wire Wire Line
+	3900 2500 5000 2500
+Wire Wire Line
+	7400 4300 6900 4300
+Connection ~ 6900 4300
+Wire Wire Line
+	7400 4500 7200 4500
+Wire Wire Line
+	7400 5000 7200 5000
+Wire Wire Line
+	7450 7000 8000 7000
+Wire Wire Line
+	8000 7300 8000 7000
+Connection ~ 8000 7000
+Wire Wire Line
+	8000 7000 8050 7000
+Wire Wire Line
+	8630 7300 8700 7300
+Wire Wire Line
+	8700 7300 8700 6800
+Wire Wire Line
+	8700 6800 8700 6600
+$Comp
+L Dreamstalker-Components:+3V3 #PWR0112
+U 1 1 5E6A7B48
+P 8700 6600
+F 0 "#PWR0112" H 8700 6450 50  0001 C CNN
+F 1 "+3V3" H 8830 6670 50  0000 C CNN
+F 2 "" H 8700 6600 50  0001 C CNN
+F 3 "" H 8700 6600 50  0001 C CNN
+	1    8700 6600
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	7500 2700 7500 2500
+Wire Wire Line
+	7800 2700 7500 2700
+Wire Wire Line
+	12500 4600 12700 4600
+Wire Wire Line
+	12700 4380 12700 4600
+Connection ~ 12700 4600
+Wire Wire Line
+	12700 4600 13400 4600
+Connection ~ 14700 4600
+$Comp
+L Dreamstalker-Components:+3V3 #PWR0113
+U 1 1 5ED57DFA
+P 4000 8400
+F 0 "#PWR0113" H 4000 8250 50  0001 C CNN
+F 1 "+3V3" H 3830 8510 50  0000 C CNN
+F 2 "" H 4000 8400 50  0001 C CNN
+F 3 "" H 4000 8400 50  0001 C CNN
+	1    4000 8400
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	7820 9300 8000 9300
+Wire Wire Line
+	8000 8800 8000 9000
+Wire Wire Line
+	8000 9000 7800 9000
+Wire Wire Line
+	7800 8100 7800 9000
+Connection ~ 8000 9000
+Wire Wire Line
+	8000 9000 8000 9300
+$Comp
+L Dreamstalker-Components:+3V3 #PWR0114
+U 1 1 5F0EF5D8
+P 6300 4800
+F 0 "#PWR0114" H 6300 4650 50  0001 C CNN
+F 1 "+3V3" H 6300 4973 50  0000 C CNN
+F 2 "" H 6300 4800 50  0001 C CNN
+F 3 "" H 6300 4800 50  0001 C CNN
+	1    6300 4800
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	6300 5000 6300 4800
+Connection ~ 6300 5000
+$Comp
+L Dreamstalker-Components:+3V3 #PWR0121
+U 1 1 5F4BC7AC
+P 7400 3000
+F 0 "#PWR0121" H 7400 2850 50  0001 C CNN
+F 1 "+3V3" V 7300 3020 50  0000 L CNN
+F 2 "" H 7400 3000 50  0001 C CNN
+F 3 "" H 7400 3000 50  0001 C CNN
+	1    7400 3000
+	0    -1   -1   0   
+$EndComp
+$Comp
+L Dreamstalker-Components:+3V3 #PWR0124
+U 1 1 5F55C3D8
+P 8000 8800
+F 0 "#PWR0124" H 8000 8650 50  0001 C CNN
+F 1 "+3V3" H 7990 8970 50  0000 C CNN
+F 2 "" H 8000 8800 50  0001 C CNN
+F 3 "" H 8000 8800 50  0001 C CNN
+	1    8000 8800
+	1    0    0    -1  
+$EndComp
+$Comp
+L Dreamstalker-Components:USB_B_Mini J1
+U 1 1 5F7E5F91
+P 5900 7000
+F 0 "J1" H 6070 6540 50  0000 C CNN
+F 1 "Mini-USB-B" H 5880 7410 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:USB_Mini-B_Lumberg_2486_01_Horizontal" H 6050 6950 50  0001 C CNN
+F 3 "~" H 6050 6950 50  0001 C CNN
+	1    5900 7000
+	-1   0    0    -1  
+$EndComp
+Text Label 5500 9300 2    50   ~ 0
+LED2
+Wire Wire Line
+	4900 9300 5500 9300
+Wire Wire Line
+	13370 3100 13500 3100
+Wire Wire Line
+	13500 2700 13500 3100
+Wire Wire Line
+	12700 3100 13170 3100
+Wire Wire Line
+	12100 3270 12100 3430
+$Comp
+L Dreamstalker-Components:GND #PWR0164
+U 1 1 600490A6
+P 12100 3430
+F 0 "#PWR0164" H 12100 3180 50  0001 C CNN
+F 1 "GND" H 12100 3260 50  0001 C CNN
+F 2 "" H 12100 3430 50  0001 C CNN
+F 3 "" H 12100 3430 50  0001 C CNN
+	1    12100 3430
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	12100 2800 12300 2800
+Wire Wire Line
+	12100 3070 12100 2800
+$Comp
+L Dreamstalker-Components:R_Small R15
+U 1 1 5FFF27F1
+P 12100 3170
+F 0 "R15" H 11950 3130 50  0000 C CNN
+F 1 "10K" H 11950 3250 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:R_0603_1608Metric" H 12100 3170 50  0001 C CNN
+F 3 "~" H 12100 3170 50  0001 C CNN
+	1    12100 3170
+	1    0    0    1   
+$EndComp
+Wire Wire Line
+	12300 3220 12300 3430
+Connection ~ 12500 2800
+Wire Wire Line
+	12300 3020 12300 2800
+$Comp
+L Dreamstalker-Components:GND #PWR0163
+U 1 1 5FD8CFE4
+P 12300 3430
+F 0 "#PWR0163" H 12300 3180 50  0001 C CNN
+F 1 "GND" H 12300 3260 50  0001 C CNN
+F 2 "" H 12300 3430 50  0001 C CNN
+F 3 "" H 12300 3430 50  0001 C CNN
+	1    12300 3430
+	1    0    0    -1  
+$EndComp
+$Comp
+L Dreamstalker-Components:C_Small C8
+U 1 1 5FD8AA9C
+P 12300 3120
+F 0 "C8" H 12140 3050 50  0000 L CNN
+F 1 "0.1u" H 12060 3210 50  0000 L CNN
+F 2 "Dreamstalker-Footprints:C_0805_2012Metric" H 12300 3120 50  0001 C CNN
+F 3 "~" H 12300 3120 50  0001 C CNN
+	1    12300 3120
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	12500 2800 12800 2800
+Wire Wire Line
+	12500 2800 12500 2470
+Wire Wire Line
+	5600 6800 5300 6800
+Text Label 5300 6800 0    50   ~ 0
+VUSB
+Wire Wire Line
+	6000 7400 6000 7500
+$Comp
+L Dreamstalker-Components:GND #PWR0127
+U 1 1 5FC66EFE
+P 6000 7630
+F 0 "#PWR0127" H 6000 7380 50  0001 C CNN
+F 1 "GND" H 6000 7460 50  0001 C CNN
+F 2 "" H 6000 7630 50  0001 C CNN
+F 3 "" H 6000 7630 50  0001 C CNN
+	1    6000 7630
+	-1   0    0    -1  
+$EndComp
+Wire Wire Line
+	5900 7400 5900 7500
+Wire Wire Line
+	5900 7500 6000 7500
+Connection ~ 6000 7500
+Wire Wire Line
+	6000 7500 6000 7630
+Wire Wire Line
+	9800 4900 9670 4900
+$Comp
+L Dreamstalker-Components:LED D4
+U 1 1 601D2633
+P 2550 9000
+F 0 "D4" H 2670 8930 50  0000 C CNN
+F 1 "KP-3216SGC" H 2640 9130 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:LEDC3216X110N" H 2550 9000 50  0001 C CNN
+F 3 "~" H 2550 9000 50  0001 C CNN
+	1    2550 9000
+	1    0    0    -1  
+$EndComp
+$Comp
+L Dreamstalker-Components:LED D5
+U 1 1 6024E854
+P 2550 9300
+F 0 "D5" H 2670 9370 50  0000 C CNN
+F 1 "KP-3216SURCK" H 2790 9170 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:LEDC3216X110N" H 2550 9300 50  0001 C CNN
+F 3 "~" H 2550 9300 50  0001 C CNN
+	1    2550 9300
+	1    0    0    -1  
+$EndComp
+$Comp
+L Dreamstalker-Components:+3V3 #PWR0128
+U 1 1 602965D3
+P 3000 8700
+F 0 "#PWR0128" H 3000 8550 50  0001 C CNN
+F 1 "+3V3" H 3000 8873 50  0000 C CNN
+F 2 "" H 3000 8700 50  0001 C CNN
+F 3 "" H 3000 8700 50  0001 C CNN
+	1    3000 8700
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2700 9300 3000 9300
+Wire Wire Line
+	3000 9300 3000 9000
+Wire Wire Line
+	2700 9000 3000 9000
+Connection ~ 3000 9000
+Wire Wire Line
+	3000 9000 3000 8700
+$Comp
+L Dreamstalker-Components:R_Small R4
+U 1 1 602D6B4A
+P 2170 9000
+F 0 "R4" V 2070 9000 50  0000 C CNN
+F 1 "1K" V 2270 9000 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:R_0603_1608Metric" H 2170 9000 50  0001 C CNN
+F 3 "~" H 2170 9000 50  0001 C CNN
+	1    2170 9000
+	0    1    1    0   
+$EndComp
+$Comp
+L Dreamstalker-Components:R_Small R5
+U 1 1 602D9EA9
+P 2170 9300
+F 0 "R5" V 2070 9300 50  0000 C CNN
+F 1 "3K" V 2270 9300 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:R_0603_1608Metric" H 2170 9300 50  0001 C CNN
+F 3 "~" H 2170 9300 50  0001 C CNN
+	1    2170 9300
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	2270 9000 2400 9000
+Wire Wire Line
+	2270 9300 2400 9300
+Wire Wire Line
+	2070 9000 1600 9000
+Wire Wire Line
+	2070 9300 1600 9300
+Text Label 1600 9000 0    50   ~ 0
+LEDG
+Text Label 1600 9300 0    50   ~ 0
+LEDR
+Connection ~ 4000 8700
+Connection ~ 11000 7000
+Wire Wire Line
+	11000 7000 11000 6700
+Wire Wire Line
+	11000 7000 11000 7130
+Connection ~ 8700 6800
+Wire Wire Line
+	2600 8000 2450 8000
+Wire Wire Line
+	2150 8000 2000 8000
+$Comp
+L Dreamstalker-Components:R_Small R25
+U 1 1 5D9E4CB2
+P 13670 6700
+F 0 "R25" V 13750 6740 50  0000 C CNN
+F 1 "1K" V 13570 6610 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:R_0603_1608Metric" H 13670 6700 50  0001 C CNN
+F 3 "~" H 13670 6700 50  0001 C CNN
+	1    13670 6700
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	14000 6570 14000 6700
+Wire Wire Line
+	6500 2500 7500 2500
+Wire Wire Line
+	7000 2800 7220 2800
+Wire Wire Line
+	7000 2800 7000 3330
+Wire Wire Line
+	6520 4300 6300 4300
+Wire Wire Line
+	6300 4300 6300 4430
+Connection ~ 12300 2800
+Wire Wire Line
+	12300 2800 12500 2800
+Text Label 11000 2700 1    50   ~ 0
+MICPWR
+Wire Wire Line
+	11000 2000 11000 2700
+Wire Wire Line
+	11230 2000 11000 2000
+Wire Wire Line
+	11200 2900 11000 2900
+Wire Wire Line
+	11000 3000 11000 2900
+Wire Wire Line
+	11000 3400 11000 3430
+$Comp
+L Dreamstalker-Components:GND #PWR0167
+U 1 1 604D0FFE
+P 11000 3430
+F 0 "#PWR0167" H 11000 3180 50  0001 C CNN
+F 1 "GND" H 11000 3260 50  0001 C CNN
+F 2 "" H 11000 3430 50  0001 C CNN
+F 3 "" H 11000 3430 50  0001 C CNN
+	1    11000 3430
+	1    0    0    -1  
+$EndComp
+$Comp
+L Dreamstalker-Components:Microphone_Condenser MK1
+U 1 1 5F730FA9
+P 11000 3200
+F 0 "MK1" H 10690 3370 50  0000 L CNN
+F 1 "6x5mm Electret" H 10230 3260 50  0000 L CNN
+F 2 "" V 11000 3300 50  0001 C CNN
+F 3 "~" V 11000 3300 50  0001 C CNN
+	1    11000 3200
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9300 4900 9470 4900
+Wire Wire Line
+	9800 4900 9800 5230
+$Comp
+L Dreamstalker-Components:R_Small R16
+U 1 1 61452D9B
+P 13930 4200
+F 0 "R16" V 13840 4190 50  0000 C CNN
+F 1 "1M" V 14010 4200 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:R_0603_1608Metric" H 13930 4200 50  0001 C CNN
+F 3 "~" H 13930 4200 50  0001 C CNN
+	1    13930 4200
+	0    -1   1    0   
+$EndComp
+Wire Wire Line
+	13400 4600 13400 5100
+Wire Wire Line
+	13600 4600 13600 4820
+Connection ~ 13400 4600
+Wire Wire Line
+	13400 4600 13600 4600
+$Comp
+L Dreamstalker-Components:C_Small C21
+U 1 1 61F5E91E
+P 1700 4380
+F 0 "C21" H 1470 4450 50  0000 L CNN
+F 1 "47u" H 1480 4310 50  0000 L CNN
+F 2 "Dreamstalker-Footprints:C_0805_2012Metric" H 1700 4380 50  0001 C CNN
+F 3 "~" H 1700 4380 50  0001 C CNN
+	1    1700 4380
+	1    0    0    -1  
+$EndComp
+$Comp
+L Dreamstalker-Components:+3V3 #PWR0134
+U 1 1 61F5E928
+P 1700 4700
+F 0 "#PWR0134" H 1700 4550 50  0001 C CNN
+F 1 "+3V3" H 1570 4830 50  0000 C CNN
+F 2 "" H 1700 4700 50  0001 C CNN
+F 3 "" H 1700 4700 50  0001 C CNN
+	1    1700 4700
+	-1   0    0    1   
+$EndComp
+$Comp
+L Dreamstalker-Components:GND #PWR0135
+U 1 1 61F5E932
+P 1700 4170
+F 0 "#PWR0135" H 1700 3920 50  0001 C CNN
+F 1 "GND" H 1700 4000 50  0001 C CNN
+F 2 "" H 1700 4170 50  0001 C CNN
+F 3 "" H 1700 4170 50  0001 C CNN
+	1    1700 4170
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	1700 4280 1700 4200
+Wire Wire Line
+	1700 4700 1700 4600
+$Comp
+L Dreamstalker-Components:C_Small C12
+U 1 1 620D036E
+P 3320 1800
+F 0 "C12" V 3160 1750 50  0000 L CNN
+F 1 "47u" V 3440 1760 50  0000 L CNN
+F 2 "Dreamstalker-Footprints:C_0805_2012Metric" H 3320 1800 50  0001 C CNN
+F 3 "~" H 3320 1800 50  0001 C CNN
+	1    3320 1800
+	0    1    1    0   
+$EndComp
+$Comp
+L Dreamstalker-Components:+3V3 #PWR0136
+U 1 1 620D0378
+P 3000 1800
+F 0 "#PWR0136" H 3000 1650 50  0001 C CNN
+F 1 "+3V3" V 3100 1990 50  0000 C CNN
+F 2 "" H 3000 1800 50  0001 C CNN
+F 3 "" H 3000 1800 50  0001 C CNN
+	1    3000 1800
+	0    -1   -1   0   
+$EndComp
+$Comp
+L Dreamstalker-Components:GND #PWR0137
+U 1 1 620D0382
+P 3530 1800
+F 0 "#PWR0137" H 3530 1550 50  0001 C CNN
+F 1 "GND" H 3530 1630 50  0001 C CNN
+F 2 "" H 3530 1800 50  0001 C CNN
+F 3 "" H 3530 1800 50  0001 C CNN
+	1    3530 1800
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	3000 1800 3100 1800
+Wire Wire Line
+	3420 1800 3500 1800
+Wire Wire Line
+	2600 4100 2000 4100
+Wire Wire Line
+	2600 4000 2000 4000
+Wire Wire Line
+	2600 3900 2000 3900
+Wire Wire Line
+	2900 2600 2900 2500
+Wire Wire Line
+	3000 2600 3000 2400
+Wire Wire Line
+	3100 2600 3100 2300
+Wire Wire Line
+	3200 2600 3200 2200
+Wire Wire Line
+	3300 2600 3300 2100
+Wire Wire Line
+	2600 3800 2000 3800
+Wire Wire Line
+	3600 2600 3600 2100
+Wire Wire Line
+	3700 2600 3700 2200
+Wire Wire Line
+	3800 2600 3800 2400
+Wire Wire Line
+	3900 2600 3900 2500
+Wire Wire Line
+	4200 3500 4700 3500
+Wire Wire Line
+	4200 3600 4700 3600
+Wire Wire Line
+	3900 5200 3900 5300
+Wire Wire Line
+	3800 5200 3800 5500
+Wire Wire Line
+	3700 5200 3700 5600
+Wire Wire Line
+	2600 3600 2000 3600
+Wire Wire Line
+	3400 5200 3400 5800
+Wire Wire Line
+	3300 5200 3300 5700
+Wire Wire Line
+	3200 5200 3200 5600
+Wire Wire Line
+	3100 5200 3100 5500
+Wire Wire Line
+	3000 5200 3000 5400
+Wire Wire Line
+	2900 5200 2900 5300
+Wire Wire Line
+	2600 4500 2000 4500
+Wire Wire Line
+	2600 4400 2000 4400
+Wire Wire Line
+	2600 3500 2000 3500
+$Comp
+L Dreamstalker-Components:ATXMEGA128A4U-AU U1
+U 1 1 5D868528
+P 3400 4000
+F 0 "U1" H 4200 5200 50  0000 L CNN
+F 1 "ATXMEGA128A4U-AU" H 4150 5050 50  0000 L CNN
+F 2 "Dreamstalker-Footprints:QFP80P1200X1200X120-44N" H 2600 1500 50  0001 L CNN
+F 3 "http://uk.rs-online.com/web/p/products/7617737" H 2600 1400 50  0001 L CNN
+F 4 "MCU,AVRXMEGA,32MHz,128K+8K Flash,TQFP44 Atmel ATXMEGA128A4U-AU, 16 bit, 8 bit AVR Microcontroller, 32MHz, 2 kB, 132 kB Flash, 44-Pin TQFP" H 2600 1300 50  0001 L CNN "Description"
+F 5 "1.2" H 2600 1850 50  0001 L CNN "Height"
+F 6 "Microchip" H 2600 1750 50  0001 L CNN "Manufacturer_Name"
+F 7 "ATXMEGA128A4U-AU" H 2600 1650 50  0001 L CNN "Manufacturer_Part_Number"
+	1    3400 4000
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3500 1800 3500 2600
+Connection ~ 3500 1800
+Wire Wire Line
+	3500 1800 3530 1800
+Wire Wire Line
+	3400 2000 3100 2000
+Wire Wire Line
+	3100 2000 3100 1800
+Wire Wire Line
+	3400 2000 3400 2600
+Connection ~ 3100 1800
+Wire Wire Line
+	3100 1800 3220 1800
+Wire Wire Line
+	1700 4200 2600 4200
+Connection ~ 1700 4200
+Wire Wire Line
+	1700 4200 1700 4170
+Wire Wire Line
+	1900 4300 1900 4600
+Wire Wire Line
+	1900 4600 1700 4600
+Wire Wire Line
+	1900 4300 2600 4300
+Connection ~ 1700 4600
+Wire Wire Line
+	1700 4600 1700 4480
+Wire Wire Line
+	4200 4500 4700 4500
+Wire Wire Line
+	4200 4400 4700 4400
+Wire Wire Line
+	4200 4300 4700 4300
+Wire Wire Line
+	4200 4200 4700 4200
+Wire Wire Line
+	4200 4100 4700 4100
+Wire Wire Line
+	4200 4000 4700 4000
+Wire Wire Line
+	4200 3900 4700 3900
+Text Label 4700 4500 2    50   ~ 0
+IRTX
+Text Label 4700 4400 2    50   ~ 0
+STAT1
+Text Label 4700 4300 2    50   ~ 0
+STAT2
+Text Label 4700 4200 2    50   ~ 0
+~PG
+Text Label 4700 4100 2    50   ~ 0
+MICPWR
+Text Label 4700 4000 2    50   ~ 0
+LED1
+Text Label 4700 3900 2    50   ~ 0
+LED2
+$Comp
+L Dreamstalker-Components:C_Small C1
+U 1 1 61EAB680
+P 5000 3620
+F 0 "C1" H 4810 3540 50  0000 L CNN
+F 1 "47u" H 4770 3690 50  0000 L CNN
+F 2 "Dreamstalker-Footprints:C_0805_2012Metric" H 5000 3620 50  0001 C CNN
+F 3 "~" H 5000 3620 50  0001 C CNN
+	1    5000 3620
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	5000 3400 5000 3520
+Connection ~ 5000 3400
+Wire Wire Line
+	4200 3700 4800 3700
+Wire Wire Line
+	4800 3400 5000 3400
+Wire Wire Line
+	4800 3700 4800 3400
+Wire Wire Line
+	5000 3800 5000 3830
+Connection ~ 5000 3800
+Wire Wire Line
+	4200 3800 5000 3800
+Wire Wire Line
+	5000 3300 5000 3400
+Wire Wire Line
+	5000 3720 5000 3800
+$Comp
+L Dreamstalker-Components:GND #PWR0131
+U 1 1 61EB2664
+P 5000 3830
+F 0 "#PWR0131" H 5000 3580 50  0001 C CNN
+F 1 "GND" H 5000 3660 50  0001 C CNN
+F 2 "" H 5000 3830 50  0001 C CNN
+F 3 "" H 5000 3830 50  0001 C CNN
+	1    5000 3830
+	1    0    0    -1  
+$EndComp
+$Comp
+L Dreamstalker-Components:+3V3 #PWR0130
+U 1 1 61EB0482
+P 5000 3300
+F 0 "#PWR0130" H 5000 3150 50  0001 C CNN
+F 1 "+3V3" H 5070 3450 50  0000 C CNN
+F 2 "" H 5000 3300 50  0001 C CNN
+F 3 "" H 5000 3300 50  0001 C CNN
+	1    5000 3300
+	1    0    0    -1  
+$EndComp
+Text Label 4000 6900 3    50   ~ 0
+AREF
+Text Label 3500 6900 3    50   ~ 0
+DACREF
+Wire Wire Line
+	3500 7400 3500 6900
+Wire Wire Line
+	3630 7400 3500 7400
+Wire Wire Line
+	4000 7400 4000 6900
+Connection ~ 4000 7400
+Wire Wire Line
+	3830 7400 4000 7400
+Wire Wire Line
+	4000 7520 4000 7400
+Wire Wire Line
+	4000 7720 4000 7930
+$Comp
+L Dreamstalker-Components:GND #PWR0129
+U 1 1 60E1BEA7
+P 4000 7930
+F 0 "#PWR0129" H 4000 7680 50  0001 C CNN
+F 1 "GND" H 4000 7760 50  0001 C CNN
+F 2 "" H 4000 7930 50  0001 C CNN
+F 3 "" H 4000 7930 50  0001 C CNN
+	1    4000 7930
+	-1   0    0    -1  
+$EndComp
+$Comp
+L Dreamstalker-Components:R_Small R21
+U 1 1 60DF5863
+P 3730 7400
+F 0 "R21" V 3830 7390 50  0000 C CNN
+F 1 "10K" V 3610 7400 50  0000 C CNN
+F 2 "Dreamstalker-Footprints:R_0603_1608Metric" H 3730 7400 50  0001 C CNN
+F 3 "~" H 3730 7400 50  0001 C CNN
+	1    3730 7400
+	0    1    -1   0   
+$EndComp
+$Comp
+L Dreamstalker-Components:C_Small C18
+U 1 1 60DEE7F2
+P 4000 7620
+F 0 "C18" H 3780 7540 50  0000 L CNN
+F 1 "1u" H 3820 7720 50  0000 L CNN
+F 2 "Dreamstalker-Footprints:C_0805_2012Metric" H 4000 7620 50  0001 C CNN
+F 3 "~" H 4000 7620 50  0001 C CNN
+	1    4000 7620
+	-1   0    0    1   
+$EndComp
+$Comp
+L Dreamstalker-Components:C_Small C4
+U 1 1 5D7B69D6
+P 12520 8900
+F 0 "C4" V 12390 8850 50  0000 L CNN
+F 1 "47u" V 12650 8830 50  0000 L CNN
+F 2 "Dreamstalker-Footprints:C_0805_2012Metric" H 12520 8900 50  0001 C CNN
+F 3 "~" H 12520 8900 50  0001 C CNN
+	1    12520 8900
+	0    1    1    0   
+$EndComp
+$Comp
+L Dreamstalker-Components:+3V3 #PWR?
+U 1 1 5D7B69F2
+P 11900 8900
+F 0 "#PWR?" H 11900 8750 50  0001 C CNN
+F 1 "+3V3" V 11790 8980 50  0000 C CNN
+F 2 "" H 11900 8900 50  0001 C CNN
+F 3 "" H 11900 8900 50  0001 C CNN
+	1    11900 8900
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	12800 8900 12620 8900
+Connection ~ 12800 8900
+Wire Wire Line
+	12800 8900 12800 9130
+Wire Wire Line
+	11900 8900 12100 8900
+Wire Wire Line
+	13050 8400 12100 8400
+Wire Wire Line
+	12100 8400 12100 8900
+Connection ~ 12100 8900
+Wire Wire Line
+	12100 8900 12420 8900
+Wire Wire Line
+	3900 5900 3780 5900
+Connection ~ 3900 5900
+Wire Wire Line
+	3600 5200 3600 5700
+Wire Wire Line
+	3900 5700 3900 5900
+Wire Wire Line
+	3600 5700 3900 5700
+Wire Wire Line
+	3500 5900 3470 5900
+Connection ~ 3500 5900
+Wire Wire Line
+	3500 5200 3500 5900
+Wire Wire Line
+	4000 5900 3900 5900
+Wire Wire Line
+	3580 5900 3500 5900
+$Comp
+L Dreamstalker-Components:GND #PWR0133
+U 1 1 61F358A9
+P 3470 5900
+F 0 "#PWR0133" H 3470 5650 50  0001 C CNN
+F 1 "GND" H 3470 5730 50  0001 C CNN
+F 2 "" H 3470 5900 50  0001 C CNN
+F 3 "" H 3470 5900 50  0001 C CNN
+	1    3470 5900
+	0    1    1    0   
+$EndComp
+$Comp
+L Dreamstalker-Components:+3V3 #PWR0132
+U 1 1 61F3589F
+P 4000 5900
+F 0 "#PWR0132" H 4000 5750 50  0001 C CNN
+F 1 "+3V3" V 4100 6090 50  0000 C CNN
+F 2 "" H 4000 5900 50  0001 C CNN
+F 3 "" H 4000 5900 50  0001 C CNN
+	1    4000 5900
+	0    1    1    0   
+$EndComp
+$Comp
+L Dreamstalker-Components:C_Small C10
+U 1 1 61F35895
+P 3680 5900
+F 0 "C10" V 3800 5800 50  0000 L CNN
+F 1 "47u" V 3540 5840 50  0000 L CNN
+F 2 "Dreamstalker-Footprints:C_0805_2012Metric" H 3680 5900 50  0001 C CNN
+F 3 "~" H 3680 5900 50  0001 C CNN
+	1    3680 5900
+	0    -1   -1   0   
+$EndComp
+$EndSCHEMATC
