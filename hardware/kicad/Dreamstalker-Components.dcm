@@ -23,7 +23,7 @@ $CMP AMS1117-3.3
 D 1A Low dropout voltage regulator with fixed output 3.3V
 $ENDCMP
 #
-$CMP ATMEGA128L-8AI
+$CMP ATMEGA128L-8AU
 D Atmel ATmega128L-8AI, 8bit AVR Microcontroller, 8MHz, 128 kB, 4 kB Flash, 64-Pin TQFP
 F http://ww1.microchip.com/downloads/en/devicedoc/2467s.pdf
 $ENDCMP
@@ -181,11 +181,6 @@ $CMP Q_Photo_NPN
 D NPN phototransistor, collector/emitter
 K phototransistor NPN
 F ~
-$ENDCMP
-#
-$CMP RT9193
-D 300mA, Ultra-Low Noise, Ultra-Fast CMOS LDO Regulator
-F http://www.richtek.com/assets/product_file/RT9193/DS9193-17.pdf
 $ENDCMP
 #
 $CMP R_Pack04

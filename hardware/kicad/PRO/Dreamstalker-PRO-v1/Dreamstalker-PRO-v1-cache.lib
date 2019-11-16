@@ -16,13 +16,13 @@ X +3V 1 0 0 0 U 0 0 1 1 W N
 ENDDRAW
 ENDDEF
 #
-# Dreamstalker-Components_ATMEGA128L-8AI
+# Dreamstalker-Components_ATMEGA128L-8AU
 #
-DEF Dreamstalker-Components_ATMEGA128L-8AI U 0 30 Y Y 1 F N
+DEF Dreamstalker-Components_ATMEGA128L-8AU U 0 30 Y Y 1 F N
 F0 "U" 1000 1400 50 H V L CNN
-F1 "Dreamstalker-Components_ATMEGA128L-8AI" 1000 1250 50 H V L CNN
+F1 "Dreamstalker-Components_ATMEGA128L-8AU" 1000 1250 50 H V L CNN
 F2 "Dreamstalker-Footprints:QFP80P1600X1600X120-64N" -700 -2750 50 H I L CNN
-F3 "http://ww1.microchip.com/downloads/en/devicedoc/2467s.pdf" -700 -2850 50 H I L CNN
+F3 "" -700 -2850 50 H I L CNN
 F4 "Atmel ATmega128L-8AI, 8bit AVR Microcontroller, 8MHz, 128 kB, 4 kB Flash, 64-Pin TQFP" -700 -2950 50 H I L CNN "Description"
 F5 "1.2" -700 -3050 50 H I L CNN "Height"
 F6 "Microchip" -700 -3150 50 H I L CNN "Manufacturer_Name"
@@ -594,8 +594,8 @@ F1 "Dreamstalker-Components_Speaker" 50 150 50 H V R CNN
 F2 "" 0 -200 50 H I C CNN
 F3 "" -10 -50 50 H I C CNN
 DRAW
-S -100 50 40 -150 0 0 10 N
-P 4 0 0 10 40 50 140 150 140 -250 40 -150 N
+S -100 50 0 -150 0 0 10 N
+P 4 0 0 10 0 50 100 150 100 -250 0 -150 N
 X 1 1 -200 0 100 R 50 50 1 1 I
 X 2 2 -200 -100 100 R 50 50 1 1 I
 ENDDRAW
