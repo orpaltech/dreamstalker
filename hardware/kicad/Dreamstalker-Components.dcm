@@ -149,6 +149,12 @@ D Single channel general purpose, low voltage, rail-to-rail output operational a
 F http://www.ti.com/lit/ds/symlink/lmv321-n.pdf
 $ENDCMP
 #
+$CMP L_Small
+D Inductor, small symbol
+K inductor choke coil reactor magnetic
+F ~
+$ENDCMP
+#
 $CMP MC34119D
 D Audio Amplifiers
 F https://www.promelec.ru/datasheet/c/e/mc34119.pdf

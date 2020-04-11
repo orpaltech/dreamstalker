@@ -1,4 +1,4 @@
-(module LEDC3216X130N-TH (layer F.Cu) (tedit 5D840362)
+(module LEDC3216X130N-TH (layer F.Cu) (tedit 5E5F91B5)
   (descr KP-3216)
   (tags LED)
   (attr smd)
@@ -22,7 +22,7 @@
   )
   (pad 3 thru_hole circle (at 0 0) (size 3.2 3.2) (drill 2.56) (layers B.Cu B.Mask)
     (clearance 0.0001) (zone_connect 0))
-  (pad 2 smd custom (at 1.82 0) (size 0.7 1.8) (layers F.Cu F.Paste F.Mask)
+  (pad 2 smd custom (at 1.88 0) (size 0.7 1.8) (layers F.Cu F.Paste F.Mask)
     (zone_connect 0)
     (options (clearance outline) (anchor rect))
     (primitives
@@ -33,7 +33,7 @@
          (xy -0.53 0.6) (xy -0.55 0.65) (xy -0.58 0.71) (xy -0.62 0.78) (xy -0.65 0.83)
          (xy -0.7 0.9) (xy 0.48 0.9)) (width 0.01))
     ))
-  (pad 1 smd custom (at -1.82 0) (size 0.7 1.8) (layers F.Cu F.Paste F.Mask)
+  (pad 1 smd custom (at -1.88 0) (size 0.7 1.8) (layers F.Cu F.Paste F.Mask)
     (zone_connect 0)
     (options (clearance outline) (anchor rect))
     (primitives
