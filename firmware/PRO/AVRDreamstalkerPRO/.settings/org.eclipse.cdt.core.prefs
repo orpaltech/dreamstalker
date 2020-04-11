@@ -1,0 +1,11 @@
+eclipse.preferences.version=1
+environment/project/de.innot.avreclipse.configuration.app.debug.920304633/append=true
+environment/project/de.innot.avreclipse.configuration.app.debug.920304633/appendContributed=true
+environment/project/de.innot.avreclipse.configuration.app.release.2021492420/EFSLDIR/delimiter=\:
+environment/project/de.innot.avreclipse.configuration.app.release.2021492420/EFSLDIR/operation=append
+environment/project/de.innot.avreclipse.configuration.app.release.2021492420/EFSLDIR/value=$HOME/Projects/orpaltech/avr/efsl-0.3.6
+environment/project/de.innot.avreclipse.configuration.app.release.2021492420/EFSL_DIR/delimiter=\:
+environment/project/de.innot.avreclipse.configuration.app.release.2021492420/EFSL_DIR/operation=append
+environment/project/de.innot.avreclipse.configuration.app.release.2021492420/EFSL_DIR/value=${HOME}/Projects/orpaltech/avr/efsl-0.3.6
+environment/project/de.innot.avreclipse.configuration.app.release.2021492420/append=true
+environment/project/de.innot.avreclipse.configuration.app.release.2021492420/appendContributed=true
