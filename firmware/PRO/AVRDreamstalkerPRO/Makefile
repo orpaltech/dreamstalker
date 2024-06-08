@@ -16,7 +16,7 @@ AVROBJCOPY = $(AVRBINDIR)$(OBJCOPY)
 AVRDUDE = avrdude
 
 # MCU name for the compiler
-MCU ?= atmega1281
+MCU ?= atmega128
 
 # Check if MCU is supported
 SUPPORTED_MCU = atmega128 atmega1281

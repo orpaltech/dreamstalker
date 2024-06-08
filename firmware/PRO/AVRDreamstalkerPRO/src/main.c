@@ -55,17 +55,16 @@
 #include "shared_file.h"
 
 
-/*
- *-----------------------------------------------------------------------
+/*-----------------------------------------------------------------------*\
  * Pin configurations
- *-----------------------------------------------------------------------
+ *-----------------------------------------------------------------------*
  *	DDR		PORT
  *	 0		 0		- input, high impedance
  *	 0		 1		- input, pulled up
  *	 1		 0		- output, driven low
  *	 1		 1		- output, driven high
- *-----------------------------------------------------------------------
- */
+\*-----------------------------------------------------------------------*/
+
 
 
 FUSES =
@@ -158,7 +157,7 @@ int main (void)
 	char msg[ 5 ];
 	keybrd_event_t key_event;
 
-	sei();						/* Enable interrupts globally */
+	sei();					/* Enable interrupts globally */
 
 	//test_app_leds();
 	//test_app_display();
@@ -350,7 +349,8 @@ int main (void)
 			}
 
 			case ( KEY_ENTER ): {
-
+				/* Start Wake-up timer */
+				
 				/*if (codec_get_status() == CODEC_IDLE)
 				{
 					codec_capture ("record.wav", 0);

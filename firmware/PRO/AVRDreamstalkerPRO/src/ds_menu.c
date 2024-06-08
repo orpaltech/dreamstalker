@@ -89,7 +89,7 @@ static void ense_speaker_setup_activate (void);
 
 static void clock_setup (keybrd_event_t);
 static void wakeup_timer_setup (keybrd_event_t);
-static void trigger_times_handler (keybrd_event_t);
+static void trigger_log_handler (keybrd_event_t);
 static void remd_sensitivity_setup (keybrd_event_t);
 static void duplex_mode_setup (keybrd_event_t);
 static void wakeup_mode_setup (keybrd_event_t);
@@ -107,9 +107,9 @@ static void save_settings_handler (keybrd_event_t);
 
 static void clock_setup_activate (void);
 static void wakeup_timer_setup_activate (void);
-static void remd_trigger_counter_display (void);
+static void trigger_count_display (void);
 static void remd_sensitivity_setup_activate (void);
-static void trigger_times_activate (void);
+static void trigger_log_activate (void);
 static void duplex_mode_setup_activate (void);
 static void wakeup_mode_setup_activate (void);
 static void alarm_clock_setup_activate (void);
@@ -199,7 +199,7 @@ PROGMEM const menu_desc_t desc_en_se[] = {
 
 PROGMEM const menu_desc_t desc_root[] = {
 	{
-		.label = "CLSE",
+		.label = MENU_CLOCK_SETUP,
 		.handler = clock_setup,
 		.activate = clock_setup_activate,
 		.exit_fn = clock_setup_exit,
@@ -211,21 +211,22 @@ PROGMEM const menu_desc_t desc_root[] = {
 		.exit_fn = disable_key_hold_repeat,
 	},
 	{
-		.label = "EnSE",
+		.label = MENU_ENHANCED_SETUP,
 		.sub_items = desc_en_se,
 		.sub_count = sizeof(desc_en_se)/sizeof(desc_en_se[0]),
 	},
 	{
-		.label = "COtr",
-		.activate = remd_trigger_counter_display,
+		.label = MENU_TRIGGERING_COUNT,
+		.activate = trigger_count_display,
 	},
 	{
-		.label = "HItr",
-		.handler = trigger_times_handler,
-		.activate = trigger_times_activate,
+		.label = MENU_TRIGGERING_LOG,
+		.handler = trigger_log_handler,
+		.activate = trigger_log_activate,
 		.exit_fn = disable_key_hold_repeat
 	},
 	{
+		/* REM Detector Sensitivity */
 		.label = "d-%.2i",
 		.fmt = 2,
 		.handler = remd_sensitivity_setup,
@@ -299,21 +300,20 @@ PROGMEM const menu_desc_t desc_root[] = {
 		.exit_fn = disable_key_hold_repeat,
 	},
 	{
-		/*check installed wakeup signals*/
-		.label = "CHUP",
+		.label = MENU_CHECK_WAKEUP_SIGNALS,
 		.handler = wakeup_signal_check_handler,
 	},
 	{
-		.label = "CHdt",
+		.label = MENU_CHECK_REM_DETECTOR,
 		.handler = remd_check_handler,
 	},
 	{
-		.label = "SEdt",
+		.label = MENU_SET_DEFAULTS,
 		.activate = set_defaults_activate,
 		.handler = set_defaults_handler,
 	},
 	{
-		.label = "SAUE",
+		.label = MENU_SAVE_SETTINGS,
 		.activate = save_settings_activate,
 		.handler = save_settings_handler,
 	},
@@ -1013,10 +1013,10 @@ void wakeup_timer_setup_activate (void)
 
 void wakeup_timer_setup ( keybrd_event_t key_event )
 {
-	switch(key_event)
+	switch ( key_event )
 	{
 	case ( KEY_ENTER ):
-		TOGGLE_CONFIG_WITH_INVALID_PROPERTY( wakeup_timer_delay );
+		TOGGLE_CONFIG_PROPERTY_WITH_INVALID( wakeup_timer_delay );
 
 		disp_wakeup_timer_delay();
 		set_handled();
@@ -1024,7 +1024,7 @@ void wakeup_timer_setup ( keybrd_event_t key_event )
 
 	case ( KEY_MINUS ):
 	case ( KEY_MINUS | KEYBRD_HOLD ):
-		DECREMENT_CONFIG_WITH_INVALID_PROPERTY( wakeup_timer_delay );
+		DECREMENT_CONFIG_PROPERTY_WITH_INVALID( wakeup_timer_delay );
 
 		disp_wakeup_timer_delay();
 		set_handled();
@@ -1032,7 +1032,7 @@ void wakeup_timer_setup ( keybrd_event_t key_event )
 
 	case ( KEY_PLUS ):
 	case ( KEY_PLUS | KEYBRD_HOLD ):
-		INCREMENT_CONFIG_WITH_INVALID_PROPERTY( wakeup_timer_delay );
+		INCREMENT_CONFIG_PROPERTY_WITH_INVALID( wakeup_timer_delay );
 
 		disp_wakeup_timer_delay();
 		set_handled();
@@ -1040,20 +1040,20 @@ void wakeup_timer_setup ( keybrd_event_t key_event )
 	}
 }
 
-void remd_trigger_counter_display (void)
+void trigger_count_display (void)
 {
 	disp_num ( get_remd_trigger_counter ());
 }
 
 // TODO: implement reading triggering history
-void trigger_times_activate (void)
+void trigger_log_activate (void)
 {
 	keybrd_hold_repeat_fast ();
 }
 
-void trigger_times_handler ( keybrd_event_t key_event )
+void trigger_log_handler ( keybrd_event_t key_event )
 {
-	switch(key_event)
+	switch ( key_event )
 	{
 	case ( KEY_MINUS ):
 	case ( KEY_MINUS | KEYBRD_HOLD ):
@@ -1067,7 +1067,7 @@ void trigger_times_handler ( keybrd_event_t key_event )
 
 void remd_sensitivity_setup_activate (void)
 {
-	disp_num(get_remd_sensitivity());
+	disp_num ( get_remd_sensitivity ());
 
 	keybrd_hold_repeat_fast ();
 }
@@ -1113,21 +1113,21 @@ void duplex_mode_setup ( keybrd_event_t key_event )
 	switch(key_event)
 	{
 	case KEY_ENTER:
-		TOGGLE_CONFIG_WITH_INVALID_PROPERTY( duplex_mode );
+		TOGGLE_CONFIG_PROPERTY_WITH_INVALID( duplex_mode );
 
 		disp_duplex_mode();
 		set_handled();
 		break;
 
 	case KEY_MINUS:
-		DECREMENT_CONFIG_WITH_INVALID_PROPERTY( duplex_mode );
+		DECREMENT_CONFIG_PROPERTY_WITH_INVALID( duplex_mode );
 
 		disp_duplex_mode();
 		set_handled();
 		break;
 
 	case KEY_PLUS:
-		INCREMENT_CONFIG_WITH_INVALID_PROPERTY( duplex_mode );
+		INCREMENT_CONFIG_PROPERTY_WITH_INVALID( duplex_mode );
 
 		disp_duplex_mode();
 		set_handled();
@@ -1154,7 +1154,7 @@ void wakeup_mode_setup ( keybrd_event_t key_event )
 	switch(key_event)
 	{
 	case KEY_ENTER:
-		TOGGLE_CONFIG_WITH_INVALID_PROPERTY( wakeup_mode );
+		TOGGLE_CONFIG_PROPERTY_WITH_INVALID( wakeup_mode );
 
 		disp_wakeup_mode();
 		set_handled();
@@ -1227,16 +1227,16 @@ void hints_duty_cycle_setup_activate (void)
 
 void hints_duty_cycle_setup ( keybrd_event_t key_event)
 {
-	switch(key_event)
+	switch ( key_event )
 	{
-	case KEY_MINUS:
+	case ( KEY_MINUS ):
 		DECREMENT_CONFIG_PROPERTY( hints_duty_cycle );
 
-		disp_num(get_hints_duty_cycle());
-		set_handled();
+		disp_num ( get_hints_duty_cycle ());
+		set_handled ();
 		break;
 
-	case KEY_PLUS:
+	case ( KEY_PLUS ):
 		INCREMENT_CONFIG_PROPERTY( hints_duty_cycle );
 
 		disp_num(get_hints_duty_cycle());
@@ -1252,16 +1252,16 @@ void sound_hints_volume_setup_activate ( void )
 
 void sound_hints_volume_setup ( keybrd_event_t key_event)
 {
-	switch(key_event)
+	switch ( key_event )
 	{
-	case KEY_MINUS:
+	case ( KEY_MINUS ):
 		DECREMENT_CONFIG_PROPERTY( sound_hints_volume );
 
 		disp_num ( get_sound_hints_volume () );
 		set_handled ();
 		break;
 
-	case KEY_PLUS:
+	case ( KEY_PLUS ):
 		INCREMENT_CONFIG_PROPERTY( sound_hints_volume );
 
 		disp_num ( get_sound_hints_volume ());
@@ -1272,32 +1272,32 @@ void sound_hints_volume_setup ( keybrd_event_t key_event)
 
 void light_hints_brightness_setup_activate (void)
 {
-	disp_num(get_light_hints_brightness());
+	disp_num ( get_light_hints_brightness ());
 }
 
 void light_hints_brightness_setup ( keybrd_event_t key_event)
 {
-	switch(key_event)
+	switch ( key_event )
 	{
-	case KEY_MINUS:
-		DECREMENT_CONFIG_PROPERTY(light_hints_brightness);
+	case ( KEY_MINUS ):
+		DECREMENT_CONFIG_PROPERTY( light_hints_brightness );
 
-		disp_num(get_light_hints_brightness());
-		set_handled();
+		disp_num ( get_light_hints_brightness ());
+		set_handled ();
 		break;
 
-	case KEY_PLUS:
-		INCREMENT_CONFIG_PROPERTY(light_hints_brightness);
+	case ( KEY_PLUS ):
+		INCREMENT_CONFIG_PROPERTY( light_hints_brightness );
 
-		disp_num(get_light_hints_brightness());
-		set_handled();
+		disp_num ( get_light_hints_brightness ());
+		set_handled ();
 		break;
 	}
 }
 
 void light_hints_duration_setup_activate (void)
 {
-	disp_num(get_light_hints_duration());
+	disp_num ( get_light_hints_duration ());
 
 	keybrd_hold_repeat_fast ();
 }
@@ -1306,49 +1306,49 @@ void light_hints_duration_setup ( keybrd_event_t key_event)
 {
 	switch(key_event)
 	{
-	case KEY_MINUS:
-	case (KEY_MINUS | KEYBRD_HOLD):
-		DECREMENT_CONFIG_PROPERTY(light_hints_duration);
+	case ( KEY_MINUS ):
+	case ( KEY_MINUS | KEYBRD_HOLD ):
+		DECREMENT_CONFIG_PROPERTY( light_hints_duration );
 
-		disp_num(get_light_hints_duration());
-		set_handled();
+		disp_num ( get_light_hints_duration ());
+		set_handled ();
 		break;
 
-	case KEY_PLUS:
-	case (KEY_PLUS | KEYBRD_HOLD):
-		INCREMENT_CONFIG_PROPERTY(light_hints_duration);
+	case ( KEY_PLUS ):
+	case ( KEY_PLUS | KEYBRD_HOLD ):
+		INCREMENT_CONFIG_PROPERTY( light_hints_duration );
 
-		disp_num(get_light_hints_duration());
-		set_handled();
+		disp_num ( get_light_hints_duration ());
+		set_handled ();
 		break;
 	}
 }
 
 void sound_hints_duration_setup_activate (void)
 {
-	disp_num(get_sound_hints_duration());
+	disp_num ( get_sound_hints_duration ());
 
 	keybrd_hold_repeat_fast ();
 }
 
 void sound_hints_duration_setup ( keybrd_event_t key_event)
 {
-	switch(key_event)
+	switch ( key_event )
 	{
-	case KEY_MINUS:
-	case (KEY_MINUS | KEYBRD_HOLD):
-		DECREMENT_CONFIG_PROPERTY(sound_hints_duration);
+	case ( KEY_MINUS ):
+	case ( KEY_MINUS | KEYBRD_HOLD ):
+		DECREMENT_CONFIG_PROPERTY( sound_hints_duration );
 
-		disp_num(get_sound_hints_duration());
-		set_handled();
+		disp_num ( get_sound_hints_duration ());
+		set_handled ();
 		break;
 
-	case KEY_PLUS:
-	case (KEY_PLUS | KEYBRD_HOLD):
-		INCREMENT_CONFIG_PROPERTY(sound_hints_duration);
+	case ( KEY_PLUS ):
+	case ( KEY_PLUS | KEYBRD_HOLD ):
+		INCREMENT_CONFIG_PROPERTY( sound_hints_duration );
 
-		disp_num(get_sound_hints_duration());
-		set_handled();
+		disp_num ( get_sound_hints_duration ());
+		set_handled ();
 		break;
 	}
 }
@@ -1365,15 +1365,15 @@ void remd_check_handler ( keybrd_event_t key_event)
 
 void set_defaults_activate (void)
 {
-	disp_msg(__disp_msg_confirm__, 1);
+	disp_msg ( __disp_msg_confirm__, 1 );
 }
 
 void set_defaults_handler ( keybrd_event_t key_event)
 {
-	switch(key_event)
+	switch ( key_event )
 	{
-	case KEY_ENTER:
-		config_set_defaults();
+	case ( KEY_ENTER ):
+		config_set_defaults ();
 		/* NOTE: device will restart */
 		break;
 	}
@@ -1381,17 +1381,17 @@ void set_defaults_handler ( keybrd_event_t key_event)
 
 void save_settings_activate (void)
 {
-	disp_msg(__disp_msg_confirm__, 1);
+	disp_msg ( __disp_msg_confirm__, 1 );
 }
 
 void save_settings_handler ( keybrd_event_t key_event)
 {
-	switch(key_event)
+	switch ( key_event )
 	{
-	case KEY_ENTER:
+	case ( KEY_ENTER ):
 		config_save_to_storage ();
 
-		set_handled();
+		set_handled ();
 		set_return ();
 		break;
 	}

@@ -22,7 +22,20 @@
 
 #include <stdbool.h>
 
-#define MENU_WAKEUP_TIMER_SETUP	"UtSE"
+/*-----------------------------------------------------------------------*\
+ * Menu Labels
+\*-----------------------------------------------------------------------*/
+
+#define MENU_CLOCK_SETUP			"CLSE"
+#define MENU_WAKEUP_TIMER_SETUP		"UtSE"
+#define MENU_ENHANCED_SETUP			"EnSE"
+#define MENU_TRIGGERING_COUNT		"trCo"
+#define MENU_TRIGGERING_LOG			"trLo"
+#define MENU_CHECK_WAKEUP_SIGNALS	"CHUP"	/*check installed wakeup signals*/
+#define MENU_SET_DEFAULTS			"SEdt"
+#define MENU_SAVE_SETTINGS			"SAUE"
+#define MENU_CHECK_REM_DETECTOR		"CHdt"
+
 
 #ifdef __cplusplus
 extern "C" {

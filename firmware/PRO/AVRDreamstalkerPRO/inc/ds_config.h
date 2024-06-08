@@ -90,15 +90,15 @@
 		set_ ## name (val);					\
 	}
 
-#define DECREMENT_CONFIG_WITH_INVALID_PROPERTY(name)	\
+#define DECREMENT_CONFIG_PROPERTY_WITH_INVALID(name)	\
 	if (! is_invalid_ ## name ())						\
 		DECREMENT_CONFIG_PROPERTY(name)
 
-#define INCREMENT_CONFIG_WITH_INVALID_PROPERTY(name)	\
+#define INCREMENT_CONFIG_PROPERTY_WITH_INVALID(name)	\
 	if (! is_invalid_ ## name ())						\
 		INCREMENT_CONFIG_PROPERTY(name)
 
-#define TOGGLE_CONFIG_WITH_INVALID_PROPERTY(name)	\
+#define TOGGLE_CONFIG_PROPERTY_WITH_INVALID(name)	\
 	if (! is_readonly_ ## name ())					\
 	{												\
 		if (is_invalid_ ## name ())					\
