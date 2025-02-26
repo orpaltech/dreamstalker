@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "*.h": "cpp"
+    },
+
+    "files.exclude": {
+        "**/*_patch.h": true,
+    },
+
+    "files.encoding": "utf8"
+}
