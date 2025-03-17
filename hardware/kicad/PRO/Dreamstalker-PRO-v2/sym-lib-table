@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "Dreamstalker-Components")(type "KiCad")(uri "/home/sergey/Projects2/kicad/dreamstalker/Dreamstalker-Components.kicad_sym")(options "")(descr ""))
+)

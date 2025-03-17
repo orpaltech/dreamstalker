@@ -1,0 +1,4 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "Dreamstalker-Footprints")(type "KiCad")(uri "/home/sergey/Projects2/kicad/dreamstalker/Dreamstalker-Footprints.pretty")(options "")(descr ""))
+)
