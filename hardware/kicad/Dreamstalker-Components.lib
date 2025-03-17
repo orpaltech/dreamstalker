@@ -733,7 +733,7 @@ DEF MC34119D U 0 30 Y Y 1 F N
 F0 "U" -150 350 50 H V L CNN
 F1 "MC34119D" -200 -350 50 H V L CNN
 F2 "Dreamstalker-Footprints:SOIC127P600X175-8N" -550 -600 50 H I L CNN
-F3 "https://www.promelec.ru/datasheet/c/e/mc34119.pdf" -550 -950 50 H I L CNN
+F3 "" -550 -950 50 H I L CNN
 F4 "Audio Amplifiers" -550 -800 50 H I L CNN "Description"
 F5 "1.75" -550 -1350 50 H I L CNN "Height"
 F6 "ON Semiconductor" -550 -1050 50 H I L CNN "Manufacturer_Name"

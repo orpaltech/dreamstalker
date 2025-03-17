@@ -157,7 +157,7 @@ $ENDCMP
 #
 $CMP MC34119D
 D Audio Amplifiers
-F https://www.promelec.ru/datasheet/c/e/mc34119.pdf
+F http://www.unisonic.com.tw/datasheet/MC34119.pdf
 $ENDCMP
 #
 $CMP MCP73833
