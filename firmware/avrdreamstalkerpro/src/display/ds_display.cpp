@@ -233,16 +233,35 @@ void pins_on (void)
   PORT_SEG |= PF_ALL_SEG;		/* drive high */
 }
 
+/*-----------------------------------------------------------------------*/
+LED4D7S_Display disp;
+
+/*-----------------------------------------------------------------------*/
+Display *Display::get()
+{
+  return &disp;
+}
 
 /*-----------------------------------------------------------------------*/
 void Display::handle_isr (void)
 {
-	disp.irq_handler ();
+  get()->irq_handler ();
 }
 
 uint32_t Display::get_cycle_us (void)
 {
   return RTClock::isr_period_us ();
+}
+
+void Display::wait_one_cycle (void)
+{
+  _delay_us (get_cycle_us ());
+}
+
+void Display::wait_cycles (unsigned num_cycles)
+{
+  for (unsigned i = 0; i < num_cycles; i++)
+	wait_one_cycle ();
 }
 
 /*-----------------------------------------------------------------------*/
@@ -306,7 +325,7 @@ void LED4D7S_Display::disable (void)
   }
 }
 
-bool LED4D7S_Display::is_enabled (void)
+bool LED4D7S_Display::is_enabled (void) const
 {
   return enabled;
 }
@@ -350,8 +369,10 @@ void LED4D7S_Display::text_out_unsafe (const char *text)
   /*
    * Process global flags
    */
-  if (RTC.wakeup_timer_is_set ())
+  if (RTClock::get()->wakeup_timer_is_set ()) {
+	
 	pf_segments[NDIGITS-1] |= SEGH;
+  }
 
 }
 
@@ -366,8 +387,7 @@ void LED4D7S_Display::version (char ver_type, uint16_t ver, uint16_t cycles_to_w
 {
   char msg[ 6 ];
 
-  snprintf (msg, 6, __disp_msg_version__, 
-			ver_type, VER_MAJOR (ver), VER_MINOR (ver));
+  snprintf (msg, 6, __disp_msg_version__, ver_type, VER_MAJOR (ver), VER_MINOR (ver));
   message (msg, cycles_to_wait);
 }
 
@@ -439,17 +459,6 @@ void LED4D7S_Display::flag (bool flag_val)
 void LED4D7S_Display::confirm (void)
 {
   message (__disp_msg_confirm__, 1);
-}
-
-void LED4D7S_Display::wait_one_cycle (void)
-{
-  _delay_us (get_cycle_us ());
-}
-
-void LED4D7S_Display::wait_cycles (unsigned num_cycles)
-{
-  for (unsigned i = 0; i < num_cycles; i++)
-	wait_one_cycle ();
 }
 
 /*-----------------------------------------------------------------------*/

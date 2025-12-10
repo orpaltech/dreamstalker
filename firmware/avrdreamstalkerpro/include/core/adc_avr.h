@@ -46,6 +46,8 @@ public:
 /*-----------------------------------------------------------------------*/
 class A2DConv {
 public:
+  static A2DConv *get();
+public:
   bool enable (void) ;
   void disable (void) ;
 
@@ -89,7 +91,5 @@ private:
 
 /*-----------------------------------------------------------------------*/
 };  //avr_core
-
-extern avr_core::A2DConv A2D;
 
 #endif // _AVR_ADC_DEFINED

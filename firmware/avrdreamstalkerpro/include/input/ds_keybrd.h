@@ -42,6 +42,8 @@ typedef uint8_t keybrd_event_t;
 /*-----------------------------------------------------------------------*/
 class Keyboard {
 public:
+  static Keyboard *get();
+
   bool init ( void );
   void end ( void );
 
@@ -71,7 +73,5 @@ private:
 
 /*-----------------------------------------------------------------------*/
 };  //DS
-
-extern DS::Keyboard kbrd;
 
 #endif // _DS_KEYBRD_DEFINED

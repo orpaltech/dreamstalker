@@ -39,15 +39,21 @@ using namespace DS;
 static
 bool vibro_is_busy (void)
 {
-  return SQW.is_active (SQW_VIBRO);
+  return SquareWave::get()->is_active (SQW_VIBRO);
 }
 
 
 /*-----------------------------------------------------------------------*/
-DS::VibrationMotor vibro;
+DS::VibroMotor vibro;
 
 /*-----------------------------------------------------------------------*/
-bool VibrationMotor::start (uint8_t level, uint16_t duration_ms)
+VibroMotor *VibroMotor::get()
+{
+  return &vibro;
+}
+
+/*-----------------------------------------------------------------------*/
+bool VibroMotor::start (uint8_t level, uint16_t duration_ms)
 {
   uint8_t duty_cycle;
 
@@ -72,25 +78,25 @@ bool VibrationMotor::start (uint8_t level, uint16_t duration_ms)
 	  break;
   }
 
-  SQW.start (SQW_VIBRO, duration_ms, 10, duty_cycle, this);
+  SquareWave::get()->start (SQW_VIBRO, duration_ms, 10, duty_cycle, this);
 
   return true;
 }
 
-void VibrationMotor::stop (void)
+void VibroMotor::stop (void)
 {
   if (!vibro_is_busy())	/* skip if inactive*/
 	  return;
 
-  SQW.stop (SQW_VIBRO);
+  SquareWave::get()->stop (SQW_VIBRO);
 }
 
-bool VibrationMotor::is_running (void)
+bool VibroMotor::is_running (void)
 {
   return vibro_is_busy ();
 }
 
-bool VibrationMotor::init (void)
+bool VibroMotor::init (void)
 {
   /* Set vibration control pin to output mode */
   pinMode ( PIN_VIBRO, OUTPUT );
@@ -101,7 +107,7 @@ bool VibrationMotor::init (void)
   return true;
 }
 
-void VibrationMotor::on_sqw_transition(unsigned i, sqw_transition_t trans)
+void VibroMotor::on_sqw_transition(unsigned i, sqw_transition_t trans)
 {
   if (i != SQW_VIBRO)
 	  return;

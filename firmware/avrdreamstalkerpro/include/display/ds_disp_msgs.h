@@ -26,7 +26,7 @@
 #define __disp_msg_battery_low__	"btLo"
 
 #define __disp_msg_codec_error__    "CoEr"
-#define __disp_msg_codec_version__	"Co%02u"
+#define __disp_msg_codec_spec__	    "Co%02u"
 
 #define __disp_msg_no_sd__			"noSd"
 #define __disp_msg_sd_0__           "Sd 0"

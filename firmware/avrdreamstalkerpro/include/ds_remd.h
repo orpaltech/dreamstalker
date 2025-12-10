@@ -49,6 +49,8 @@ public:
 /*-----------------------------------------------------------------------*/
 class REMDetect : public avr_core::A2DSampleCB {
 public:
+  static REMDetect *get();
+
   bool init (void) ;
   void end (void);
 
@@ -69,7 +71,5 @@ private:
 
 /*-----------------------------------------------------------------------*/
 };  //DS
-
-extern DS::REMDetect remd;
 
 #endif // _DS_REMD_DEFINED

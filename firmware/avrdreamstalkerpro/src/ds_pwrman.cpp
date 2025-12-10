@@ -56,7 +56,7 @@ using namespace avr_core;
 #define BATTMON_FULL_ADC_LEVEL	0x01CCU
 
 #ifndef BATTMON_PERIOD_MINUTES
-  #define BATTMON_PERIOD_MINUTES	3
+  #define BATTMON_PERIOD_MINUTES	10
 #endif
 #define BATTMON_CHANNEL	2
 #define BATTMON_SAMPLES	32
@@ -66,16 +66,22 @@ using namespace avr_core;
 #endif
 
 /*-----------------------------------------------------------------------*/
-void PowerManager::handle_isr (void)	/* called every 1 min */
+void PowerMan::handle_isr (void)	/* called every 1 min */
 {
-  PM.irq_handler();
+  get()->irq_handler();
 }
 
 /*-----------------------------------------------------------------------*/
-PowerManager PM;
+static PowerMan pm;
 
 /*-----------------------------------------------------------------------*/
-void PowerManager::irq_handler (void)
+PowerMan *PowerMan::get()
+{
+  return &pm;
+}
+
+/*-----------------------------------------------------------------------*/
+void PowerMan::irq_handler (void)
 {
   timer_ticks = ( timer_ticks + 1 ) % BATTMON_PERIOD_MINUTES;
   if ( 0 == timer_ticks ) {
@@ -87,7 +93,7 @@ void PowerManager::irq_handler (void)
   }
 }
 
-void PowerManager::run_monitor (void)
+void PowerMan::run_monitor (void)
 {
   uint8_t lvl;
 
@@ -95,7 +101,7 @@ void PowerManager::run_monitor (void)
   lvl = battery_level ();
   if ( lvl ) {
     if ( lvl < BATTERY_LOW )
-      disp.text_out ( __disp_msg_battery_low__ );
+      Display::get()->text_out ( __disp_msg_battery_low__ );
 
     if ( lvl < BATTERY_EMPTY )
       return;   /* No more measurements needed */
@@ -104,10 +110,10 @@ void PowerManager::run_monitor (void)
   batt_level = 0;	/* Start a new measurement */
 
   /* Let ADC take a few samples */
-  A2D.start_unsafe ( BATTMON_CHANNEL, BATTMON_SAMPLES, this );
+  A2DConv::get()->start_unsafe ( BATTMON_CHANNEL, BATTMON_SAMPLES, this );
 }
 
-bool PowerManager::init (void)
+bool PowerMan::init (void)
 {
   /* NOTE: Set GBUF line to be controlled by the codec. 
    *	The GBUF expected level is ~1.23V according to datasheet.
@@ -125,12 +131,12 @@ bool PowerManager::init (void)
   return true;
 }
 
-void PowerManager::start (void)
+void PowerMan::start (void)
 {
   if (battmon_status)
     return;
   
-  if (! A2D.setup_channel ( BATTMON_CHANNEL, ADC_CF_VREF_2_56))
+  if (! A2DConv::get()->setup_channel ( BATTMON_CHANNEL, ADC_CF_VREF_2_56))
 	  return;
 
   batt_level = 0;
@@ -138,17 +144,17 @@ void PowerManager::start (void)
   battmon_status = true;
 }
 
-void PowerManager::stop (void)
+void PowerMan::stop (void)
 {
   battmon_status = false;
 }
 
-uint8_t PowerManager::battery_level (void)
+uint8_t PowerMan::battery_level (void)
 {
   return ( 100UL * batt_level ) / BATTMON_FULL_ADC_LEVEL;
 }
 
-void PowerManager::on_a2d_sample( uint16_t sample )
+void PowerMan::on_a2d_sample( uint16_t sample )
 {
   if ( 0 == batt_level )
 	  batt_level = sample;

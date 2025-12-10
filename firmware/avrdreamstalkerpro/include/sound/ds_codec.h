@@ -60,24 +60,26 @@
 namespace DS {
 
 /*-----------------------------------------------------------------------*/
-typedef enum e_codec_status {
-	CODEC_IDLE		= 0,
-	CODEC_PLAYBACK	= 1,
-	CODEC_CAPTURE	= 2
-} codec_status_t;
+typedef enum e_audio_codec_state {
+	AUDIO_CODEC_IDLE		= 0,
+	AUDIO_CODEC_PLAYBACK	= 1,
+	AUDIO_CODEC_CAPTURE	= 2
+} e_audio_codec_state_t;
 
 
 /*-----------------------------------------------------------------------*/
 class AudioCodec {
 public:
-  bool begin (void);	/* called from Sound::begin */
+  static AudioCodec *get();
+public:
+  bool begin (void);
   void end (void);
 
   bool apply_patches (void);
   bool playback (const char *file_name);
   bool capture (const char *file_name);
   void stop (void);
-  codec_status_t get_status (void);
+  e_audio_codec_state_t get_status (void);
   /* Set codec volume: 0-9 */
   void set_volume (uint8_t left_chan, uint8_t right_chan);
 
@@ -90,17 +92,16 @@ private:
   static void end_capture (AudioCodec *c, bool on_error);
   static void process_playback (AudioCodec *c);
   static void process_capture (AudioCodec *c);
+
 private:
 	SDFile		fp;
 	uint8_t		buff[CODEC_BUF_SIZE];
 	uint32_t	count;
-	codec_status_t status;
+	e_audio_codec_state_t status;
   VsCodec vs;
 };
 
 /*-----------------------------------------------------------------------*/
 }; //DS
-
-extern DS::AudioCodec AC;
 
 #endif // _DS_SOUND_DEFINED

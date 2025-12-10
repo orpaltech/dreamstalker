@@ -40,22 +40,24 @@ using namespace DS;
 #define PIN_PLUS    PIN_PD6
 #define PIN_MINUS   PIN_PD7
 
-#define IF_ONOFF	_BV(INT0)
-#define IF_CHECK	_BV(INT1)
+/* INT0/INT1 will generate interrupts on falling edge */
+#define INT_ONOFF   0
+#define INT_CHECK   1
+
+#define INTF_ONOFF  _BV(INTF0)
+#define INTF_CHECK  _BV(INTF1)
 
 
 /*-----------------------------------------------------------------------*/
-ISR(INT0_vect)	/* POWER button interrupt */
+static
+void handle_onoff_isr (void)  /* POWER button interrupt */
 {
-  /* NOTE: missing IRQ handler will cause MCU reboot */
-
   Keyboard::handle_key_isr ( KEY_POWER );
 }
 
-ISR(INT1_vect)	/* CHECK button interrupt */
+static
+void handle_check_isr (void)  /* CHECK button interrupt */
 {
-  /* NOTE: missing IRQ handler will cause MCU reboot */
-
   Keyboard::handle_key_isr ( KEY_CHECK );
 }
 
@@ -66,18 +68,22 @@ keybrd_event_t poll_keys ( void );
 /*-----------------------------------------------------------------------*/
 bool Keyboard::handle_isr ( void )
 {
-  return kbrd.irq_handler ();
+  return get()->irq_handler ();
 }
 
 void Keyboard::handle_key_isr ( keybrd_event_t key )
 {
-  kbrd.key_irq ( key );
+  get()->key_irq ( key );
 }
 
 /*-----------------------------------------------------------------------*/
 Keyboard kbrd;
 
 /*-----------------------------------------------------------------------*/
+Keyboard *Keyboard::get()
+{
+  return &kbrd;
+}
 
 bool Keyboard::irq_handler (void)
 {
@@ -106,12 +112,8 @@ bool Keyboard::init (void)
   pinMode ( PIN_PLUS,   INPUT_PULLUP );
   pinMode ( PIN_MINUS,  INPUT_PULLUP );
 
-  /* Disable pin interrupts INT0-7 */
+  /* Disable all interrupts INT0-7 */
   EIMSK = 0;
-
-  /* INT0/INT1 will generate interrupts on falling edge */
-  EICRA &= ~(_BV(ISC10) | _BV(ISC00));
-  EICRA |= (_BV(ISC11) | _BV(ISC01));
 
   irq_keys = 0;
   return true;
@@ -145,15 +147,17 @@ uint8_t Keyboard::get_irq_keys ( void )
 void Keyboard::enable_key_irq ( uint8_t keys )
 {
   if( keys & KEY_POWER ) {
-    EIMSK |= IF_ONOFF;	
+
+    attachInterrupt( INT_ONOFF, handle_onoff_isr, FALLING );
   }
 
   if( keys & KEY_CHECK ) {
-    EIMSK |= IF_CHECK;	
+
+    attachInterrupt( INT_CHECK, handle_check_isr, FALLING );
   }
 
   /* Clear interrupt flags */
-  EIFR |= (_BV(INTF1) | _BV(INTF0));
+  EIFR |= ( INTF_CHECK | INTF_ONOFF );
 
   irq_keys = 0;
 }
@@ -161,11 +165,13 @@ void Keyboard::enable_key_irq ( uint8_t keys )
 void Keyboard::disable_key_irq ( uint8_t keys )
 {
   if( keys & KEY_POWER ) {
-	  EIMSK &= ~IF_ONOFF;	
+
+    detachInterrupt ( INT_ONOFF );
   }
 
   if( keys & KEY_CHECK ) {
-	  EIMSK &= ~IF_CHECK;	
+
+    detachInterrupt ( INT_CHECK );
   }
 }
 

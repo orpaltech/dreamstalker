@@ -55,7 +55,7 @@ using namespace DS;
 static
 int led_is_busy(led_id_t led)
 {
-  return SQW.is_active (led);
+  return SquareWave::get()->is_active (led);
 }
 
 static 
@@ -90,6 +90,12 @@ void led_set_pwm_ocr (led_id_t led, uint16_t ocr)
 Leds leds;
 
 /*-----------------------------------------------------------------------*/
+Leds *Leds::get()
+{
+  return &leds;
+}
+
+/*-----------------------------------------------------------------------*/
 void Leds::on (led_id_t led, uint8_t brightness, uint16_t duration_ms)
 {
   pulse (led, brightness, duration_ms, 0, 0);
@@ -103,7 +109,7 @@ void Leds::off (led_id_t led)
   if (! led_is_busy (led))	/* skip if not lit*/
 	  return;
 
-  SQW.stop (led);
+  SquareWave::get()->stop (led);
 
   TMR3_OFF();
 }
@@ -125,9 +131,9 @@ void Leds::pulse (led_id_t led, uint8_t brightness, uint16_t duration_ms, uint16
 
   led_set_pwm_ocr (led, LEDS_TMR3_OCR_HALF_TOP + LEDS_TMR3_OCR_HALF_TOP * (1.f - fbr*fbr));
 
-  RTC.wait(4); // found experimentally to avoid initial LED burst
+  RTClock::get()->wait( 4 ); // found experimentally to avoid initial LED burst
 
-  SQW.start (led, duration_ms, period_ms, duty_cycle, this);
+  SquareWave::get()->start (led, duration_ms, period_ms, duty_cycle, this);
 }
 
 bool Leds::init (void)

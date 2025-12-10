@@ -27,11 +27,11 @@
 /*-----------------------------------------------------------------------*/
 namespace DS {
 
-typedef enum e_rtc_op_mode {
+typedef enum e_rtc_oper_mode {
   RTC_OPM_NONE = 0,
 	RTC_OPM_NORMAL,
 	RTC_OPM_PWRSAVE
-} rtc_op_mode_t; 
+} rtc_oper_mode_t; 
 
 typedef enum e_rtc_setup_mode {
 	RTC_SETUP_NONE	= 0,
@@ -52,10 +52,12 @@ protected:
 /*-----------------------------------------------------------------------*/
 class RTClock {
 public:
+  static RTClock *get();
+public:
   bool init (void);
   void end (void);
 
-  void start (rtc_op_mode_t mode);
+  void start (rtc_oper_mode_t mode);
   void stop (void);
 
   /* Show/hide clock on display */
@@ -131,7 +133,5 @@ private:
 
 /*-----------------------------------------------------------------------*/
 };	//DS
-
-extern DS::RTClock RTC;
 
 #endif // _DS_CLOCK_DEFINED

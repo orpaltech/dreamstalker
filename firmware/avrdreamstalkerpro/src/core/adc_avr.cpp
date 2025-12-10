@@ -69,7 +69,7 @@ using namespace avr_core;
 #define ADC_DIV		64
 #define ADC_CLK   (F_CPU / ADC_DIV)
 
-/* ADC convert rate, kHz */
+/* ADC convert rate */
 #define ADC_CONVERT_RATE  31250U
 
 /** NOTE: see how often we should run the handler , i.e. calc the handler 
@@ -97,16 +97,22 @@ ISR(ADC_vect)
 /*-----------------------------------------------------------------------*/
 void A2DConv::handle_rtc (void)
 {
-  A2D.rtc_handler();
+  get()->rtc_handler();
 }
 
 void A2DConv::handle_adc (void)
 {
-  A2D.adc_handler();
+  get()->adc_handler();
 }
 
 /*-----------------------------------------------------------------------*/
-A2DConv A2D;
+A2DConv a2d;
+
+/*-----------------------------------------------------------------------*/
+A2DConv *A2DConv::get()
+{
+  return &a2d;
+}
 
 /*-----------------------------------------------------------------------*/
 void A2DConv::rtc_handler (void)

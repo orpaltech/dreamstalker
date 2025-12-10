@@ -42,6 +42,12 @@ using namespace DS;
 #define PIN_SOUND	PIN_PB5		/* PWM sound pin */
 
 /*-----------------------------------------------------------------------*/
+typedef enum e_tonegen_storage {
+  TGS_RAM = 0,
+  TGS_FLASH
+} tonegen_storage_t;
+
+/*-----------------------------------------------------------------------*/
 PROGMEM const uint16_t notes[] = {
 	PAUSE,
 	C2, C2x, D2, D2x, E2, F2, F2x, G2, G2x, A2, A2x, B2,
@@ -94,8 +100,8 @@ PROGMEM const char kleine_nachtmusik[] = "d=4,o=5,b=280:2c.,g4|2c.,g4|c,g4,c,e|2
 										"e,e,8g,8f,8e,8f|2g,2p";
 
 PROGMEM const char jingle_bells[] = "d=4,o=4,b=240:e,e,2e|e,e,2e|e,g,c,d|2e,2p|f,f,f,f|"
-										"f,e,e,8e,8e|e,d,d,e|2d,2g|e,e,2e|e,e,2e|e,g,c,d|"
-										"2e,2p|f,f,f,f|f,e,e,8e,8e|g,g,f,d|2c,2p";
+									"f,e,e,8e,8e|e,d,d,e|2d,2g|e,e,2e|e,e,2e|e,g,c,d|"
+									"2e,2p|f,f,f,f|f,e,e,8e,8e|g,g,f,d|2c,2p";
 
 
 /*-----------------------------------------------------------------------*/
@@ -117,13 +123,15 @@ ISR(TIMER4_COMPA_vect) // interrupt
 
 char Tonegen::melody_get_char (void)
 {
-  if ( melody.storage_mode == 0 )
-	return *melody.sound;	// direct access
+  if ( melody.storage_mode == TGS_FLASH )
+    return pgm_read_byte_far ( melody.buffer );
   else
-	return pgm_read_byte_far ( melody.sound );
+	return *melody.buffer;	// direct access
 }
 
+/*-----------------------------------------------------------------------*/
 #if defined (__AVR_ATmega128__)
+/*-----------------------------------------------------------------------*/
 static
 void melody_on (void)
 {
@@ -150,7 +158,9 @@ void melody_off()
   TMR2_OFF();
 }
 
+/*-----------------------------------------------------------------------*/
 #elif defined (__AVR_ATmega1281__)
+/*-----------------------------------------------------------------------*/
 static
 void melody_on (void)
 {
@@ -178,9 +188,14 @@ void melody_off()
   TMR4_OFF();
 }
 
+/*-----------------------------------------------------------------------*/
 #else
+/*-----------------------------------------------------------------------*/
   #error "Unsupported MCU"
+
+/*-----------------------------------------------------------------------*/
 #endif
+/*-----------------------------------------------------------------------*/
 
 static
 void tone_off (void)
@@ -237,45 +252,45 @@ bool Tonegen::play_melody (tonegen_piece_t piece, uint8_t repeat_count)
 {
   switch (piece) {
 	case TGP_MOONLIGHT_SONATA:
-	  melody.sound = moonlight_sonata;
+	  melody.buffer = moonlight_sonata;
 	  break;
 
 	case TGP_FUR_ELISE:
-	  melody.sound = fur_elise;
+	  melody.buffer = fur_elise;
 	  break;
 
 	case TGP_INDIANA_JONES:
-	  melody.sound = indiana_jones;
+	  melody.buffer = indiana_jones;
 	  break;
 
 	case TGP_ODE_TO_JOY:
-	  melody.sound = ode_to_joy;
+	  melody.buffer = ode_to_joy;
 	  break;
 
 	case TGP_MISSION_IMPOSSIBLE:
-	  melody.sound = mission_impossible;
+	  melody.buffer = mission_impossible;
 	  break;
 
 	case TGP_HAPPY_BIRTHDAY:
-	  melody.sound = happy_birthday;
+	  melody.buffer = happy_birthday;
 	  break;
 
 	case TGP_AMAZING_GRACE:
-	  melody.sound = amazing_grace;
+	  melody.buffer = amazing_grace;
 	  break;
 
 	case TGP_KLEINE_NACHTMUSIK:
-	  melody.sound = kleine_nachtmusik;
+	  melody.buffer = kleine_nachtmusik;
 	  break;
 
 	case TGP_JINGLE_BELLS:
-	  melody.sound = jingle_bells;
+	  melody.buffer = jingle_bells;
 	  break;
 	default:
 	 return false;
   }
 
-  melody.storage_mode = 1;	// melody is stored in progmem
+  melody.storage_mode = TGS_FLASH;	// melody is stored in progmem
 
   melody.count = repeat_count == 0 ? INT16_MAX : repeat_count;
   melody.ticks = 0;
@@ -288,18 +303,18 @@ bool Tonegen::play_melody (tonegen_piece_t piece, uint8_t repeat_count)
   /* ---------------------------------------------------------- */
   if (melody_get_char() == 'd')	{
 	/* Skip "d=" */
-	melody.sound++;
-	melody.sound++;
+	melody.buffer++;
+	melody.buffer++;
 
 	while (isdigit (melody_get_char ())) {
 	  melody.note_default_len =
 					(melody.note_default_len * 10)
 	   				+ (melody_get_char () - '0');
-	  melody.sound++;
+	  melody.buffer++;
 	}
 
     /* Skip "," */
-    melody.sound++;
+    melody.buffer++;
   }
 
   if (melody.note_default_len == 0)
@@ -308,14 +323,14 @@ bool Tonegen::play_melody (tonegen_piece_t piece, uint8_t repeat_count)
   /* ---------------------------------------------------------- */
   if (melody_get_char() == 'o') {
 	/* Skip "o=" */
-	melody.sound++;
-	melody.sound++;
+	melody.buffer++;
+	melody.buffer++;
 
 	melody.octave_default = melody_get_char() - '0';
-	melody.sound++;
+	melody.buffer++;
 
 	/* Skip "," */
-	melody.sound++;
+	melody.buffer++;
   }
 
   if (!(melody.octave_default >= 2 && melody.octave_default <=7))
@@ -324,19 +339,19 @@ bool Tonegen::play_melody (tonegen_piece_t piece, uint8_t repeat_count)
   /* ---------------------------------------------------------- */
   if (melody_get_char() == 'b') {
 	/* Skip "b=" */
-	melody.sound++;
-	melody.sound++;
+	melody.buffer++;
+	melody.buffer++;
 
 	/* read BPM temporarily into whole_duration variable */
 	while (isdigit (melody_get_char ())){
 	  melody.whole_duration =
 					(melody.whole_duration * 10)
 					+ (melody_get_char () - '0');
-	  melody.sound++;
+	  melody.buffer++;
 	}
 
 	/* Skip ":" */
-	melody.sound++;
+	melody.buffer++;
   }
 
   if (melody.whole_duration == 0)
@@ -347,10 +362,8 @@ bool Tonegen::play_melody (tonegen_piece_t piece, uint8_t repeat_count)
 				whole_duration_ms(melody.whole_duration)
 				/ TICK_PERIOD_MS;
 
-  /* ---------------------------------------------------------- */
-  /** now melody.sound points to the melody data 
-   */
-  melody.head = melody.sound;
+  /* now melody.buffer points to the melody data */
+  melody.head = melody.buffer;
 
   melody_on();
   return true;
@@ -423,7 +436,7 @@ void Tonegen::irq_handler (void)
 		melody.duration =
 				(melody.duration * 10)
 				+ (melody_get_char() - '0');
-		melody.sound++;
+		melody.buffer++;
 	};
 
 	if (melody.duration)
@@ -468,31 +481,32 @@ void Tonegen::irq_handler (void)
 		note = PAUSE;
 		break;
 	}
-	melody.sound++;
+	melody.buffer++;
 
 	/* Check for '#' */
 	if (melody_get_char () == '#') {
-	  note++;
-	  melody.sound++;
+	  if (note != PAUSE)
+	  	note++;
+	  melody.buffer++;
 	}
 
 	/* Check for '.' */
 	if (melody_get_char () == '.') {
 	  melody.duration += melody.duration/2;
-	  melody.sound++;
+	  melody.buffer++;
 	}
 
 	/* Read octave */
 	if (isdigit (melody_get_char ())) {
 	  octave = melody_get_char () - '0';
-	  melody.sound++;
+	  melody.buffer++;
 	} else {
 	  octave = melody.octave_default;
 	}
 
 	/* Skip ',' or '|' */
 	if (melody_get_char () == ',' || melody_get_char () == '|')
-	  melody.sound++;
+	  melody.buffer++;
 
 	tone_on(note, octave);
   }
@@ -502,7 +516,7 @@ void Tonegen::irq_handler (void)
 	tone_off ();
 
 	if (melody_get_char () == 0) {
-	  melody.sound = melody.head;
+	  melody.buffer = melody.head;
 	  if (--melody.count == 0)
 		melody_off ();
 	}

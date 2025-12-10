@@ -28,6 +28,7 @@
 
 
 namespace DS {
+
 /*-----------------------------------------------------------------------*/
 typedef enum e_sqw_transition {
   SQW_TRANS_LOW,
@@ -45,6 +46,8 @@ public:
 /*-----------------------------------------------------------------------*/
 class SquareWave {
 public:
+  static SquareWave *get();
+public:
   bool	init (void);
 
   void	start (unsigned slot,
@@ -61,12 +64,12 @@ public:
 
 private:
   typedef struct s_sqw_context {
-	uint32_t duration_ticks;
-	uint16_t period_ticks;
-	uint16_t period;
-	uint8_t duty_cycle : 7;
-	uint8_t active : 1;
-	SquareWaveCB *ptcb;
+    uint32_t duration_ticks;
+    uint16_t period_ticks;
+    uint16_t period;
+    uint8_t duty_cycle : 7;
+    uint8_t active : 1;
+    SquareWaveCB *ptcb;
   } sqw_context_t;
 
   void do_transition (unsigned slot, sqw_transition_t trans);
@@ -77,7 +80,5 @@ private:
 
 /*-----------------------------------------------------------------------*/
 };	//DS
-
-extern DS::SquareWave SQW;
 
 #endif // _DS_SQUARE_WAVE_DEFINED

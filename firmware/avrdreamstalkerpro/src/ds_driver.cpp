@@ -38,6 +38,7 @@
 
 
 using namespace DS;
+using namespace avr_core;
 
 /*-----------------------------------------------------------------------*/
 
@@ -59,7 +60,6 @@ static void key_tone ( void )
 
 
 /*-----------------------------------------------------------------------*/
-LED4D7S_Display disp;
 Driver driver;
 
 /*-----------------------------------------------------------------------*/
@@ -67,16 +67,16 @@ bool Driver::begin (void)
 {
   delay(600); /* Let power stabilize */
 
-  RTC.init();
-  disp.init();
-  kbrd.init ();
-  PM.init();
-  menu.init();
-  SQW.init();
-  vibro.init();
-  leds.init();
-  SND.init ();
-  remd.init();
+  RTClock::get()->init();
+  Display::get()->init();
+  Keyboard::get()->init ();
+  PowerMan::get()->init();
+  AppMenu::get()->init();
+  SquareWave::get()->init();
+  VibroMotor::get()->init();
+  Leds::get()->init();
+  Sound::get()->init ();
+  REMDetect::get()->init();
   
 
 #if ( REMD_TEST || BATTMON_TEST )
@@ -101,13 +101,14 @@ bool Driver::start (void)
 
   interrupts();   /* Enable interrupts globally */
 
-  /* Disable hold-repeat keyboard feature */
-  kbrd.hold_repeat_disable ();
+  /* Disable hold-repeat keyboard feature by default */
+  Keyboard::get()->hold_repeat_disable ();
 
-  /* NOTE: This is the core component and many others 
-   *       won't work without it.
+  /* IMPORTANT: Real-Time clock is the core component (!)
+   *            Most of the other components will NOT work 
+   *            without it.
    */
-  RTC.start ( RTC_OPM_NORMAL );   /* Start real-time clock.*/ 
+  RTClock::get()->start ( RTC_OPM_NORMAL );   /* Start real-time clock.*/ 
 
   ///////////////////
 
@@ -118,39 +119,39 @@ bool Driver::start (void)
   //leds.pulse(DS::LED2, 20, 0, 500, 70);
 
   
-  disp.enable ();
-  disp.version ('F', fw_version(), 1000);
+  Display::get()->enable ();
+  Display::get()->version ('F', fw_version(), 1000);
 
 
   /* SD-card initialization */
   while (! card0.begin ()) {
 
     /* handle error */
-    disp.message (__disp_msg_no_sd__, 1);
+    Display::get()->message (__disp_msg_no_sd__, 1);
 
     /* let user insert SD-card and press ON/OFF */
-    kbrd.wait_for_key_press (KEY_POWER);
+    Keyboard::get()->wait_for_key_press (KEY_POWER);
 
     /* try SD-card again...*/
-    disp.message (__disp_msg_all_dots__, 500);
+    Display::get()->message (__disp_msg_all_dots__, 500);
   }
 
    /* SD-card found */
-  disp.message (__disp_msg_sd_0__, 1000);
+  Display::get()->message (__disp_msg_sd_0__, 1000);
 
   do {
-    if ( ! AC.begin () ) {
+    if ( ! AudioCodec::get()->begin () ) {
 
       // codec initialization failed!
-      disp.message (__disp_msg_codec_error__, 1);
+      Display::get()->message (__disp_msg_codec_error__, 1);
 
       success = false;
       break;
     }
 
     /* Display codec version */
-    snprintf (msg, 5, __disp_msg_codec_version__, VS_HW_SPEC);
-    disp.message (msg, 1000);
+    snprintf (msg, 5, __disp_msg_codec_spec__, VS_HW_SPEC);
+    Display::get()->message (msg, 1000);
 
 
     if ( ! config.begin () ) {
@@ -166,17 +167,17 @@ bool Driver::start (void)
     */
     /* ... */
 
-    RTC.show ();
+    RTClock::get()->show ();
 
-    A2D.enable ();
-    A2D.warm_up ();
-    PM.start();
+    A2DConv::get()->enable ();
+    A2DConv::get()->warm_up ();
+    PowerMan::get()->start();
 
-    SND.start();
+    Sound::get()->start();
 
   } while ( false );
 
-  kbrd.clear_events ();
+  Keyboard::get()->clear_events ();
 
   return success;
 }
@@ -194,17 +195,17 @@ void Driver::process (void)
   // put your main code here, to run repeatedly:
 
   /* check to see if user has pressed a button */
-  key_event = kbrd.get_event ();
+  key_event = Keyboard::get()->get_event ();
 
-  if ( menu.is_active () && ( key_event != KEY_NONE )) {
+  if ( AppMenu::get()->is_active () && ( key_event != KEY_NONE )) {
 
-    ret = menu.handle_key( key_event );
+    ret = AppMenu::get()->handle_key( key_event );
     if ( ret & MENU_HANDLED ) {
 
       if ( ret & MENU_EXIT ) {
 
         /* exit from menu, show the clock again */
-        RTC.show ();
+        RTClock::get()->show ();
       }
 
       /* event has been processed by menu */
@@ -225,9 +226,9 @@ void Driver::process (void)
     case ( KEY_SELECT | KEYBRD_HOLD ): {
       key_tone ();
 
-      RTC.hide ();
+      RTClock::get()->hide ();
 
-      menu.enter ();
+      AppMenu::get()->enter ();
 
       break;
     }
@@ -260,11 +261,11 @@ void Driver::process (void)
 
       }*/
 
-      if ( remd.is_running () ) {
-        remd.stop();
+      if ( REMDetect::get()->is_running () ) {
+        REMDetect::get()->stop();
 
       }/* else {
-        remd.start();
+        REMDetect::get()->start();
 
       }*/
 
@@ -276,14 +277,14 @@ void Driver::process (void)
   /*
    * Process different tasks
    */
-  AC.process_task ();
+  AudioCodec::get()->process_task ();
 
 }
 
 void Driver::reboot_on_key (void)
 {
   /* let user press ON/OFF */
-  kbrd.wait_for_key_press (KEY_POWER);
+  Keyboard::get()->wait_for_key_press (KEY_POWER);
 
   // and reboot
   soft_reset ();
@@ -307,46 +308,46 @@ void Driver::on_remd_event (remd_event_type_t event)
   /* Сheck if alarm clock is enabled */
   if (config.get_alarm_clock ()) {
     
-    RTC.alarm_clock_set (this);
+    RTClock::get()->alarm_clock_set (this);
   }
 }
 
 void Driver::wakeup_timer_toggle (void)
 {
-  if (RTC.wakeup_timer_is_set ()) {
+  if (RTClock::get()->wakeup_timer_is_set ()) {
 
-    RTC.wakeup_timer_cancel ();
+    RTClock::get()->wakeup_timer_cancel ();
 
   } else {
 
-    RTC.wakeup_timer_set (this);
+    RTClock::get()->wakeup_timer_set (this);
   }
 }
 
 void Driver::wakeup_timer_quick_set (keybrd_event_t key_event)
 {
   /* Wake-Up timer */
-  if ( RTC.wakeup_timer_is_set ()) {
+  if ( RTClock::get()->wakeup_timer_is_set ()) {
 
-    RTC.wakeup_timer_cancel ();
+    RTClock::get()->wakeup_timer_cancel ();
     return;
   }
 
-  RTC.hide();
-  disp.message ( __disp_msg_set__, 500 );
+  RTClock::get()->hide();
+  Display::get()->message ( __disp_msg_set__, 500 );
 
   if ( key_event & KEY_MINUS ) {
     config.set_wakeup_timer_delay ( 20 );
-    disp.time ( 0, 20 );
+    Display::get()->time ( 0, 20 );
 
   } else {
     config.set_wakeup_timer_delay ( WAKEUP_TIMER_DELAY_DEFAULT );
-    disp.time ( 0, WAKEUP_TIMER_DELAY_DEFAULT );
+    Display::get()->time ( 0, WAKEUP_TIMER_DELAY_DEFAULT );
   }
-  disp.wait_cycles ( 800 );
+  Display::get()->wait_cycles ( 800 );
 
-  RTC.wakeup_timer_set (this);
-  RTC.show();
+  RTClock::get()->wakeup_timer_set (this);
+  RTClock::get()->show();
 }
 
 #if REMD_TEST
@@ -372,36 +373,36 @@ void Driver::handle_isr (void)
 
 void Driver::start_lucid_dream (void)
 {
-  if ( !remd.start_unsafe (this) ) {
+  if ( !REMDetect::get()->start_unsafe (this) ) {
     return;
   }
 
 #if REMD_TEST
   /* Stop after 3 min */
-  evt_id = tmr.after(REMD_TIMEOUT_MIN * 60'000UL, stop_remd, &remd );
+  evt_id = tmr.after(REMD_TIMEOUT_MIN * 60'000UL, stop_remd, REMDetect::get() );
 #endif
 }
 
 void Driver::power_off (void)
 {
-  RTC.hide ();
-  disp.message (__disp_msg_off__, 500);
+  RTClock::get()->hide ();
+  Display::get()->message (__disp_msg_off__, 500);
 
-  AC.stop ();
+  AudioCodec::get()->stop ();
 
-  remd.stop();
-  PM.stop ();
-  A2D.disable ();	/* disable ADC to save power */
+  REMDetect::get()->stop();
+  PowerMan::get()->stop ();
+  A2DConv::get()->disable ();	/* disable ADC to save power */
 
-  SND.stop();
+  Sound::get()->stop();
 
-  disp.disable ();
+  Display::get()->disable ();
 
   /* Restart RTC in power-save mode and 
    * keep current time for the user 
    */
-  RTC.stop();
-  RTC.start ( RTC_OPM_PWRSAVE );
+  RTClock::get()->stop();
+  RTClock::get()->start ( RTC_OPM_PWRSAVE );
 
 
   /*
@@ -410,32 +411,32 @@ void Driver::power_off (void)
   set_sleep_mode ( SLEEP_MODE_PWR_SAVE );
 
   do {
-	  kbrd.enable_key_irq ( KEY_EXIT_SLEEP );
+	  Keyboard::get()->enable_key_irq ( KEY_EXIT_SLEEP );
 
 	  /*
 	   * ...Zzz...  
 	   */
 	  sleep_mode ();
 
-	  kbrd.disable_key_irq ( KEY_EXIT_SLEEP );
+	  Keyboard::get()->disable_key_irq ( KEY_EXIT_SLEEP );
 
-  } while (! (kbrd.get_irq_keys() & KEY_EXIT_SLEEP));
+  } while (! (Keyboard::get()->get_irq_keys() & KEY_EXIT_SLEEP));
 
   /* Wait for next tick and restart RTC in normal mode */
-  RTC.wait_for_next_tick ();
-  RTC.stop ();
-  RTC.start ( RTC_OPM_NORMAL );
+  RTClock::get()->wait_for_next_tick ();
+  RTClock::get()->stop ();
+  RTClock::get()->start ( RTC_OPM_NORMAL );
 
-  disp.enable ();
-  disp.message (__disp_msg_on__, 500);
+  Display::get()->enable ();
+  Display::get()->message (__disp_msg_on__, 500);
 
-  RTC.show ();
+  RTClock::get()->show ();
 
-  A2D.enable ();
-  PM.start ();
+  A2DConv::get()->enable ();
+  PowerMan::get()->start ();
 
-  SND.start();
+  Sound::get()->start();
 
   /* Ignore keyboard events that might happen*/
-  kbrd.clear_events ();
+  Keyboard::get()->clear_events ();
 }

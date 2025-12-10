@@ -142,13 +142,18 @@ bool write_wav_header ( SDFile *fp, uint32_t num_blocks )
 AudioCodec AC;
 
 /*-----------------------------------------------------------------------*/
+AudioCodec *AudioCodec::get()
+{
+  return &AC;
+}
 
+/*-----------------------------------------------------------------------*/
 bool AudioCodec::begin (void)
 {
   if (! vs.init ())
 	return false;
 
-  status = CODEC_IDLE;	/* Set initial state */
+  status = AUDIO_CODEC_IDLE;	/* Set initial state */
   return true;
 }
 
@@ -162,7 +167,7 @@ bool AudioCodec::apply_patches (void)
   return vs.process_patches ();
 }
 
-codec_status_t AudioCodec::get_status (void)
+e_audio_codec_state_t AudioCodec::get_status (void)
 {
   return status;
 }
@@ -182,7 +187,7 @@ bool AudioCodec::playback (const char *file_name)
 {
   uint8_t vol;
 
-  if (get_status() != CODEC_IDLE)
+  if (get_status() != AUDIO_CODEC_IDLE)
 	return false;
 
   /* open the file */
@@ -206,14 +211,14 @@ bool AudioCodec::playback (const char *file_name)
   set_volume (vol, vol);
 
   /* Update status flag*/
-  status = CODEC_PLAYBACK;
+  status = AUDIO_CODEC_PLAYBACK;
 
   return true;
 }
 
 bool AudioCodec::capture (const char *file_name)
 {
-  if (get_status () != CODEC_IDLE)
+  if (get_status () != AUDIO_CODEC_IDLE)
 	return false;
 
   // create a new file
@@ -226,7 +231,7 @@ bool AudioCodec::capture (const char *file_name)
 	goto error_exit0;
   }
 
-  SND.mic_on ();
+  Sound::get()->mic_on ();
 
   if (! vs.adpcm_record_start (ADPCM_SAMPLE_RATE, 
 							config.get_record_gain_level (), 
@@ -238,11 +243,11 @@ bool AudioCodec::capture (const char *file_name)
   count = 0;
 
   /* Update status flag*/
-  status = CODEC_CAPTURE;
+  status = AUDIO_CODEC_CAPTURE;
   return true;
 
 error_exit1:
-  SND.mic_off ();
+  Sound::get()->mic_off ();
 
 error_exit0:
   fp.close();
@@ -254,7 +259,7 @@ error_exit0:
 void AudioCodec::end_playback (AudioCodec *c, bool on_error)
 {
   /* Update status flag*/
-  c->status = CODEC_IDLE;
+  c->status = AUDIO_CODEC_IDLE;
 
   c->vs.playback_stop ();
 
@@ -276,11 +281,11 @@ void AudioCodec::end_playback (AudioCodec *c, bool on_error)
 void AudioCodec::end_capture (AudioCodec *c, bool on_error)
 {
   /* Update status flag*/
-  c->status = CODEC_IDLE;
+  c->status = AUDIO_CODEC_IDLE;
 
   c->vs.adpcm_record_stop ();
 
-  SND.mic_off ();
+  Sound::get()->mic_off ();
 
   if (! on_error) {
 	/* update wav header */
@@ -352,12 +357,13 @@ void AudioCodec::process_capture (AudioCodec *c)
 void AudioCodec::stop (void)
 {
   switch (get_status ()) {
-	case CODEC_PLAYBACK: {
+
+	case AUDIO_CODEC_PLAYBACK: {
 	  end_playback ( this, false );
 	  break;
 	}
 
-	case CODEC_CAPTURE: {
+	case AUDIO_CODEC_CAPTURE: {
 	  end_capture ( this, false );
 	  break;
 	}
@@ -370,11 +376,12 @@ void AudioCodec::stop (void)
 void AudioCodec::process_task (void)
 {
   switch (get_status ()) {
-	case CODEC_PLAYBACK:
+
+	case AUDIO_CODEC_PLAYBACK:
 	  process_playback (this);
 	  break;
 
-	case CODEC_CAPTURE:
+	case AUDIO_CODEC_CAPTURE:
 	  process_capture (this);
 	  break;
 

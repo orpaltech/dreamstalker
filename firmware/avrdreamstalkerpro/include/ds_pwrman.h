@@ -34,7 +34,9 @@
 namespace DS {
 
 /*-----------------------------------------------------------------------*/
-class PowerManager : public avr_core::A2DSampleCB {
+class PowerMan : public avr_core::A2DSampleCB {
+public:
+  static PowerMan *get();
 public:
   bool init (void);
 
@@ -61,7 +63,5 @@ private:
 
 /*-----------------------------------------------------------------------*/
 };  //DS
-
-extern DS::PowerManager PM;
 
 #endif  //_DS_PWRMAN_DEFINED

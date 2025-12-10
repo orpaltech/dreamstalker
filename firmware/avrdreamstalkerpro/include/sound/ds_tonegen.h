@@ -26,7 +26,7 @@
 namespace DS {
 /*-----------------------------------------------------------------------*/
 typedef enum e_tonegen_piece {
-  TGP_NONE,
+  TGP_NONE = 0,
   TGP_MOONLIGHT_SONATA,
   TGP_FUR_ELISE,
   TGP_INDIANA_JONES,
@@ -65,8 +65,8 @@ private:
 
   typedef struct s_tonegen_melody {
     const char *head;
-    const char *sound;
-    uint8_t storage_mode;     /* where a melody is stored */
+    const char *buffer;
+    uint8_t storage_mode : 2; /* where a melody is stored */
     uint16_t ticks;
     uint16_t duration;        /* duration of current note */
     uint16_t whole_duration;  /* duration of whole note */

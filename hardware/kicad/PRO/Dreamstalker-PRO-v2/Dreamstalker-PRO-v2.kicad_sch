@@ -8908,6 +8908,12 @@
 		(uuid "05594e61-ecc0-4251-bcb1-208153b566ba")
 	)
 	(junction
+		(at 264.16 153.67)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "0ca538bd-edbd-4afe-93c6-7f5ec7fccaf2")
+	)
+	(junction
 		(at 190.5 45.72)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -9094,6 +9100,12 @@
 		(uuid "704de2c3-c855-40a9-ae56-7f79e42522f7")
 	)
 	(junction
+		(at 377.19 231.14)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "715f16e3-7392-493f-8ef6-e964921daa10")
+	)
+	(junction
 		(at 101.6 198.12)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -9128,12 +9140,6 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "8064f467-716e-472d-8e6b-9fd2a709b5f9")
-	)
-	(junction
-		(at 313.69 168.91)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "9015e319-b06b-420d-a1f4-d51a44a2f2df")
 	)
 	(junction
 		(at 381 76.2)
@@ -9316,12 +9322,6 @@
 		(uuid "d7bcfbab-d1e7-4a41-9f80-4c47815fde58")
 	)
 	(junction
-		(at 381 231.14)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "dd20f9eb-a67f-4a39-a4ae-01571e3ac07e")
-	)
-	(junction
 		(at 198.12 96.52)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -9344,6 +9344,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "e1ed3575-6c2c-4f8c-97a4-23a97711ff00")
+	)
+	(junction
+		(at 264.16 165.1)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "eb886a04-1c4f-425c-805d-778cf68b6d6b")
 	)
 	(junction
 		(at 350.52 45.72)
@@ -9569,16 +9575,6 @@
 	)
 	(wire
 		(pts
-			(xy 377.19 231.14) (xy 381 231.14)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "0a6c8399-90c2-4972-b552-839ef1933e85")
-	)
-	(wire
-		(pts
 			(xy 353.06 119.38) (xy 353.06 132.08)
 		)
 		(stroke
@@ -9669,6 +9665,16 @@
 	)
 	(wire
 		(pts
+			(xy 29.21 36.83) (xy 59.69 36.83)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0e22c92b-5402-4cd5-8e98-cad88887d61c")
+	)
+	(wire
+		(pts
 			(xy 121.92 152.4) (xy 121.92 146.05)
 		)
 		(stroke
@@ -9699,7 +9705,7 @@
 	)
 	(wire
 		(pts
-			(xy 311.15 163.83) (xy 311.15 168.91)
+			(xy 311.15 170.18) (xy 311.15 172.72)
 		)
 		(stroke
 			(width 0)
@@ -10249,7 +10255,7 @@
 	)
 	(wire
 		(pts
-			(xy 303.53 158.75) (xy 303.53 170.18)
+			(xy 303.53 158.75) (xy 303.53 172.72)
 		)
 		(stroke
 			(width 0)
@@ -10529,16 +10535,6 @@
 	)
 	(wire
 		(pts
-			(xy 313.69 168.91) (xy 311.15 168.91)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "3a4d3d63-6727-4ce9-bc6b-1657cc604948")
-	)
-	(wire
-		(pts
 			(xy 124.46 152.4) (xy 124.46 151.13)
 		)
 		(stroke
@@ -10749,16 +10745,6 @@
 	)
 	(wire
 		(pts
-			(xy 313.69 168.91) (xy 313.69 170.18)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "432dca0f-abca-4b0a-be24-de33bda8a808")
-	)
-	(wire
-		(pts
 			(xy 58.42 200.66) (xy 66.04 200.66)
 		)
 		(stroke
@@ -10766,16 +10752,6 @@
 			(type default)
 		)
 		(uuid "436c6351-c7ff-4ee1-bd8c-4ec49aafaeb4")
-	)
-	(wire
-		(pts
-			(xy 313.69 168.91) (xy 316.23 168.91)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "4417734a-f158-4a27-92b9-59d5ba57e980")
 	)
 	(wire
 		(pts
@@ -10919,16 +10895,6 @@
 	)
 	(wire
 		(pts
-			(xy 59.69 36.83) (xy 29.21 36.83)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "4b866427-f9ce-4e80-918e-b21e66f56490")
-	)
-	(wire
-		(pts
 			(xy 127 148.59) (xy 127 140.97)
 		)
 		(stroke
@@ -11029,7 +10995,7 @@
 	)
 	(wire
 		(pts
-			(xy 311.15 156.21) (xy 311.15 158.75)
+			(xy 311.15 156.21) (xy 311.15 165.1)
 		)
 		(stroke
 			(width 0)
@@ -11086,6 +11052,16 @@
 			(type default)
 		)
 		(uuid "52f8713f-c50f-47cf-bde0-0feefe023785")
+	)
+	(wire
+		(pts
+			(xy 264.16 171.45) (xy 264.16 173.99)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "52fc5ba7-fe92-4f90-b470-d9e652fdcd61")
 	)
 	(wire
 		(pts
@@ -11449,6 +11425,16 @@
 	)
 	(wire
 		(pts
+			(xy 264.16 162.56) (xy 264.16 165.1)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "60090a44-9c1a-4091-8696-099aee3af973")
+	)
+	(wire
+		(pts
 			(xy 69.85 140.97) (xy 69.85 153.67)
 		)
 		(stroke
@@ -11579,7 +11565,7 @@
 	)
 	(wire
 		(pts
-			(xy 316.23 168.91) (xy 316.23 163.83)
+			(xy 316.23 165.1) (xy 316.23 172.72)
 		)
 		(stroke
 			(width 0)
@@ -12119,7 +12105,7 @@
 	)
 	(wire
 		(pts
-			(xy 276.86 166.37) (xy 276.86 170.18)
+			(xy 276.86 166.37) (xy 276.86 173.99)
 		)
 		(stroke
 			(width 0)
@@ -12419,7 +12405,7 @@
 	)
 	(wire
 		(pts
-			(xy 266.7 153.67) (xy 276.86 153.67)
+			(xy 255.27 153.67) (xy 264.16 153.67)
 		)
 		(stroke
 			(width 0)
@@ -12476,6 +12462,16 @@
 			(type default)
 		)
 		(uuid "86333b90-6e20-48dc-9be4-b31c369decbc")
+	)
+	(wire
+		(pts
+			(xy 377.19 231.14) (xy 384.81 231.14)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "86ad03c1-7ab7-4847-afaa-6e77aa7be2a7")
 	)
 	(wire
 		(pts
@@ -12556,6 +12552,16 @@
 			(type default)
 		)
 		(uuid "8996a35d-4af4-4c5e-93f3-37ba6a33f394")
+	)
+	(wire
+		(pts
+			(xy 264.16 165.1) (xy 264.16 166.37)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "89d768c2-8da7-4f58-b676-1bb84d10bce9")
 	)
 	(wire
 		(pts
@@ -12646,6 +12652,16 @@
 			(type default)
 		)
 		(uuid "8ed00871-b0f4-4317-a3e3-b4a1cfe88e01")
+	)
+	(wire
+		(pts
+			(xy 264.16 153.67) (xy 264.16 157.48)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "906b72ed-aea8-4d2b-8f4f-f7a6233d41eb")
 	)
 	(wire
 		(pts
@@ -13149,6 +13165,16 @@
 	)
 	(wire
 		(pts
+			(xy 264.16 153.67) (xy 276.86 153.67)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "abe31326-5c2c-4a89-954b-8b1d280820a2")
+	)
+	(wire
+		(pts
 			(xy 201.93 204.47) (xy 201.93 184.15)
 		)
 		(stroke
@@ -13229,7 +13255,7 @@
 	)
 	(wire
 		(pts
-			(xy 316.23 153.67) (xy 316.23 158.75)
+			(xy 316.23 153.67) (xy 316.23 160.02)
 		)
 		(stroke
 			(width 0)
@@ -13489,16 +13515,6 @@
 	)
 	(wire
 		(pts
-			(xy 384.81 231.14) (xy 381 231.14)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "b8fc195b-9c49-4aea-8182-42e80a8cff4f")
-	)
-	(wire
-		(pts
 			(xy 355.6 44.958) (xy 355.6 45.72)
 		)
 		(stroke
@@ -13616,6 +13632,16 @@
 			(type default)
 		)
 		(uuid "c037e0f7-6715-4a35-925e-c80bd52a4cfd")
+	)
+	(wire
+		(pts
+			(xy 254 165.1) (xy 264.16 165.1)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c09e7378-de06-4803-a609-c791c3a40e18")
 	)
 	(wire
 		(pts
@@ -13919,7 +13945,7 @@
 	)
 	(wire
 		(pts
-			(xy 381 231.14) (xy 381 233.68)
+			(xy 377.19 231.14) (xy 377.19 233.68)
 		)
 		(stroke
 			(width 0)
@@ -15357,16 +15383,6 @@
 		)
 		(uuid "3838a270-bc12-46d9-a3d5-2c98dde35958")
 	)
-	(label "GBUF"
-		(at 29.21 36.83 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "3c03940c-046f-4050-b8e8-f4e12a913511")
-	)
 	(label "VIBRO"
 		(at 27.94 194.31 0)
 		(effects
@@ -15998,7 +16014,7 @@
 		(uuid "ba97fef9-cfa7-4f20-9823-493c79ebd836")
 	)
 	(label "V_IN"
-		(at 266.7 153.67 0)
+		(at 255.27 153.67 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -16056,6 +16072,16 @@
 			(justify left bottom)
 		)
 		(uuid "bebed0bc-3a68-463e-b222-6801958e45d7")
+	)
+	(label "BM"
+		(at 254 165.1 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "c09d651e-a3e8-45bf-af1e-47401f56702a")
 	)
 	(label "VSVDD"
 		(at 376.174 43.18 180)
@@ -16336,6 +16362,16 @@
 			(justify left bottom)
 		)
 		(uuid "fc096589-f328-4831-aa44-631b84a30b7f")
+	)
+	(label "BM"
+		(at 29.21 36.83 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "ff64157a-1a24-4365-8a25-32aaa9903465")
 	)
 	(symbol
 		(lib_id "Dreamstalker-Components:VS1002D")
@@ -25565,7 +25601,7 @@
 	)
 	(symbol
 		(lib_id "Dreamstalker-Components:GND")
-		(at 313.69 170.18 0)
+		(at 311.15 172.72 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -25573,7 +25609,7 @@
 		(dnp no)
 		(uuid "0b2c91e3-6246-4be6-ab36-1138b6cb6104")
 		(property "Reference" "#PWR08"
-			(at 313.69 176.53 0)
+			(at 311.15 179.07 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -25582,7 +25618,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 313.69 173.99 0)
+			(at 311.15 176.53 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -25591,7 +25627,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 313.69 170.18 0)
+			(at 311.15 172.72 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -25600,7 +25636,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 313.69 170.18 0)
+			(at 311.15 172.72 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -25609,7 +25645,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 313.69 170.18 0)
+			(at 311.15 172.72 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -25631,7 +25667,7 @@
 	)
 	(symbol
 		(lib_id "Dreamstalker-Components:GND")
-		(at 276.86 170.18 0)
+		(at 276.86 173.99 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -25639,7 +25675,7 @@
 		(dnp no)
 		(uuid "100fd78c-8a45-40f9-8ffb-c7fc9175a97b")
 		(property "Reference" "#PWR09"
-			(at 276.86 176.53 0)
+			(at 276.86 180.34 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -25648,7 +25684,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 276.86 173.99 0)
+			(at 276.86 177.8 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -25657,7 +25693,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 276.86 170.18 0)
+			(at 276.86 173.99 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -25666,7 +25702,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 276.86 170.18 0)
+			(at 276.86 173.99 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -25675,7 +25711,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 276.86 170.18 0)
+			(at 276.86 173.99 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -25900,6 +25936,75 @@
 	(symbol
 		(lib_name "R_Small_1")
 		(lib_id "Dreamstalker-Components:R_Small")
+		(at 264.16 168.91 0)
+		(mirror x)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "222c2aea-f442-4ea2-828c-86fa681faed9")
+		(property "Reference" "R44"
+			(at 259.588 168.148 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "15K"
+			(at 259.334 170.434 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Dreamstalker-Footprints:R_0603_1608Metric"
+			(at 264.16 168.91 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 264.16 168.91 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Resistor, small symbol"
+			(at 264.16 168.91 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "bb75ea6a-3d59-4a73-b0f3-5d8b2cf8cafb")
+		)
+		(pin "1"
+			(uuid "87680d6f-9f74-40e1-8bcf-449ca4f2857f")
+		)
+		(instances
+			(project "Dreamstalker-PRO-v2"
+				(path "/f07dec04-4160-48aa-9be7-b121d21f5a9d"
+					(reference "R44")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_name "R_Small_1")
+		(lib_id "Dreamstalker-Components:R_Small")
 		(at 284.48 190.5 0)
 		(mirror x)
 		(unit 1)
@@ -25961,6 +26066,72 @@
 			(project "Dreamstalker-PRO-v2"
 				(path "/f07dec04-4160-48aa-9be7-b121d21f5a9d"
 					(reference "R41")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Dreamstalker-Components:GND")
+		(at 316.23 172.72 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "29941bd6-6a0f-4907-a34e-1ef2ed10dcaa")
+		(property "Reference" "#PWR013"
+			(at 316.23 179.07 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 316.23 176.53 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" ""
+			(at 316.23 172.72 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 316.23 172.72 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 316.23 172.72 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "138242ba-367c-4800-a839-615a85749d32")
+		)
+		(instances
+			(project "Dreamstalker-PRO-v2"
+				(path "/f07dec04-4160-48aa-9be7-b121d21f5a9d"
+					(reference "#PWR013")
 					(unit 1)
 				)
 			)
@@ -26237,6 +26408,75 @@
 			(project "Dreamstalker-PRO-v2"
 				(path "/f07dec04-4160-48aa-9be7-b121d21f5a9d"
 					(reference "R40")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_name "R_Small_1")
+		(lib_id "Dreamstalker-Components:R_Small")
+		(at 264.16 160.02 0)
+		(mirror x)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "45201dec-09d0-449f-88a0-1f1068ea87ea")
+		(property "Reference" "R43"
+			(at 259.588 158.75 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "30K"
+			(at 259.588 161.036 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Dreamstalker-Footprints:R_0603_1608Metric"
+			(at 264.16 160.02 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 264.16 160.02 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Resistor, small symbol"
+			(at 264.16 160.02 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "9efed1c7-2707-4aec-94cc-93b2f52e2893")
+		)
+		(pin "1"
+			(uuid "42bf8492-2f71-4bcb-94ed-cee32796141e")
+		)
+		(instances
+			(project "Dreamstalker-PRO-v2"
+				(path "/f07dec04-4160-48aa-9be7-b121d21f5a9d"
+					(reference "R43")
 					(unit 1)
 				)
 			)
@@ -26585,7 +26825,7 @@
 	)
 	(symbol
 		(lib_id "Dreamstalker-Components:C_Small")
-		(at 311.15 161.29 0)
+		(at 311.15 167.64 0)
 		(mirror y)
 		(unit 1)
 		(exclude_from_sim no)
@@ -26594,7 +26834,7 @@
 		(dnp no)
 		(uuid "6d388f97-5e8c-4e32-beac-13d40fa49e6d")
 		(property "Reference" "C23"
-			(at 309.626 159.512 0)
+			(at 309.626 165.862 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -26603,7 +26843,7 @@
 			)
 		)
 		(property "Value" "22n"
-			(at 309.372 162.052 0)
+			(at 309.372 168.402 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -26612,7 +26852,7 @@
 			)
 		)
 		(property "Footprint" "Dreamstalker-Footprints:C_0805_2012Metric"
-			(at 311.15 161.29 0)
+			(at 311.15 167.64 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -26621,7 +26861,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 311.15 161.29 0)
+			(at 311.15 167.64 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -26630,7 +26870,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 311.15 161.29 0)
+			(at 311.15 167.64 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -26788,7 +27028,7 @@
 	)
 	(symbol
 		(lib_id "Dreamstalker-Components:GND")
-		(at 303.53 170.18 0)
+		(at 303.53 172.72 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -26796,7 +27036,7 @@
 		(dnp no)
 		(uuid "7df7f4f1-195e-4bd0-a547-3a8ca925105b")
 		(property "Reference" "#PWR010"
-			(at 303.53 176.53 0)
+			(at 303.53 179.07 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -26805,7 +27045,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 303.53 173.99 0)
+			(at 303.53 176.53 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -26814,7 +27054,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 303.53 170.18 0)
+			(at 303.53 172.72 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -26823,7 +27063,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 303.53 170.18 0)
+			(at 303.53 172.72 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -26832,7 +27072,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 303.53 170.18 0)
+			(at 303.53 172.72 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -26988,7 +27228,7 @@
 	)
 	(symbol
 		(lib_id "Dreamstalker-Components:C_Small")
-		(at 316.23 161.29 0)
+		(at 316.23 162.56 0)
 		(mirror y)
 		(unit 1)
 		(exclude_from_sim no)
@@ -26997,7 +27237,7 @@
 		(dnp no)
 		(uuid "8b527733-f28e-44b8-bd2e-1253437d2483")
 		(property "Reference" "C22"
-			(at 322.58 159.512 0)
+			(at 322.58 160.782 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -27006,7 +27246,7 @@
 			)
 		)
 		(property "Value" "4.7u"
-			(at 323.342 161.798 0)
+			(at 323.342 163.068 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -27015,7 +27255,7 @@
 			)
 		)
 		(property "Footprint" "Dreamstalker-Footprints:C_0805_2012Metric"
-			(at 316.23 161.29 0)
+			(at 316.23 162.56 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -27024,7 +27264,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 316.23 161.29 0)
+			(at 316.23 162.56 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -27033,7 +27273,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 316.23 161.29 0)
+			(at 316.23 162.56 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -27058,7 +27298,7 @@
 	)
 	(symbol
 		(lib_id "Dreamstalker-Components:GND")
-		(at 381 233.68 0)
+		(at 377.19 233.68 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -27066,7 +27306,7 @@
 		(dnp no)
 		(uuid "93cb4949-704f-4011-9165-0a2560239e1d")
 		(property "Reference" "#PWR02"
-			(at 381 240.03 0)
+			(at 377.19 240.03 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -27075,7 +27315,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 381 237.49 0)
+			(at 377.19 237.49 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -27084,7 +27324,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 381 233.68 0)
+			(at 377.19 233.68 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -27093,7 +27333,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 381 233.68 0)
+			(at 377.19 233.68 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -27102,7 +27342,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 381 233.68 0)
+			(at 377.19 233.68 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -27323,6 +27563,72 @@
 			(project "Dreamstalker-PRO-v2"
 				(path "/f07dec04-4160-48aa-9be7-b121d21f5a9d"
 					(reference "R32")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Dreamstalker-Components:GND")
+		(at 264.16 173.99 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "a4f5aad3-e844-4046-a387-24ded0cd29c9")
+		(property "Reference" "#PWR014"
+			(at 264.16 180.34 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 264.16 177.8 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" ""
+			(at 264.16 173.99 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 264.16 173.99 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 264.16 173.99 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "451de64f-6a2d-40b8-b1dd-c2bcfd23edb8")
+		)
+		(instances
+			(project "Dreamstalker-PRO-v2"
+				(path "/f07dec04-4160-48aa-9be7-b121d21f5a9d"
+					(reference "#PWR014")
 					(unit 1)
 				)
 			)

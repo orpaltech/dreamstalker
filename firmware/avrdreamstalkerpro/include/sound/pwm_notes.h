@@ -1,19 +1,44 @@
+/*
+ * This file is part of the AVR Dreamstalker software
+ * (https://github.com/orpaltech/dreamstalker).
+ *
+ * Copyright (c) 2013-2025	ORPAL Technologies, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #ifndef __PWM_NOTES_H__
 #define __PWM_NOTES_H__
 
 
+/*-----------------------------------------------------------------------*/
 /* Pause */
 
 #define PAUSE   0U
-#define P		PAUSE
-#define p		P
+/* Define synonyms */
+#define P   PAUSE
+#define p	PAUSE
 
 
-/* There are 12 notes in octave */
+/*-----------------------------------------------------------------------*/
+/* IMPORTANT: A musical octave contains 12 notes in total */
 
+
+/*-----------------------------------------------------------------------*/
 #if F_CPU == 8000000UL
+/*-----------------------------------------------------------------------*/
 
-/* Valid for 8MHz clock */
+/* IMPORTANT: The numbers below are valid for 8MHz clock (!) */
 
 /* Octave #2 */
 
@@ -111,9 +136,11 @@
 #define B7   1012 	/* PWM: 3937.01 Hz, note freq: 3951.07 Hz, error 0.36% */
 
 
+/*-----------------------------------------------------------------------*/
 #elif F_CPU == 1000000UL
+/*-----------------------------------------------------------------------*/
 
-/* Valid for 1MHz clock */
+/* IMPORTANT: The numbers below are valid for 1MHz clock (!) */
 
 /* Octave #2 */
 
@@ -210,6 +237,9 @@
 #define A7x  134  	/* PWM: 3731.34 Hz, note freq: 3729.31 Hz, error 0.05% */
 #define B7   127  	/* PWM: 3937.01 Hz, note freq: 3951.07 Hz, error 0.36% */
 
-#endif
+
+/*-----------------------------------------------------------------------*/
+#endif  // F_CPU
+/*-----------------------------------------------------------------------*/
 
 #endif /* __PWM_NOTES_H__ */

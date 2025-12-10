@@ -73,11 +73,11 @@ bool Strings::hex_str ( uint32_t decimal, char *buffer, int precision )
   int i, k = 0;
 
   while( decimal > 0 ) {
-	int remainder = decimal % 16;
-	if (remainder < 10)
-	  hexadecimal[indx++] = remainder + '0';
-	else
-	  hexadecimal[indx++] = remainder + 'A' - 10;
+	  int remainder = decimal % 16;
+	  if (remainder < 10)
+	    hexadecimal[indx++] = remainder + '0';
+	  else
+	    hexadecimal[indx++] = remainder + 'A' - 10;
     decimal /= 16;
   }
 

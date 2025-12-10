@@ -26,35 +26,42 @@
 
 /*-----------------------------------------------------------------------*/
 namespace DS {
+
 /*-----------------------------------------------------------------------*/
 class Display {
 public:
-  /*virtual bool init (void) = 0;
+  static Display *get();
+
+  /* Intended for use in RTC ISR. Do not call it directly! */
+  static void handle_isr (void);
+
+  static uint32_t get_cycle_us(void);	/* length of cycle in microseconds */
+
+  virtual bool init (void) = 0;
 
   // Display control methods
   virtual void enable (void) = 0;
   virtual void disable (void) = 0;
-  virtual bool is_enabled (void) = 0;
+  virtual bool is_enabled (void) const = 0;
 
-  virtual void clear (void) = 0;
-
-  virtual void number (uint16_t num) = 0;
+  /* Display utilities */ 
   virtual void message (const char *text, uint16_t wait_cycles) = 0;
-  virtual void version (char type, uint16_t ver, uint16_t wait_cycles) = 0;
+  virtual void version (char type, uint16_t ver, uint16_t wait_cycles) = 0;	/* display version */
+  virtual void time (uint8_t hour, unsigned minute) = 0;
+  virtual void number (uint16_t num) = 0;
   virtual void flag (bool flag_val) = 0;
-  virtual void confirm (void) = 0;
-  virtual void text_out (const char *text) = 0;
-*/
-  /* Intended for use in RTC ISR. Do not call it directly! */
-  static void handle_isr (void);
-  /*virtual void clear_unsafe (void) = 0;
+  virtual void text_out (const char *text) = 0; /* show text with no delay */
+
+  /* Intended for use in ISR */
   virtual void enable_unsafe (void) = 0;
   virtual void disable_unsafe (void) = 0;
-  virtual void text_out_unsafe (const char *text) = 0;*/
+  virtual void text_out_unsafe (const char *text) = 0;
 
-  static uint32_t get_cycle_us(void);	/* length of cycle in microseconds */
+  void wait_one_cycle (void);
+  void wait_cycles (unsigned num_cycles);
+
 protected:
-  //virtual void irq_handler (void) = 0;
+  virtual void irq_handler (void) = 0;
 };
 
 /*-----------------------------------------------------------------------*/
@@ -65,7 +72,7 @@ public:
   // Display control methods
   void enable (void);
   void disable (void);
-  bool is_enabled (void);
+  bool is_enabled (void) const;
 
   void clear (void);
 
@@ -78,9 +85,6 @@ public:
   void confirm (void);
   void text_out (const char *text); /* show text with no delay */
 
-  void wait_one_cycle (void);
-  void wait_cycles (unsigned num_cycles);
-
   /* Test methods */
   void test_on (void);
   void test_off (void);
@@ -91,8 +95,7 @@ public:
   void disable_unsafe (void);
   void text_out_unsafe (const char *text);
 
-  friend class Display;
-private:
+protected:
   void irq_handler (void);
 
 
@@ -106,6 +109,6 @@ private:
 /*-----------------------------------------------------------------------*/
 };  //DS
 
-extern DS::LED4D7S_Display disp;
+//extern DS::LED4D7S_Display disp;
 
 #endif // _DS_DISPLAY_DEFINED

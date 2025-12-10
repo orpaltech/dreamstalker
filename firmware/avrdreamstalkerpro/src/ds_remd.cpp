@@ -43,7 +43,12 @@ using namespace avr_core;
 REMDetect remd;
 
 /*-----------------------------------------------------------------------*/
+REMDetect *REMDetect::get()
+{
+  return &remd;
+}
 
+/*-----------------------------------------------------------------------*/
 bool REMDetect::init (void)
 {
   /* Enable IRTX line */
@@ -78,10 +83,10 @@ bool REMDetect::start_unsafe (REMDetectCB *pcb)
   if (status)
 	  return true;
 
-  if (! A2D.setup_channel ( REMD_ADC_CHAN, ADC_CF_NONE ))
+  if (! A2DConv::get()->setup_channel ( REMD_ADC_CHAN, ADC_CF_NONE ))
 	  return false;
 
-  if (! A2D.start_unsafe ( REMD_ADC_CHAN, 0, this ))
+  if (! A2DConv::get()->start_unsafe ( REMD_ADC_CHAN, 0, this ))
 	  return false;
 
   /* Switch-on IRX transmitter*/
@@ -97,7 +102,7 @@ void REMDetect::stop_unsafe (void)
   if (! status)
 	  return;
 
-  A2D.stop_unsafe ( REMD_ADC_CHAN );
+  A2DConv::get()->stop_unsafe ( REMD_ADC_CHAN );
 
   /* Switch-off IRX transmitter*/
   digitalWrite( PIN_IRTX, HIGH ); /*drive pin high*/

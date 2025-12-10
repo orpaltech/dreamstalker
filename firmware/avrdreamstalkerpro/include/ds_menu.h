@@ -54,6 +54,8 @@ typedef struct s_menu_context {
 /*-----------------------------------------------------------------------*/
 class AppMenu {
 public:
+  static AppMenu *get();
+public:
   bool init (void);
 
   void enter (void);
@@ -72,7 +74,5 @@ private:
 
 /*-----------------------------------------------------------------------*/
 };	//DS
-
-extern DS::AppMenu menu;
 
 #endif // _DS_MENU_DEFINED

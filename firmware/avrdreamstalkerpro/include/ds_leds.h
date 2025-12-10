@@ -38,6 +38,8 @@ typedef enum e_led_id {
 /*-----------------------------------------------------------------------*/
 class Leds : public SquareWaveCB {
 public:
+  static Leds *get();
+public:
   bool init (void);
 
   void on (led_id_t led,
@@ -60,7 +62,5 @@ protected:
 
 /*-----------------------------------------------------------------------*/
 };	//DS
-
-extern DS::Leds leds;
 
 #endif // _DS_LEDS_DEFINED

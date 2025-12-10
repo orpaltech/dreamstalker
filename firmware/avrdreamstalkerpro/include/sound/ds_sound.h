@@ -37,6 +37,7 @@ namespace DS {
 class Sound {
 public:
   Sound();
+  static Sound *get();
 public:
   bool init( void );
 
@@ -46,16 +47,20 @@ public:
   /* Enable/shutdown amplifier */
   void speaker_on (void);
   void speaker_off (void);
+  bool is_speaker_on() const;
 
   /* Enable/disable system microphone */
   void mic_on (void);
   void mic_off (void);
 
+  /* Only for use in RTC ISR. Do not call it directly! */
+  static void handle_isr (void);
+
+private:
+  void irq_handler (void);
 };
 
 /*-----------------------------------------------------------------------*/
 }; //DS
-
-extern DS::Sound SND;
 
 #endif // _DS_SOUND_DEFINED

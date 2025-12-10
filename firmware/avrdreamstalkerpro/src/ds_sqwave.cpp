@@ -29,11 +29,17 @@ using namespace DS;
 /*-----------------------------------------------------------------------*/
 void SquareWave::handle_isr (void)
 {
-	SQW.irq_handler ();
+	get()->irq_handler ();
 }
 
 /*-----------------------------------------------------------------------*/
-SquareWave SQW;
+SquareWave sqwav;
+
+/*-----------------------------------------------------------------------*/
+SquareWave *SquareWave::get()
+{
+  return &sqwav;
+}
 
 /*-----------------------------------------------------------------------*/
 void SquareWave::irq_handler (void)
@@ -108,14 +114,16 @@ void SquareWave::start(unsigned i, uint16_t duration_ms, uint16_t period_ms, uin
   ps = &sqw[ i ];
 
   if (period_ms > 0) {
-	/* The period must be at least  2x RTC_INTERVAL_MSEC
+	/* 
+	 * The period must be at least 2 * RTC ISR period
 	 */
 	if (period_ms < (RTClock::isr_period_ms () * 2))
 	  period_ms = (RTClock::isr_period_ms () * 2);
   }
 
   if (duration_ms > 0) {
-	/* The duration must be at least one period
+	/* 
+	 * The duration must be at least one period
 	 */
 	if (duration_ms < period_ms)
 	  duration_ms = period_ms;

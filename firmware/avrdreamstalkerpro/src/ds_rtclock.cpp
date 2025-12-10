@@ -74,11 +74,17 @@ ISR(TIMER2_COMPA_vect)
 /*-----------------------------------------------------------------------*/
 void RTClock::handle_isr (void)
 {
-  RTC.irq_handler();
+  get()->irq_handler();
 }
 
 /*-----------------------------------------------------------------------*/
 RTClock RTC;
+
+/*-----------------------------------------------------------------------*/
+RTClock *RTClock::get()
+{
+  return &RTC;
+}
 
 /*-----------------------------------------------------------------------*/
 void RTClock::irq_handler (void)
@@ -117,12 +123,11 @@ void RTClock::irq_handler (void)
   if ( Keyboard::handle_isr ()) {
 
 	/* Reset display-off counter on a key press */
-	disp.enable_unsafe ();
+	Display::get()->enable_unsafe ();
 	rtc.ticks_display = 0;
   }
 
   /* Let other subsystems process interrupt */
-  //deferred_isr ();
   Display::handle_isr ();
   SquareWave::handle_isr ();
   avr_core::A2DConv::handle_rtc ();
@@ -137,11 +142,12 @@ void RTClock::irq_handler (void)
 	  if ((rtc.ticks_display >= RTC_OFF_DELAY_SEC)
 			&& is_visible () 
 			&& !is_setup ()) {
-		disp.disable_unsafe ();
+		Display::get()->disable_unsafe ();
 	  }
 	}
 
 	Driver::handle_isr();
+	Sound::handle_isr ();
 
 	if (flag_is_set (RTC_ALARM_CLOCK)) {
 	  /* 
@@ -190,7 +196,7 @@ void RTClock::irq_handler (void)
 		}
 	  }
 
-	  PowerManager::handle_isr ();	/* Call battery monitor */
+	  PowerMan::handle_isr ();	/* Call battery monitor */
 	}
 
 	flag_toggle (RTC_SHOW_DOT);
@@ -271,7 +277,7 @@ void RTClock::end (void)
 {
 }
 
-void RTClock::start (rtc_op_mode_t mode)
+void RTClock::start (rtc_oper_mode_t mode)
 {
 #if defined (__AVR_ATmega128__)
 
@@ -597,7 +603,7 @@ void RTClock::display_out (int hour, int minute, uint8_t flags)
   static char msg[7];
   char *ptr = msg;
 
-  if (! disp.is_enabled ())
+  if (! Display::get()->is_enabled ())
 	return;
 
   if (flags & RTC_SHOW_HOUR)
@@ -618,5 +624,5 @@ void RTClock::display_out (int hour, int minute, uint8_t flags)
   if (flags & RTC_WAKEUP_TIMER)
 	strcat (ptr, ".");
 
-  disp.text_out_unsafe (msg);
+  Display::get()->text_out_unsafe (msg);
 }
