@@ -25,14 +25,6 @@
 
 #include <core/adc_avr.h>
 
-/*-----------------------------------------------------------------------*/
-/** Defines the REM detector test mode
- */
-#ifndef REMD_TEST
-# define REMD_TEST 0
-#endif
-
-
 namespace DS {
 /*-----------------------------------------------------------------------*/
 
@@ -47,7 +39,7 @@ public:
 };
 
 /*-----------------------------------------------------------------------*/
-class REMDetect : public avr_core::A2DSampleCB {
+class REMDetect {
 public:
   static REMDetect *get();
 
@@ -62,7 +54,10 @@ public:
   bool start_unsafe (REMDetectCB *premdcb) ;
   void stop_unsafe (void) ;
 protected:
-  virtual void on_a2d_sample(uint16_t sample);
+  void on_a2d_sample(uint16_t sample);
+
+private:
+  static void a2d_sample_callback(void *context, uint16_t sample);
   
 private:
   REMDetectCB *premdcb;

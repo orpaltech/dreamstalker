@@ -40,14 +40,8 @@ typedef enum e_rtc_setup_mode {
 } rtc_setup_mode_t;
 
 /*-----------------------------------------------------------------------*/
-class RTClockCB {
-public:
-  virtual void on_wakeup_timer (void) = 0;
-  virtual void on_alarm_clock (void) = 0;
+typedef void (*RTClockCB_t)(void *context);
 
-protected:
-  RTClockCB() { }
-};
 
 /*-----------------------------------------------------------------------*/
 class RTClock {
@@ -72,13 +66,14 @@ public:
   void setup_inc (int sign);
 
   /* Wake-Up timer operations */
-  void wakeup_timer_set (RTClockCB *prtcb);
-  void wakeup_timer_cancel (void);
+  void wakeup_timer_set (RTClockCB_t prtcb, void *context);
+  bool wakeup_timer_cancel (void);
+  bool wakeup_timer_is_set_unsafe (void);
   bool wakeup_timer_is_set (void);
 
   /* Alarm clock operations */
-  void alarm_clock_set (RTClockCB *prtcb);
-  void alarm_clock_cancel (void);
+  void alarm_clock_set (RTClockCB_t prtcb, void *context);
+  bool alarm_clock_cancel (void);
   bool alarm_clock_is_set (void);
 
   /* Only use in power-save mode */
@@ -116,8 +111,11 @@ private:
     uint8_t ticks_setup;
     /* Wake-Up timer management */
     uint16_t ticks_wakeup_timer;
-    RTClockCB *pcb;
+    RTClockCB_t pcb_wakeup_timer;
+    void *context_wakeup_timer;
     /* Alarm clock management */
+    RTClockCB_t pcb_alarm_clock;
+    void *context_alarm_clock;
     uint8_t ticks_alarm_clock;
     /* Internal control flags */
     uint16_t flags : 8;

@@ -45,9 +45,9 @@ SquareWave *SquareWave::get()
 void SquareWave::irq_handler (void)
 {
   volatile sqw_context_t *ps;
-  unsigned i, pulse_width;
+  uint16_t pulse_width;
 
-  for (i=0; i< SQW_SLOTS; i++) {
+  for (uint8_t i=0; i< SQW_SLOTS; i++) {
 	ps = &sqw[ i ];
 
 	if (! ps->active)
@@ -75,10 +75,12 @@ void SquareWave::irq_handler (void)
   }
 }
 
-void SquareWave::do_transition (unsigned i, sqw_transition_t trans)
+void SquareWave::do_transition (uint8_t i, sqw_transition_t trans)
 {
-  if (sqw[i].ptcb)
-	sqw[i].ptcb->on_sqw_transition ( i, trans );
+  volatile sqw_context_t *ps = &sqw[i];
+
+  if (ps->pcb_transition)
+	ps->pcb_transition (ps->context, i, trans);
 }
 
 bool SquareWave::init(void)
@@ -88,7 +90,7 @@ bool SquareWave::init(void)
   return true;
 }
 
-bool SquareWave::is_active (unsigned i)
+bool SquareWave::is_active (uint8_t i)
 {
   bool active;
 
@@ -102,7 +104,8 @@ bool SquareWave::is_active (unsigned i)
   return active;
 }
 
-void SquareWave::start(unsigned i, uint16_t duration_ms, uint16_t period_ms, uint8_t duty_cycle, SquareWaveCB *ptcb)
+void SquareWave::start(uint8_t i, uint16_t duration_ms, uint16_t period_ms, uint8_t duty_cycle, 
+					SquareWaveCB_Transition_t ptcb, void *context)
 {
   sqw_context_t volatile *ps;
 
@@ -136,13 +139,15 @@ void SquareWave::start(unsigned i, uint16_t duration_ms, uint16_t period_ms, uin
 	ps->duty_cycle = duty_cycle;
 	ps->period_ticks = 0;
 	ps->active = true;
-	ps->ptcb = ptcb;
+	ps->pcb_transition = ptcb;
+	ps->context = context;
+	ps->pcb_complete = nullptr;
 
 	do_transition ( i, SQW_TRANS_HIGH );
   }
 }
 
-void SquareWave::stop (unsigned i)
+void SquareWave::stop (uint8_t i)
 {
   if (i >= SQW_SLOTS)
 	return;

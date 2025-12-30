@@ -369,7 +369,7 @@ void LED4D7S_Display::text_out_unsafe (const char *text)
   /*
    * Process global flags
    */
-  if (RTClock::get()->wakeup_timer_is_set ()) {
+  if (RTClock::get()->wakeup_timer_is_set_unsafe ()) {
 	
 	pf_segments[NDIGITS-1] |= SEGH;
   }

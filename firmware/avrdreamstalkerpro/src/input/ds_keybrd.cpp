@@ -26,6 +26,7 @@
 
 #include "input/inputevent.h"
 #include "input/ds_keybrd.h"
+#include "ds_util.h"
 
 
 using namespace DS;
@@ -105,12 +106,12 @@ bool Keyboard::init (void)
   /** Keyboard input lines
    ** Pull-up all associated pins 
    */
-  pinMode ( PIN_ONOFF,  INPUT_PULLUP );
-  pinMode ( PIN_CHECK,  INPUT_PULLUP );
-  pinMode ( PIN_SELECT, INPUT_PULLUP );
-  pinMode ( PIN_ENTER,  INPUT_PULLUP );
-  pinMode ( PIN_PLUS,   INPUT_PULLUP );
-  pinMode ( PIN_MINUS,  INPUT_PULLUP );
+  Pins::set_in_pullup ( PIN_ONOFF );
+  Pins::set_in_pullup ( PIN_CHECK );
+  Pins::set_in_pullup ( PIN_SELECT );
+  Pins::set_in_pullup ( PIN_ENTER );
+  Pins::set_in_pullup ( PIN_PLUS );
+  Pins::set_in_pullup ( PIN_MINUS );
 
   /* Disable all interrupts INT0-7 */
   EIMSK = 0;
@@ -204,37 +205,37 @@ keybrd_event_t poll_keys ( void )
   keybrd_event_t ret	= KEY_NONE;
 
   // check to see if the user has pressed ONOFF down
-  if( digitalRead( PIN_ONOFF ) == LOW )
+  if (Pins::is_in_low (PIN_ONOFF))
   {
 	  ret |= KEY_POWER;
   }
 
   // check to see if the user has pressed CHECK down
-  if( digitalRead( PIN_CHECK ) == LOW )
+  if (Pins::is_in_low (PIN_CHECK))
   {
 	  ret |= KEY_CHECK;
   }
 
   // check to see if the user has pressed ENTER down
-  if( digitalRead( PIN_ENTER ) == LOW )
+  if (Pins::is_in_low (PIN_ENTER))
   {
 	  ret |= KEY_ENTER;
   }
 
   // check to see if the user has pressed SELECT down
-  if( digitalRead( PIN_SELECT ) == LOW )
+  if (Pins::is_in_low (PIN_SELECT))
   {
 	  ret |= KEY_SELECT;
   }
 
   // check to see if the user has pressed (+) down
-  if( digitalRead( PIN_PLUS ) == LOW )
+  if (Pins::is_in_low (PIN_PLUS))
   {
 	  ret |= KEY_PLUS;
   }
 
   // check to see if the user has pressed (-) down
-  if( digitalRead( PIN_MINUS ) == LOW )
+  if (Pins::is_in_low (PIN_MINUS))
   {
 	  ret |= KEY_MINUS;
   }

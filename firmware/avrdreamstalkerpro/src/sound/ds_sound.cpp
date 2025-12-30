@@ -28,6 +28,7 @@
 #include "sound/ds_sound.h"
 #include "sound/ds_tonegen.h"
 #include "ds_config.h"
+#include "ds_util.h"
 
 using namespace DS;
 
@@ -61,7 +62,7 @@ void Sound::handle_isr (void)	// runs every 1 sec
 }
 
 /*-----------------------------------------------------------------------*/
-Sound snd;
+static Sound snd;
 
 /*-----------------------------------------------------------------------*/
 Sound *Sound::get()
@@ -76,7 +77,7 @@ Sound::Sound()
 
 void Sound::irq_handler (void)
 {
-  if (digitalRead( PIN_HPTS ) == LOW ) {
+  if (Pins::is_in_low (PIN_HPTS)) {
 
     // off loudspeaker
     if ( is_speaker_on () )
@@ -84,42 +85,40 @@ void Sound::irq_handler (void)
   } else {
 
 	// on loudspeaker (if enabled by config)
-	if ( config.get_loud_speaker () && ! is_speaker_on () )
+	if ( config.get_loud_speaker_enabled () && ! is_speaker_on () )
 		speaker_on( );
   }
 }
 
 void Sound::speaker_on (void)
 {
-	digitalWrite( PIN_SND_OFF, LOW );
+  Pins::out_low (PIN_SND_OFF);
 
 	_delay_ms ( 100 );
 }
 
 void Sound::speaker_off (void)
 {
-	digitalWrite( PIN_SND_OFF, HIGH );
+  Pins::out_high (PIN_SND_OFF);
 
 	_delay_ms ( 10 );
 }
 
 bool Sound::is_speaker_on() const
 {
-	int val = digitalReadOutputPin( PIN_SND_OFF );
-
-	return ( val == LOW );
+	return Pins::is_out_low (PIN_SND_OFF);
 }
 
 void Sound::mic_on (void)
 {
-  digitalWrite( PIN_MIC_PWR, HIGH );
+  Pins::out_high (PIN_MIC_PWR);
 
   _delay_ms ( 10 );
 }
 
 void Sound::mic_off (void)
 {
-  digitalWrite( PIN_MIC_PWR, LOW );
+  Pins::out_low (PIN_MIC_PWR);
 
   _delay_ms ( 10 );
 }
@@ -127,14 +126,14 @@ void Sound::mic_off (void)
 bool Sound::init ( void )
 {
   /* set control pins to output */
-  pinMode( PIN_MIC_PWR, OUTPUT );
-  pinMode( PIN_SND_OFF, OUTPUT );
+  Pins::set_out ( PIN_MIC_PWR );
+  Pins::set_out ( PIN_SND_OFF );
 
   /* set headphones tip sensing pin to input */
-  pinMode( PIN_HPTS, INPUT_PULLUP );
+  Pins::set_in_pullup ( PIN_HPTS );
 
   /* set silent pin to input */
-  pinMode( PIN_SILENT, INPUT );
+  Pins::set_in_highz ( PIN_SILENT );
 
 	/* Left channel sensing pin */
 	DDRG &= ~DD_MLEFT;		/* set input */
@@ -153,12 +152,12 @@ bool Sound::init ( void )
 
 void Sound::start (void)
 {
-  if (config.get_loud_speaker ()) {
+  if (config.get_loud_speaker_enabled ()) {
 
-	speaker_on ();
+	  speaker_on ();
   } else {
 
-	speaker_off ();
+	  speaker_off ();
   }
 }
 

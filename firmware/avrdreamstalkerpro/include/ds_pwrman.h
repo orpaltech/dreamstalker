@@ -34,7 +34,7 @@
 namespace DS {
 
 /*-----------------------------------------------------------------------*/
-class PowerMan : public avr_core::A2DSampleCB {
+class PowerMan {
 public:
   static PowerMan *get();
 public:
@@ -53,6 +53,8 @@ protected:
   virtual void on_a2d_sample(uint16_t sample);
 
 private:
+  static void a2d_sample_callback(void *context, uint16_t sample);
+  
   void irq_handler (void);
   void run_monitor (void);
 

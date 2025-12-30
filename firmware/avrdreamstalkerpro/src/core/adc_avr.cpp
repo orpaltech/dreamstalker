@@ -171,7 +171,7 @@ void A2DConv::adc_handler (void)
 
 	  /* Allow callback function process the sample */
 	  if (pch->pfcb)
-	    (pch->pfcb)->on_a2d_sample ( sample );
+	    pch->pfcb( pch->context, sample );
 
 	  if (pch->num_samples > 0) {
 	    /* Check number of samples requested 
@@ -186,12 +186,14 @@ void A2DConv::adc_handler (void)
   ADCSRA &= ~_BV(ADIE);
 }
 
-uint8_t A2DConv::get_channel ( int i )
+uint8_t A2DConv::get_channel ( uint8_t i )
 {
-  return adc[i].flags & ADC_CHAN_MASK;
+  // The compiler will only read the first byte of .flags 
+  // because the mask 0x1F makes the second byte irrelevant.
+  return (uint8_t)(adc[i].flags & ADC_CHAN_MASK);
 }
 
-int A2DConv::get_index( uint8_t chan )
+int8_t A2DConv::get_index( uint8_t chan )
 {
   uint8_t i;
 
@@ -202,9 +204,9 @@ int A2DConv::get_index( uint8_t chan )
   return -1;
 }
 
-int A2DConv::get_next_running_index ( void )
+int8_t A2DConv::get_next_running_index ( void )
 {
-  int index = chan_index;
+  uint8_t index = chan_index;
 
   /* Advance the channel index */
   if (!( ++chan_index < ADC_CHANNELS ))
@@ -220,7 +222,7 @@ int A2DConv::get_next_running_index ( void )
   return -1;
 }
 
-void A2DConv::convert_one ( int i )
+void A2DConv::convert_one ( int8_t i )
 {
   uint8_t adc_ref, left_adjust = 0;
   /* Setup ADC multiplexer for conversion */
@@ -315,18 +317,18 @@ bool A2DConv::setup_channel (uint8_t chan, uint16_t flags)
   return true;
 }
 
-bool A2DConv::start (uint8_t chan, int num_samples, A2DSampleCB *pfcb)
+bool A2DConv::start (uint8_t chan, uint16_t num_samples, A2DSampleCB_t pfcb, void *context)
 {
   bool res;
 
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
 
-    res = start_unsafe ( chan, num_samples, pfcb );
+    res = start_unsafe ( chan, num_samples, pfcb, context );
   }
   return res;
 }
 
-bool A2DConv::start_unsafe (uint8_t chan, int num_samples, A2DSampleCB *pfcb)
+bool A2DConv::start_unsafe (uint8_t chan, uint16_t num_samples, A2DSampleCB_t pfcb, void *context)
 {
   volatile adc_channel_t *pch;
   int i;
@@ -345,8 +347,9 @@ bool A2DConv::start_unsafe (uint8_t chan, int num_samples, A2DSampleCB *pfcb)
   if (pch->flags & SF_RUNNING)
     return false;
 
-  pch->num_samples = ( num_samples > 0 ) ? num_samples : -1;
+  pch->num_samples = num_samples;
   pch->pfcb = pfcb;
+  pch->context = context;
   pch->flags |= SF_RUNNING;
 
   /* Start the conversion */

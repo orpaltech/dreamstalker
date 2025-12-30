@@ -53,13 +53,13 @@ using namespace DS;
 /*-----------------------------------------------------------------------*/
 
 static
-int led_is_busy(led_id_t led)
+bool led_is_busy(led_id_t led)
 {
   return SquareWave::get()->is_active (led);
 }
 
 static 
-uint8_t led_to_pin (/*led_id_t*/unsigned led)
+uint8_t led_to_pin (led_id_t led)
 {
   uint8_t pin;
 
@@ -87,7 +87,15 @@ void led_set_pwm_ocr (led_id_t led, uint16_t ocr)
 }
 
 /*-----------------------------------------------------------------------*/
-Leds leds;
+static Leds leds;
+
+/*-----------------------------------------------------------------------*/
+void Leds::sqw_transition_callback(void *context, uint8_t slot, sqw_transition_t trans)
+{
+  Leds *pls = static_cast<Leds *>(context);
+
+  pls->on_sqw_transition (slot, trans);
+}
 
 /*-----------------------------------------------------------------------*/
 Leds *Leds::get()
@@ -131,9 +139,10 @@ void Leds::pulse (led_id_t led, uint8_t brightness, uint16_t duration_ms, uint16
 
   led_set_pwm_ocr (led, LEDS_TMR3_OCR_HALF_TOP + LEDS_TMR3_OCR_HALF_TOP * (1.f - fbr*fbr));
 
-  RTClock::get()->wait( 4 ); // found experimentally to avoid initial LED burst
+  RTClock::get()->wait( 4 ); // found experimentally to avoid initial LED spark
 
-  SquareWave::get()->start (led, duration_ms, period_ms, duty_cycle, this);
+  SquareWave::get()->start (led, duration_ms, period_ms, duty_cycle, 
+                          sqw_transition_callback, this);
 }
 
 bool Leds::init (void)
@@ -166,15 +175,15 @@ bool Leds::init (void)
   return true;
 }
 
-void Leds::on_sqw_transition(unsigned led, sqw_transition_t trans)
+void Leds::on_sqw_transition (uint8_t led, sqw_transition_t trans)
 {
-  uint8_t pin = led_to_pin(led);
-  uint8_t mask = digitalPinToBitMask(pin);
-  uint8_t port = digitalPinToPort(pin);
+  uint8_t pin = led_to_pin ((led_id_t)led);
+  uint8_t mask = digitalPinToBitMask (pin);
+  uint8_t port = digitalPinToPort (pin);
 
   volatile uint8_t *mod, *out;
-  mod = portModeRegister(port);
-  out = portOutputRegister(port);
+  mod = portModeRegister (port);
+  out = portOutputRegister (port);
 
   switch (trans)
   {
@@ -200,7 +209,7 @@ void Leds::on_sqw_transition(unsigned led, sqw_transition_t trans)
   }
 }
 
-void Leds::on_sqw_complete(unsigned led)
+/*void Leds::on_sqw_complete(unsigned led)
 {
   switch (led) {
 	case LED1: 
@@ -211,4 +220,4 @@ void Leds::on_sqw_complete(unsigned led)
     TCCR3A &= ~_BV(COM3B1);
 	  break;
   }
-}
+}*/

@@ -1049,7 +1049,7 @@ void ense_speaker_setup ( pmenu_context_t ctx, keybrd_event_t key_event )
 		Sound::get()->speaker_off ();
 	  }
 
-	  config.toggle_loud_speaker();
+	  config.toggle_loud_speaker_enabled ();
 	  Display::get()->flag (ense_speaker_setup_read_value ());
 
 	  set_handled (ctx);
@@ -1059,7 +1059,7 @@ void ense_speaker_setup ( pmenu_context_t ctx, keybrd_event_t key_event )
 
 int ense_speaker_setup_read_value (void)
 {
-  return config.get_loud_speaker ();
+  return config.get_loud_speaker_enabled ();
 }
 
 void clock_setup_activate (void)
@@ -1339,7 +1339,7 @@ void alarm_clock_setup ( pmenu_context_t ctx, keybrd_event_t key_event )
   switch ( key_event ) {
 	case ( KEY_MINUS ):
 	case ( KEY_PLUS ):
-	  config.toggle_alarm_clock();
+	  config.toggle_alarm_clock_enabled ();
 
 	  Display::get()->flag (alarm_clock_setup_read_value ());
 	  set_handled (ctx);
@@ -1349,7 +1349,7 @@ void alarm_clock_setup ( pmenu_context_t ctx, keybrd_event_t key_event )
 
 int alarm_clock_setup_read_value (void)
 {
-  return config.get_alarm_clock ();	
+  return config.get_alarm_clock_enabled ();	
 }
 
 void hints_frequency_setup_activate (void)

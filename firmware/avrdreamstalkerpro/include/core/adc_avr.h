@@ -38,10 +38,7 @@ typedef enum adc_channel_flag {
 } adc_channel_flag_t;
 
 /*-----------------------------------------------------------------------*/
-class A2DSampleCB {
-public:
-  virtual void on_a2d_sample(uint16_t sample) = 0;
-};
+typedef void (*A2DSampleCB_t)(void *context, uint16_t sample);
 
 /*-----------------------------------------------------------------------*/
 class A2DConv {
@@ -53,8 +50,8 @@ public:
 
   void warm_up ( void);
 
-  bool setup_channel(uint8_t chan, uint16_t flags);
-  bool start (uint8_t chan, int num_samples, A2DSampleCB *pfcb = nullptr);
+  bool setup_channel(uint8_t chan, uint16_t flags = ADC_CF_NONE);
+  bool start (uint8_t chan, uint16_t num_samples, A2DSampleCB_t pfcb = nullptr, void *context = nullptr);
   void stop (uint8_t chan) ;
   void enable_channel (uint8_t chan, bool enable);
   bool is_enabled (uint8_t chan);
@@ -65,22 +62,23 @@ public:
   /* Intended for use in ISR only */
   static void handle_rtc (void);  /* called every 1ms*/
   static void handle_adc (void);
-  bool start_unsafe (uint8_t chan, int num_samples, A2DSampleCB *pfcb = nullptr);
+  bool start_unsafe (uint8_t chan, uint16_t num_samples, A2DSampleCB_t pfcb = nullptr, void *context = nullptr);
   void stop_unsafe (uint8_t chan) ;
 
 private:
-  uint8_t get_channel ( int index);
-  int   get_index( uint8_t chan );
-  int   get_next_running_index (void);
-  void  convert_one ( int index );
+  uint8_t get_channel( uint8_t index);
+  int8_t  get_index( uint8_t chan );
+  int8_t  get_next_running_index (void);
+  void  convert_one ( int8_t index );
   void  rtc_handler ( void);
   void  adc_handler ( void);
 
 private:
   typedef struct s_adc_channel {
     uint16_t flags;
-    int num_samples;
-    A2DSampleCB *pfcb;
+    uint16_t num_samples;
+    A2DSampleCB_t pfcb;
+    void *context;
   } adc_channel_t;
   
   volatile adc_channel_t adc[ADC_CHANNELS];

@@ -194,8 +194,8 @@ void Config::set_default_values (void)
   set_default_before_hints ();
   set_default_after_hints ();
   set_default_voice_recording ();
-  set_default_loud_speaker ();
-  set_default_alarm_clock ();
+  set_default_loud_speaker_enabled ();
+  set_default_alarm_clock_enabled ();
 
   /*
    * TODO: Add more lines below if you need more properties !!!
@@ -310,8 +310,8 @@ void Config::erase_storage (void)
 DSCONF_IMPLEMENT_BOOL_PROPERTY(before_hints, false)
 DSCONF_IMPLEMENT_BOOL_PROPERTY(after_hints, false)
 DSCONF_IMPLEMENT_BOOL_PROPERTY(voice_recording, false)
-DSCONF_IMPLEMENT_BOOL_PROPERTY(loud_speaker, true)
-DSCONF_IMPLEMENT_BOOL_PROPERTY(alarm_clock, false)
+DSCONF_IMPLEMENT_BOOL_PROPERTY(loud_speaker_enabled, true)
+DSCONF_IMPLEMENT_BOOL_PROPERTY(alarm_clock_enabled, false)
 DSCONF_IMPLEMENT_PROPERTY(wakeup_timer_delay, WAKEUP_TIMER_DELAY_MIN, WAKEUP_TIMER_DELAY_MAX, 1, WAKEUP_TIMER_DELAY_DEFAULT)
 DSCONF_IMPLEMENT_PROPERTY(sleep_scenario, 0, 9, 1, 0)
 DSCONF_IMPLEMENT_PROPERTY(relax_tunes, 0, 9, 1, 0)

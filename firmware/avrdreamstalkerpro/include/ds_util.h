@@ -80,6 +80,33 @@ public:
 };
 
 /*-----------------------------------------------------------------------*/
+
+class Pins {
+public:
+  /* Switches pin to output mode */
+  static void set_out ( uint8_t pin );
+  /* Switches pin to input mode (High-Z)*/
+  static void set_in_highz ( uint8_t pin );
+  /* Switches pin to input mode (Pull-Up)*/
+  static void set_in_pullup ( uint8_t pin);
+
+  /* Drives output pin high */
+  static void out_high ( uint8_t pin );
+  /* Drives output pin low */
+  static void out_low ( uint8_t pin );
+
+  /* Checks if input pin driven high */
+  static bool is_in_high ( uint8_t pin );
+  /* Checks if input pin driven low */
+  static bool is_in_low ( uint8_t pin );
+
+  /* Checks if output pin driven high */
+  static bool is_out_high ( uint8_t pin );
+  /* Checks if output pin driven low */
+  static bool is_out_low ( uint8_t pin );
+};
+
+/*-----------------------------------------------------------------------*/
 };  //DS
 
 #endif // _DS_UTIL_DEFINED

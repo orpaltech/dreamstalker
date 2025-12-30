@@ -33,7 +33,7 @@ extern SDLib::SDClass &card0;
 
 namespace DS {
 /*-----------------------------------------------------------------------*/
-class Driver : public RTClockCB, public REMDetectCB {
+class Driver : public REMDetectCB {
 public:
   bool begin (void);
   void end (void);
@@ -48,8 +48,8 @@ public:
   /* The method is only used from ISR. Do not call it directly. */
   static void handle_isr (void);
 protected:
-  virtual void on_wakeup_timer (void);
-  virtual void on_alarm_clock (void);
+  void on_wakeup_timer (void);
+  void on_alarm_clock (void);
   virtual void on_remd_event (remd_event_type_t event);
 
   friend class AppMenu;
@@ -58,6 +58,8 @@ private:
   void wakeup_timer_quick_set (keybrd_event_t key_event);
   void start_lucid_dream (void);
   void power_off (void);
+  static void alarm_clock_callback (void *context);
+  static void wakeup_timer_callback (void *context);
 };
 
 /*-----------------------------------------------------------------------*/

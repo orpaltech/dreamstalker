@@ -33,6 +33,13 @@ using namespace avr_core;
 
 
 /*-----------------------------------------------------------------------*/
+/** Defines the REM detector test mode
+ */
+#ifndef TEST_REMD
+# define TEST_REMD 0
+#endif
+
+/*-----------------------------------------------------------------------*/
 /* Peripheral controls (Platform dependent) */
 
 #define PIN_IRTX  PIN_PC0
@@ -40,7 +47,15 @@ using namespace avr_core;
 #define REMD_ADC_CHAN	0
 
 /*-----------------------------------------------------------------------*/
-REMDetect remd;
+static REMDetect remd;
+
+/*-----------------------------------------------------------------------*/
+void REMDetect::a2d_sample_callback(void *context, uint16_t sample)
+{
+  REMDetect *premd = static_cast<REMDetect *>(context);
+
+  premd->on_a2d_sample(sample);
+}
 
 /*-----------------------------------------------------------------------*/
 REMDetect *REMDetect::get()
@@ -52,10 +67,10 @@ REMDetect *REMDetect::get()
 bool REMDetect::init (void)
 {
   /* Enable IRTX line */
-  pinMode( PIN_IRTX, OUTPUT );    /*set output mode*/
+  Pins::set_out (PIN_IRTX);    /*set output mode*/
 
   /* Switch-off IRX transmitter*/
-  digitalWrite( PIN_IRTX, HIGH ); /*drive pin high*/
+  Pins::out_high (PIN_IRTX);    /*drive pin high*/
 
   status = false;	/* not running */
   return true;
@@ -64,7 +79,7 @@ bool REMDetect::init (void)
 void REMDetect::end (void)
 {
   /* Disable IRTX line */
-  pinMode( PIN_IRTX, INPUT ); /*set input mode, high-Z*/
+  Pins::set_in_highz (PIN_IRTX);   /*set input mode, high-Z*/
 }
 
 bool REMDetect::start (REMDetectCB *pcb)
@@ -83,14 +98,15 @@ bool REMDetect::start_unsafe (REMDetectCB *pcb)
   if (status)
 	  return true;
 
-  if (! A2DConv::get()->setup_channel ( REMD_ADC_CHAN, ADC_CF_NONE ))
+  if (! A2DConv::get()->setup_channel ( REMD_ADC_CHAN ))
 	  return false;
 
-  if (! A2DConv::get()->start_unsafe ( REMD_ADC_CHAN, 0, this ))
+  if (! A2DConv::get()->start_unsafe ( REMD_ADC_CHAN, 0, 
+                                  a2d_sample_callback, this ))
 	  return false;
 
   /* Switch-on IRX transmitter*/
-  digitalWrite( PIN_IRTX, LOW );  /*drive pin low*/
+  Pins::out_low (PIN_IRTX);   /*drive pin low*/
 
   premdcb = pcb;
   status = true;	/* running */
@@ -105,7 +121,7 @@ void REMDetect::stop_unsafe (void)
   A2DConv::get()->stop_unsafe ( REMD_ADC_CHAN );
 
   /* Switch-off IRX transmitter*/
-  digitalWrite( PIN_IRTX, HIGH ); /*drive pin high*/
+  Pins::out_high (PIN_IRTX);    /*drive pin high*/
   
   status = false;	/* not running*/
 }
@@ -125,7 +141,7 @@ bool REMDetect::is_running()
 
 void REMDetect::on_a2d_sample(uint16_t sample)
 {
-#if REMD_TEST
+#if TEST_REMD
 	/*
    * forward sample to UART0 during testing phase
    */

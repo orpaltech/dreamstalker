@@ -36,28 +36,31 @@ typedef enum e_led_id {
 } led_id_t;
 
 /*-----------------------------------------------------------------------*/
-class Leds : public SquareWaveCB {
+class Leds {
 public:
   static Leds *get();
 public:
   bool init (void);
 
   void on (led_id_t led,
-			uint8_t brightness,		/* percent, 1-100*/
-			uint16_t duration_ms	/* milliseconds*/
-			);
+      uint8_t brightness,		/* percent, 1-100*/
+      uint16_t duration_ms	/* milliseconds*/
+      );
 
   void off (led_id_t led);
 
   void pulse (led_id_t led,
-				uint8_t brightness,		/* percent, 1-100*/
-				uint16_t duration_ms,	/* milliseconds*/
-				uint16_t period_ms,		/* milliseconds*/
-				uint8_t duty_cycle		/* percent, normally 5-95 */
-				);
+      uint8_t brightness,		/* percent, 1-100*/
+      uint16_t duration_ms,	/* milliseconds*/
+      uint16_t period_ms,		/* milliseconds*/
+      uint8_t duty_cycle		/* percent, normally 5-95 */
+      );
 protected:
-  virtual void on_sqw_transition(unsigned slot, sqw_transition_t trans);
-  virtual void on_sqw_complete(unsigned slot);
+  void on_sqw_transition(uint8_t slot, sqw_transition_t trans);
+  //void on_sqw_complete(uint8_t slot);
+
+private:
+  static void sqw_transition_callback(void *context, uint8_t slot, sqw_transition_t trans);
 };
 
 /*-----------------------------------------------------------------------*/

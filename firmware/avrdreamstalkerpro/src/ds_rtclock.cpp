@@ -161,8 +161,8 @@ void RTClock::irq_handler (void)
 		flag_unset (RTC_ALARM_CLOCK);
 
 		/* Notify callback object */
-		if (rtc.pcb)
-		  (rtc.pcb)->on_alarm_clock ();
+		if (rtc.pcb_alarm_clock)
+		  rtc.pcb_alarm_clock (rtc.context_alarm_clock);
 	  }
 	}
 
@@ -191,8 +191,8 @@ void RTClock::irq_handler (void)
 		  flag_unset (RTC_WAKEUP_TIMER);
 
 		  /* Notify callback object */
-		  if (rtc.pcb)
-		  	(rtc.pcb)->on_wakeup_timer ();
+		  if (rtc.pcb_wakeup_timer)
+		  	rtc.pcb_wakeup_timer (rtc.context_wakeup_timer);
 		}
 	  }
 
@@ -522,80 +522,99 @@ void RTClock::setup_inc (int sign)
   }
 }
 
-void RTClock::wakeup_timer_set (RTClockCB *prtcb)
+void RTClock::wakeup_timer_set (RTClockCB_t prtcb, void *context)
 {
   if (rtc.op_mode != RTC_OPM_NORMAL)
 	return;
 
-  if (flag_is_set (RTC_WAKEUP_TIMER))
-	return;		/* Already set */
-
   ATOMIC_BLOCK (ATOMIC_RESTORESTATE) {
 
+	if (flag_is_set (RTC_WAKEUP_TIMER))
+		return;		/* Already set */
+
 	rtc.ticks_wakeup_timer = 0;
-	rtc.pcb = prtcb;
+	rtc.pcb_wakeup_timer = prtcb;
+	rtc.context_wakeup_timer = context;
 
 	flag_set (RTC_WAKEUP_TIMER);
   }
 }
 
-void RTClock::wakeup_timer_cancel (void)
+bool RTClock::wakeup_timer_cancel (void)
 {
   if (rtc.op_mode != RTC_OPM_NORMAL)
-	return;
-
-  if (! flag_is_set (RTC_WAKEUP_TIMER))
-	return;		/* Not set */
+	return false;
 
   ATOMIC_BLOCK (ATOMIC_RESTORESTATE) {
 
+	if (! flag_is_set (RTC_WAKEUP_TIMER))
+		return false;	/* Not set */
+
 	flag_unset (RTC_WAKEUP_TIMER);
 
-	rtc.pcb = nullptr;
+	rtc.pcb_wakeup_timer = nullptr;
   }
+  return true;
 }
 
-bool RTClock::wakeup_timer_is_set (void)
+bool RTClock::wakeup_timer_is_set_unsafe (void)
 {
   return flag_is_set (RTC_WAKEUP_TIMER);
 }
 
-void RTClock::alarm_clock_set (RTClockCB *prtcb)
+bool RTClock::wakeup_timer_is_set (void)
+{
+  bool res;
+
+  ATOMIC_BLOCK (ATOMIC_RESTORESTATE) {
+  	res = wakeup_timer_is_set_unsafe ();
+  }
+  return res;
+}
+
+void RTClock::alarm_clock_set (RTClockCB_t prtcb, void *context)
 {
   if (rtc.op_mode != RTC_OPM_NORMAL)
 	return;
 
-  if (flag_is_set (RTC_ALARM_CLOCK))
-	return;		/* Already set*/
-
   ATOMIC_BLOCK (ATOMIC_RESTORESTATE) {
 
+  	if (flag_is_set (RTC_ALARM_CLOCK))
+		return;		/* Already set*/
+
 	rtc.ticks_alarm_clock = 0;
-	rtc.pcb = prtcb;
+	rtc.pcb_alarm_clock = prtcb;
+	rtc.context_alarm_clock = context;
 
 	flag_set (RTC_ALARM_CLOCK);
   }
 }
 
-void RTClock::alarm_clock_cancel (void)
+bool RTClock::alarm_clock_cancel (void)
 {
   if (rtc.op_mode != RTC_OPM_NORMAL)
-	return;
-
-  if (! flag_is_set (RTC_ALARM_CLOCK))
-	return;		/* Not set */
+	return false;
 
   ATOMIC_BLOCK (ATOMIC_RESTORESTATE) {
 
+  	if (! flag_is_set (RTC_ALARM_CLOCK))
+		return false;	/* Not set */
+
 	flag_unset (RTC_ALARM_CLOCK);
 
-	rtc.pcb = nullptr;
+	rtc.pcb_alarm_clock = nullptr;
   }
+  return true;
 }
 
 bool RTClock::alarm_clock_is_set (void)
 {
-	return flag_is_set (RTC_ALARM_CLOCK);
+  bool res;
+
+  ATOMIC_BLOCK (ATOMIC_RESTORESTATE) {
+	res = flag_is_set (RTC_ALARM_CLOCK);
+  }
+  return res;
 }
 
 void RTClock::display_out (int hour, int minute, uint8_t flags)

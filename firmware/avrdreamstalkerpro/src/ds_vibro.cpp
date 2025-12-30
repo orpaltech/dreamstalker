@@ -23,6 +23,7 @@
 #include <Arduino.h>
 
 #include "ds_vibro.h"
+#include "ds_util.h"
 
 using namespace DS;
 
@@ -44,7 +45,16 @@ bool vibro_is_busy (void)
 
 
 /*-----------------------------------------------------------------------*/
-DS::VibroMotor vibro;
+static DS::VibroMotor vibro;
+
+/*-----------------------------------------------------------------------*/
+void VibroMotor::sqw_transition_callback(void *context, uint8_t slot,
+                                      sqw_transition_t trans)
+{
+  VibroMotor *pvm = static_cast<VibroMotor *>(context);
+
+  pvm->on_sqw_transition (slot, trans);
+}
 
 /*-----------------------------------------------------------------------*/
 VibroMotor *VibroMotor::get()
@@ -78,7 +88,8 @@ bool VibroMotor::start (uint8_t level, uint16_t duration_ms)
 	  break;
   }
 
-  SquareWave::get()->start (SQW_VIBRO, duration_ms, 10, duty_cycle, this);
+  SquareWave::get()->start (SQW_VIBRO, duration_ms, 10, duty_cycle, 
+                        sqw_transition_callback, this);
 
   return true;
 }
@@ -99,24 +110,24 @@ bool VibroMotor::is_running (void)
 bool VibroMotor::init (void)
 {
   /* Set vibration control pin to output mode */
-  pinMode ( PIN_VIBRO, OUTPUT );
+  Pins::set_out (PIN_VIBRO);
 
   /* Switch off */
-  digitalWrite ( PIN_VIBRO, LOW );
+  Pins::out_low (PIN_VIBRO);
 
   return true;
 }
 
-void VibroMotor::on_sqw_transition(unsigned i, sqw_transition_t trans)
+void VibroMotor::on_sqw_transition(uint8_t i, sqw_transition_t trans)
 {
   if (i != SQW_VIBRO)
 	  return;
 
-  uint8_t mask = digitalPinToBitMask(PIN_VIBRO);
-  uint8_t port = digitalPinToPort(PIN_VIBRO);
+  uint8_t mask = digitalPinToBitMask (PIN_VIBRO);
+  uint8_t port = digitalPinToPort (PIN_VIBRO);
 
   volatile uint8_t *out;
-  out = portOutputRegister(port);
+  out = portOutputRegister (port);
 
   switch (trans)
   {

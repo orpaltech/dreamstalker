@@ -203,13 +203,13 @@ public:
   /*
    * This mode controls built-in loudspeaker of the device.
    */
-  DSCONF_DECLARE_BOOL_PROPERTY(loud_speaker)
+  DSCONF_DECLARE_BOOL_PROPERTY(loud_speaker_enabled)
 
   /*
    * The alarm clock plays melody since 1 minute from giving you 
    * a series of cues (regardless of mode you set)
    */
-  DSCONF_DECLARE_BOOL_PROPERTY(alarm_clock)
+  DSCONF_DECLARE_BOOL_PROPERTY(alarm_clock_enabled)
 
   /*
    * Three modes of wakeup signals are available.
@@ -259,8 +259,8 @@ public:
 	DSCONF_DEFINE_FLAG(before_hints);
 	DSCONF_DEFINE_FLAG(after_hints);
 	DSCONF_DEFINE_FLAG(voice_recording);
-	DSCONF_DEFINE_FLAG(loud_speaker);
-	DSCONF_DEFINE_FLAG(alarm_clock);
+	DSCONF_DEFINE_FLAG(loud_speaker_enabled);
+	DSCONF_DEFINE_FLAG(alarm_clock_enabled);
 
 	DSCONF_DEFINE_FIELD(wakeup_timer_delay);
 	DSCONF_DEFINE_FIELD(sleep_scenario);

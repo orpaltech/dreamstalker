@@ -35,14 +35,6 @@ using namespace avr_core;
 
 #define PIN_MGBUF   PIN_PG0
 
-//#define DDR_MGBUF	DDRG		/* MGBUF direction register */
-//#define DD_MGBUF	_BV(DDG0)
-
-//#define PORT_MGBUF	PORTG		/* MGBUG out register */
-//#define PINS_MGBUF	PING		/* MGBUG input register */
-//#define BIT_MGBUF	PG0
-//#define PF_MGBUF	_BV(BIT_MGBUF)
-
 
 /*-----------------------------------------------------------------------*/
 /* The GBUF level is declared 1.23V in the datasheet and this level 
@@ -61,8 +53,8 @@ using namespace avr_core;
 #define BATTMON_CHANNEL	2
 #define BATTMON_SAMPLES	32
 
-#ifndef BATTMON_TEST
-#define BATTMON_TEST  0
+#ifndef TEST_BATTMON
+#define TEST_BATTMON  0
 #endif
 
 /*-----------------------------------------------------------------------*/
@@ -73,6 +65,14 @@ void PowerMan::handle_isr (void)	/* called every 1 min */
 
 /*-----------------------------------------------------------------------*/
 static PowerMan pm;
+
+/*-----------------------------------------------------------------------*/
+void PowerMan::a2d_sample_callback(void *context, uint16_t sample)
+{
+  PowerMan *ppm = static_cast<PowerMan *>(context);
+
+  ppm->on_a2d_sample( sample );
+}
 
 /*-----------------------------------------------------------------------*/
 PowerMan *PowerMan::get()
@@ -110,17 +110,16 @@ void PowerMan::run_monitor (void)
   batt_level = 0;	/* Start a new measurement */
 
   /* Let ADC take a few samples */
-  A2DConv::get()->start_unsafe ( BATTMON_CHANNEL, BATTMON_SAMPLES, this );
+  A2DConv::get()->start_unsafe ( BATTMON_CHANNEL, BATTMON_SAMPLES,
+                              a2d_sample_callback, this );
 }
 
 bool PowerMan::init (void)
 {
-  /* NOTE: Set GBUF line to be controlled by the codec. 
-   *	The GBUF expected level is ~1.23V according to datasheet.
+  /* NOTE: Set GBUF line to be controlled by the codec.
    */
-  pinMode ( PIN_MGBUF, INPUT_PULLUP );  /* set for input & pullup */
-  //pinMode ( PIN_MGBUF, INPUT );	    /* set for input & high-Z */
-
+  //Pins::set_in_pullup ( PIN_MGBUF );  /* set for input & pullup */
+  Pins::set_in_highz (PIN_MGBUF);     /* set for input & high-Z */
 
   /* 
    * Disable unused hardware 
@@ -136,7 +135,8 @@ void PowerMan::start (void)
   if (battmon_status)
     return;
   
-  if (! A2DConv::get()->setup_channel ( BATTMON_CHANNEL, ADC_CF_VREF_2_56))
+  if (! A2DConv::get()->setup_channel ( BATTMON_CHANNEL,
+                                    ADC_CF_VREF_2_56))
 	  return;
 
   batt_level = 0;
@@ -161,7 +161,7 @@ void PowerMan::on_a2d_sample( uint16_t sample )
   else
 	  batt_level = ((uint32_t) batt_level + (uint32_t) sample) / 2;
 
-#if BATTMON_TEST
+#if TEST_BATTMON
 	/* 
    * Forward sample to UART0 during testing phase
    */

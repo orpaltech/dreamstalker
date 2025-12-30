@@ -31,7 +31,7 @@
 
 namespace DS {
 /*-----------------------------------------------------------------------*/
-class VibroMotor : public SquareWaveCB {
+class VibroMotor {
 public:
   static VibroMotor *get();
 public:
@@ -46,7 +46,10 @@ public:
   bool is_running (void);
 
 protected:
-  virtual void on_sqw_transition(unsigned slot, sqw_transition_t trans);
+  void on_sqw_transition(uint8_t slot, sqw_transition_t trans);
+
+private:
+  static void sqw_transition_callback(void *context, uint8_t slot, sqw_transition_t trans);
 };
 
 /*-----------------------------------------------------------------------*/

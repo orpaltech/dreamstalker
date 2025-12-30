@@ -30,6 +30,7 @@
 #include <SD.h>
 
 #include "ds_util.h"
+#include "ds_arduino.h"
 #include "shared_fp.h"
 
 
@@ -137,6 +138,51 @@ void Files::make_next_file_path(char *file_path, unsigned len,
   }
 
   snprintf(file_path, len, "%s/%s%02u.%s", dir_path, prefix, ++max, file_ext);
+}
+
+void Pins::set_out ( uint8_t pin )
+{
+  pinMode ( pin, OUTPUT );
+}
+
+void Pins::set_in_highz ( uint8_t pin )
+{
+  pinMode ( pin, INPUT );
+}
+
+void Pins::set_in_pullup ( uint8_t pin)
+{
+  pinMode ( pin, INPUT_PULLUP );
+}
+
+void Pins::out_high ( uint8_t pin )
+{
+  digitalWrite ( pin, HIGH );
+}
+
+void Pins::out_low ( uint8_t pin )
+{
+  digitalWrite ( pin, LOW );
+}
+
+bool Pins::is_in_high ( uint8_t pin )
+{
+  return digitalRead( pin ) == HIGH;
+}
+
+bool Pins::is_in_low ( uint8_t pin )
+{
+  return digitalRead( pin ) == LOW;
+}
+
+bool Pins::is_out_high ( uint8_t pin )
+{
+  return digitalReadOutputPin( pin ) == HIGH;
+}
+
+bool Pins::is_out_low ( uint8_t pin )
+{
+  return digitalReadOutputPin( pin ) == LOW;
 }
 
 };  //DS

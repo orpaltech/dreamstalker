@@ -24,7 +24,7 @@
 #include <stdint.h>
 
 /*-----------------------------------------------------------------------*/
-#define SQW_SLOTS	3   /* Available slots: 0,1,2 */
+#define SQW_SLOTS	3U   /* Available slots: 0,1,2 */
 
 
 namespace DS {
@@ -37,11 +37,9 @@ typedef enum e_sqw_transition {
 } sqw_transition_t;
 
 /*-----------------------------------------------------------------------*/
-class SquareWaveCB {
-public:
-  virtual void on_sqw_transition(unsigned slot, sqw_transition_t trans) = 0;
-  virtual void on_sqw_complete(unsigned slot) {}
-};
+typedef void (*SquareWaveCB_Transition_t)(void *context, uint8_t slot, sqw_transition_t trans);
+typedef void (*SquareWaveCB_Complete_t)(void *context, uint8_t slot);
+
 
 /*-----------------------------------------------------------------------*/
 class SquareWave {
@@ -50,14 +48,15 @@ public:
 public:
   bool	init (void);
 
-  void	start (unsigned slot,
+  void	start (uint8_t slot,
               uint16_t duration_ms, 
               uint16_t period_ms, 
               uint8_t duty_cycle, /* in percent */
-              SquareWaveCB *ptcb);
-  void	stop(unsigned slot);
+              SquareWaveCB_Transition_t ptcb,
+              void *context);
+  void	stop(uint8_t slot);
 
-  bool	is_active (unsigned slot);
+  bool	is_active (uint8_t slot);
 
   /* Only for use in RTC ISR. Do not call it directly! */
   static void handle_isr (void);
@@ -69,10 +68,12 @@ private:
     uint16_t period;
     uint8_t duty_cycle : 7;
     uint8_t active : 1;
-    SquareWaveCB *ptcb;
+    SquareWaveCB_Transition_t pcb_transition;
+    SquareWaveCB_Complete_t pcb_complete;
+    void *context;
   } sqw_context_t;
 
-  void do_transition (unsigned slot, sqw_transition_t trans);
+  void do_transition (uint8_t slot, sqw_transition_t trans);
   void irq_handler (void);
 
   volatile sqw_context_t sqw[SQW_SLOTS];

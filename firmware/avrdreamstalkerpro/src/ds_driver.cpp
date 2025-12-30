@@ -63,6 +63,21 @@ static void key_tone ( void )
 Driver driver;
 
 /*-----------------------------------------------------------------------*/
+void Driver::alarm_clock_callback (void *context)
+{
+  Driver *pdrv = static_cast<Driver *>(context);
+
+  pdrv->on_alarm_clock ();
+}
+
+void Driver::wakeup_timer_callback (void *context)
+{
+  Driver *pdrv = static_cast<Driver *>(context);
+
+  pdrv->on_wakeup_timer ();
+}
+
+/*-----------------------------------------------------------------------*/
 bool Driver::begin (void)
 {
   delay(600); /* Let power stabilize */
@@ -79,7 +94,7 @@ bool Driver::begin (void)
   REMDetect::get()->init();
   
 
-#if ( REMD_TEST || BATTMON_TEST )
+#if ( TEST_REMD || TEST_BATTMON )
   Serial.begin( UART0_BITRATE );
   while (!Serial) {
     _NOP(); // wait for serial port to connect
@@ -306,9 +321,9 @@ void Driver::on_remd_event (remd_event_type_t event)
   // серию вспышек и звуков во время сновидения
 
   /* Сheck if alarm clock is enabled */
-  if (config.get_alarm_clock ()) {
+  if (config.get_alarm_clock_enabled ()) {
     
-    RTClock::get()->alarm_clock_set (this);
+    RTClock::get()->alarm_clock_set (alarm_clock_callback, this);
   }
 }
 
@@ -320,7 +335,7 @@ void Driver::wakeup_timer_toggle (void)
 
   } else {
 
-    RTClock::get()->wakeup_timer_set (this);
+    RTClock::get()->wakeup_timer_set (wakeup_timer_callback, this);
   }
 }
 
@@ -346,11 +361,11 @@ void Driver::wakeup_timer_quick_set (keybrd_event_t key_event)
   }
   Display::get()->wait_cycles ( 800 );
 
-  RTClock::get()->wakeup_timer_set (this);
+  RTClock::get()->wakeup_timer_set (wakeup_timer_callback, this);
   RTClock::get()->show();
 }
 
-#if REMD_TEST
+#if TEST_REMD
 static Timer tmr;
 static volatile int8_t evt_id = -1;
 #define REMD_TIMEOUT_MIN  10UL
@@ -363,7 +378,7 @@ static void stop_remd (void *ctx){
 
 void Driver::handle_isr (void)
 {
-#if REMD_TEST
+#if TEST_REMD
   if (evt_id < 0)
     return;
 
@@ -377,8 +392,8 @@ void Driver::start_lucid_dream (void)
     return;
   }
 
-#if REMD_TEST
-  /* Stop after 3 min */
+#if TEST_REMD
+  /* Stop after N min */
   evt_id = tmr.after(REMD_TIMEOUT_MIN * 60'000UL, stop_remd, REMDetect::get() );
 #endif
 }
