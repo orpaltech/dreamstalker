@@ -234,7 +234,7 @@ void pins_on (void)
 }
 
 /*-----------------------------------------------------------------------*/
-LED4D7S_Display disp;
+Display disp;
 
 /*-----------------------------------------------------------------------*/
 Display *Display::get()
@@ -265,7 +265,7 @@ void Display::wait_cycles (unsigned num_cycles)
 }
 
 /*-----------------------------------------------------------------------*/
-void LED4D7S_Display::irq_handler (void)
+void Display::irq_handler (void)
 {
   if (! enabled)
 	return;
@@ -276,7 +276,7 @@ void LED4D7S_Display::irq_handler (void)
   dig_index = ( dig_index + 1 ) % NDIGITS;	/* Increment digit counter */
 }
 
-bool LED4D7S_Display::init (void)
+bool Display::init (void)
 {
   dig_index = 0;
   enabled = false;
@@ -289,7 +289,7 @@ bool LED4D7S_Display::init (void)
   return true;
 }
 
-void LED4D7S_Display::enable_unsafe (void)
+void Display::enable_unsafe (void)
 {
   if (enabled)
 	return;
@@ -299,14 +299,14 @@ void LED4D7S_Display::enable_unsafe (void)
   enabled = true;
 }
 
-void LED4D7S_Display::enable (void)
+void Display::enable (void)
 {
   ATOMIC_BLOCK (ATOMIC_RESTORESTATE) {
 	enable_unsafe ();
   }
 }
 
-void LED4D7S_Display::disable_unsafe (void)
+void Display::disable_unsafe (void)
 {
   if (! enabled)
 	return;
@@ -318,32 +318,32 @@ void LED4D7S_Display::disable_unsafe (void)
   enabled = false;
 }
 
-void LED4D7S_Display::disable (void)
+void Display::disable (void)
 {
   ATOMIC_BLOCK (ATOMIC_RESTORESTATE) {
 	disable_unsafe ();
   }
 }
 
-bool LED4D7S_Display::is_enabled (void) const
+bool Display::is_enabled (void) const
 {
   return enabled;
 }
 
-void LED4D7S_Display::clear_unsafe (void)
+void Display::clear_unsafe (void)
 {
   for (uint8_t i = 0; i < NDIGITS; i++ )
 	pf_segments[ i ] = 0;
 }
 
-void LED4D7S_Display::clear (void)
+void Display::clear (void)
 {
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
 	clear_unsafe ();
   }
 }
 
-void LED4D7S_Display::text_out_unsafe (const char *text)
+void Display::text_out_unsafe (const char *text)
 {
   uint8_t len, pos;
   uint8_t i = 0;
@@ -376,14 +376,14 @@ void LED4D7S_Display::text_out_unsafe (const char *text)
 
 }
 
-void LED4D7S_Display::text_out (const char *text)
+void Display::text_out (const char *text)
 {
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
 	text_out_unsafe (text);
   }
 }
 
-void LED4D7S_Display::version (char ver_type, uint16_t ver, uint16_t cycles_to_wait)
+void Display::version (char ver_type, uint16_t ver, uint16_t cycles_to_wait)
 {
   char msg[ 6 ];
 
@@ -393,7 +393,7 @@ void LED4D7S_Display::version (char ver_type, uint16_t ver, uint16_t cycles_to_w
 
 #ifdef DISP_NUM_CODE_ENABLE
 
-void LED4D7S_Display::disp_hex ( uint16_t num )
+void Display::disp_hex ( uint16_t num )
 {
   ATOMIC_BLOCK (ATOMIC_RESTORESTATE) {
 	pf_segments[ 3 ] = get_num_code ( (num >> 0) & 0xF );
@@ -406,7 +406,7 @@ void LED4D7S_Display::disp_hex ( uint16_t num )
 }
 #endif
 
-void LED4D7S_Display::number ( uint16_t num )
+void Display::number ( uint16_t num )
 {
   char msg[ 5 ];
 
@@ -421,7 +421,7 @@ void LED4D7S_Display::number ( uint16_t num )
 /*
  * Displays 4 symbols of the text
  */
-void LED4D7S_Display::message (const char *text, uint16_t cycles_to_wait)
+void Display::message (const char *text, uint16_t cycles_to_wait)
 {
   text_out (text);
 
@@ -431,7 +431,7 @@ void LED4D7S_Display::message (const char *text, uint16_t cycles_to_wait)
   wait_cycles (cycles_to_wait);
 }
 
-void LED4D7S_Display::time (uint8_t hour, unsigned minute)
+void Display::time (uint8_t hour, unsigned minute)
 {
   char msg[6];
 
@@ -448,7 +448,7 @@ void LED4D7S_Display::time (uint8_t hour, unsigned minute)
   text_out ( msg );
 }
 
-void LED4D7S_Display::flag (bool flag_val)
+void Display::flag (bool flag_val)
 {
   if (flag_val)
 	message (__disp_msg_on__, 1);
@@ -456,14 +456,14 @@ void LED4D7S_Display::flag (bool flag_val)
 	message (__disp_msg_off__, 1);
 }
 
-void LED4D7S_Display::confirm (void)
+void Display::confirm (void)
 {
   message (__disp_msg_confirm__, 1);
 }
 
 /*-----------------------------------------------------------------------*/
 
-void LED4D7S_Display::test_on (void)
+void Display::test_on (void)
 {
 	pins_on ();
 
@@ -472,7 +472,7 @@ void LED4D7S_Display::test_on (void)
 	PORT_SEG = 0x00;			/* drive low */
 }
 
-void LED4D7S_Display::test_off (void)
+void Display::test_off (void)
 {
 	pins_off ();
 }

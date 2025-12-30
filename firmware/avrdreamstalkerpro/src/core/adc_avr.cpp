@@ -33,11 +33,11 @@ using namespace avr_core;
 /* Peripheral controls (Platform dependent) */
 
 /* ADC status flags */
-#define SF_ENABLED      0x0100U
-#define SF_RUNNING		  0x0200U
-#define SF_LEFT_ADJUST	0x0400U
-#define SF_VREF_2_56	  0x0800U
-//#define SF_LOW_NOISE	0x1000
+#define SF_ENABLED      0x01U
+#define SF_RUNNING		  0x02U
+#define SF_LEFT_ADJUST	0x04U
+#define SF_VREF_2_56	  0x08U
+//#define SF_LOW_NOISE	0x10U
 
 #define DDR_ADC		DDRF
 #define DD_ADC0		_BV(DDF0)
@@ -66,11 +66,11 @@ using namespace avr_core;
 
 
 /* Default ADC prescaler (F_CPU divider) */
-#define ADC_DIV		64
+#define ADC_DIV		64                  /* ADC takes 13 cycles for each conversion, ~104us */
 #define ADC_CLK   (F_CPU / ADC_DIV)
 
 /* ADC convert rate */
-#define ADC_CONVERT_RATE  31250U
+//#define ADC_CONVERT_RATE  31250U
 
 /** NOTE: see how often we should run the handler , i.e. calc the handler 
  * period. It depends on number of channels and the RTC frequency.
@@ -83,7 +83,7 @@ using namespace avr_core;
  * i.e. period ~= ( 1'000'000 / ( ADC_CHANNELS * ADC_CONVERT_RATE ) ), 
  * in millisec.
  */
-#define ADC_HANDLER_PERIOD_TICKS  (1'000'000U / ( ADC_CHANNELS * ADC_CONVERT_RATE ))
+//#define ADC_HANDLER_PERIOD_TICKS  (1'000'000U / ( ADC_CHANNELS * ADC_CONVERT_RATE ))
 
 
 
@@ -106,7 +106,7 @@ void A2DConv::handle_adc (void)
 }
 
 /*-----------------------------------------------------------------------*/
-A2DConv a2d;
+static A2DConv a2d;
 
 /*-----------------------------------------------------------------------*/
 A2DConv *A2DConv::get()
@@ -124,27 +124,22 @@ void A2DConv::rtc_handler (void)
   if (! (ADCSRA & _BV(ADEN)))
     return;
 
-  tick_count = ( tick_count + 1 ) % period_ticks;
-  if ( 0 == tick_count ) {
+  /* Check if conversion complete */
+  //if (ADCSRA & _BV(ADSC))
+  //  return;
 
-    /* Check if conversion complete */
-    //if (ADCSRA & _BV(ADSC))
-    //  return;
-
-    /* Next channel for convert */
-    i = get_next_running_index ();
-    if( i < 0 ) {
-      /* No channel to convert */
-      return;
-    }
-
-    /* Enable interrupt on data ready */
-    ADCSRA |= _BV(ADIE);
-
-
-    /* Next sample convert */
-    convert_one ( i );
+  /* Next channel for convert */
+  i = get_next_running_index ();
+  if( i < 0 ) {
+    /* No channel to convert */
+    return;
   }
+
+  /* Enable interrupt on data ready */
+  ADCSRA |= _BV(ADIE);
+
+  /* Next sample convert */
+  convert_one ( i );
 }
 
 void A2DConv::adc_handler (void)
@@ -182,7 +177,15 @@ void A2DConv::adc_handler (void)
 	  }
   }
 
-  /* Disable further interrupts */
+  /* Check if there are other running channels */
+  i = get_next_running_index ();
+  if( i > 0 ) {
+    /* More channels to convert */
+    convert_one ( i );
+    return;
+  }
+
+  /* Otherwise, disable interrupts until the next RTC tick */
   ADCSRA &= ~_BV(ADIE);
 }
 
@@ -190,7 +193,7 @@ uint8_t A2DConv::get_channel ( uint8_t i )
 {
   // The compiler will only read the first byte of .flags 
   // because the mask 0x1F makes the second byte irrelevant.
-  return (uint8_t)(adc[i].flags & ADC_CHAN_MASK);
+  return (uint8_t)(adc[i].channel & ADC_CHAN_MASK);
 }
 
 int8_t A2DConv::get_index( uint8_t chan )
@@ -237,9 +240,8 @@ void A2DConv::convert_one ( int8_t i )
   /* Setup multiplexer register */
   ADMUX = (adc_ref | left_adjust | get_channel( i ));	
 
-  /** Clear irq flag, do a single conversion 
-   */
-  ADCSRA |= _BV(ADIF); ADCSRA |= _BV(ADSC);
+  /* Do a single conversion */
+  ADCSRA |= _BV(ADSC);
 }
 
 /*-----------------------------------------------------------------------*/
@@ -247,13 +249,15 @@ bool A2DConv::enable (void)
 {
   /* NOTE: ADC is in single-convert mode */
 
-  /* Enable ADC channels */
-  adc[0].flags = ( 0U | SF_ENABLED );	/* channel 0 */
-  adc[1].flags = ( 2U | SF_ENABLED );	/* channel 2 */
+  /* Enable ADC channel 0 */
+  adc[0].channel = 0U;
+  adc[0].flags = SF_ENABLED;
 
-  chan_index = 0;	
-  tick_count = 0;
-  period_ticks = ADC_HANDLER_PERIOD_TICKS;
+  /* Enable ADC channel 2 */
+  adc[1].channel = 2U;
+  adc[1].flags = SF_ENABLED;
+
+  chan_index = 0;
 
   /* TODO: Switch ADC pins for input. 
    *		Is this needed ???
@@ -402,6 +406,7 @@ bool A2DConv::is_running ( uint8_t chan )
 void A2DConv::stop (uint8_t chan) 
 {
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+
     stop_unsafe (chan);
   }
 }

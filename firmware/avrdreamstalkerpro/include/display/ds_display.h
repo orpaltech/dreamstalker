@@ -24,49 +24,16 @@
 #include <stdint.h>
 
 
-/*-----------------------------------------------------------------------*/
 namespace DS {
-
 /*-----------------------------------------------------------------------*/
 class Display {
 public:
   static Display *get();
+  static uint32_t get_cycle_us(void);	/* length of cycle in microseconds */
 
   /* Intended for use in RTC ISR. Do not call it directly! */
   static void handle_isr (void);
 
-  static uint32_t get_cycle_us(void);	/* length of cycle in microseconds */
-
-  virtual bool init (void) = 0;
-
-  // Display control methods
-  virtual void enable (void) = 0;
-  virtual void disable (void) = 0;
-  virtual bool is_enabled (void) const = 0;
-
-  /* Display utilities */ 
-  virtual void message (const char *text, uint16_t wait_cycles) = 0;
-  virtual void version (char type, uint16_t ver, uint16_t wait_cycles) = 0;	/* display version */
-  virtual void time (uint8_t hour, unsigned minute) = 0;
-  virtual void number (uint16_t num) = 0;
-  virtual void flag (bool flag_val) = 0;
-  virtual void text_out (const char *text) = 0; /* show text with no delay */
-
-  /* Intended for use in ISR */
-  virtual void enable_unsafe (void) = 0;
-  virtual void disable_unsafe (void) = 0;
-  virtual void text_out_unsafe (const char *text) = 0;
-
-  void wait_one_cycle (void);
-  void wait_cycles (unsigned num_cycles);
-
-protected:
-  virtual void irq_handler (void) = 0;
-};
-
-/*-----------------------------------------------------------------------*/
-class LED4D7S_Display : public Display {
-public:
   bool init (void);
 
   // Display control methods
@@ -95,9 +62,11 @@ public:
   void disable_unsafe (void);
   void text_out_unsafe (const char *text);
 
+  void wait_one_cycle (void);
+  void wait_cycles (unsigned num_cycles);
+
 protected:
   void irq_handler (void);
-
 
 #define NDIGITS 4
 private:
@@ -108,7 +77,5 @@ private:
 
 /*-----------------------------------------------------------------------*/
 };  //DS
-
-//extern DS::LED4D7S_Display disp;
 
 #endif // _DS_DISPLAY_DEFINED

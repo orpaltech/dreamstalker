@@ -303,13 +303,13 @@ void RTClock::start (rtc_oper_mode_t mode)
 
 		/* Period 1000ms = 1sec*/
 
-		TMR0_SET_N(256);	/*256x prescaler, clk=TOSC/256=128 */
+		TMR0_SET_N(256);					/*256x prescaler, clk=TOSC/256=128 */
 		//TCCR0 |= (_BV(CS02) | _BV(CS01));	/*256x prescaler, clk=TOSC/256=128 */
 
 		/* Generate 1s interrupts.
-		 * Max Error: (1 / 128 * 128) − 1 = 0 (s)
+		 * Max Error: (1 / 128 * (OCR0+1)) − 1 = 0 (s)
 		 */
-		OCR0 = 128;
+		OCR0 = 127;
 
 		rtc.op_mode = RTC_OPM_PWRSAVE;
 
@@ -317,13 +317,13 @@ void RTClock::start (rtc_oper_mode_t mode)
 
 		/* Period: 1ms */
 
-		TMR0_SET_N(1);		/*1x prescaler, clk=TOSC*/
-		//TCCR0 |= _BV(CS00);					/*1x prescaler, clk=TOSC*/
+		TMR0_SET_N(1);						/*1x prescaler, clk=TOSC*/
+		//TCCR0 |= _BV(CS00);				/*1x prescaler, clk=TOSC*/
 
 		/* Generate 1ms interrupts.
-	 	 * Max Error: (1 / 32768 * 33) − 0.001 = 0.0000070800781 (s) 
+	 	 * Max Error: (1 / 32768 * (OCR0+1)) − 0.001 = 0.0000070800781 (s) 
 		 */
-		OCR0 = 33;
+		OCR0 = 32;
 
 		rtc.op_mode = RTC_OPM_NORMAL;
 	}
@@ -357,13 +357,13 @@ void RTClock::start (rtc_oper_mode_t mode)
 	case RTC_OPM_PWRSAVE:
 		/* Period: 1000ms = 1sec*/
 
-		TMR2_SET_N(256);	/*256x prescaler, clk=TOSC/256=128 */
+		TMR2_SET_N(256);					/*256x prescaler, clk=TOSC/256=128 */
 		//TCCR2B = (_BV(CS22) | _BV(CS21));	/*256x prescaler, clk=TOSC/256=128 */
 
 		/* Generate 1s interrupts.
-		 * Max Error: (1 / 128 * 128) − 1 = 0 (s)
+		 * Max Error: (1 / 128 * (OCR2A+1)) − 1 = 0 (s)
 		 */
-		OCR2A = 128;
+		OCR2A = 127;
 
 		rtc.op_mode = RTC_OPM_PWRSAVE;
 		break;
@@ -372,13 +372,13 @@ void RTClock::start (rtc_oper_mode_t mode)
 	default:
 		/* Period: 1ms */
 
-		TMR2_SET_N(1);		/* 1x prescaler  */
-		//TCCR2B = _BV(CS20);	/* 1x prescaler  */
+		TMR2_SET_N(1);						/* 1x prescaler  */
+		//TCCR2B = _BV(CS20);				/* 1x prescaler  */
 
 		/* Generate 1ms interrupts.
-	 	 * Max Error: (1 / 32768 * 33) − 0.001 = 0.0000070800781 (s) 
+	 	 * Max Error: (1 / 32768 * (OCR2A+1)) − 0.001 = 0.0000070800781 (s) 
 		 */
-		OCR2A = 33;
+		OCR2A = 32;
 
 		rtc.op_mode = RTC_OPM_NORMAL;
 		break;

@@ -75,7 +75,8 @@ private:
 
 private:
   typedef struct s_adc_channel {
-    uint16_t flags;
+    uint8_t channel;
+    uint8_t flags;
     uint16_t num_samples;
     A2DSampleCB_t pfcb;
     void *context;
@@ -83,8 +84,6 @@ private:
   
   volatile adc_channel_t adc[ADC_CHANNELS];
   volatile uint8_t chan_index;
-  uint8_t period_ticks;
-  uint8_t tick_count;   /* ticks counter*/
 };
 
 /*-----------------------------------------------------------------------*/

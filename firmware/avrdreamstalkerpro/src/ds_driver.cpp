@@ -368,7 +368,7 @@ void Driver::wakeup_timer_quick_set (keybrd_event_t key_event)
 #if TEST_REMD
 static Timer tmr;
 static volatile int8_t evt_id = -1;
-#define REMD_TIMEOUT_MIN  10UL
+#define REMD_TIMEOUT_MIN  120UL
 static void stop_remd (void *ctx){
 
   ((REMDetect *)ctx)->stop_unsafe ();
