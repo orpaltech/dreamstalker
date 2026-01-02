@@ -67,10 +67,10 @@ REMDetect *REMDetect::get()
 bool REMDetect::init (void)
 {
   /* Enable IRTX line */
-  Pins::set_out (PIN_IRTX);    /*set output mode*/
+  Pins::set_out ( PIN_IRTX );       /*set output mode*/
 
   /* Switch-off IRX transmitter*/
-  Pins::out_high (PIN_IRTX);    /*drive pin high*/
+  Pins::drive_high ( PIN_IRTX );    /*drive pin high*/
 
   status = false;	/* not running */
   return true;
@@ -79,7 +79,7 @@ bool REMDetect::init (void)
 void REMDetect::end (void)
 {
   /* Disable IRTX line */
-  Pins::set_in_highz (PIN_IRTX);   /*set input mode, high-Z*/
+  Pins::set_in_highz ( PIN_IRTX );  /*set input mode, high-Z*/
 }
 
 bool REMDetect::start (REMDetectCB *pcb)
@@ -106,7 +106,7 @@ bool REMDetect::start_unsafe (REMDetectCB *pcb)
 	  return false;
 
   /* Switch-on IRX transmitter*/
-  Pins::out_low (PIN_IRTX);   /*drive pin low*/
+  Pins::drive_low ( PIN_IRTX );   /*drive pin low*/
 
   premdcb = pcb;
   status = true;	/* running */
@@ -121,7 +121,7 @@ void REMDetect::stop_unsafe (void)
   A2DConv::get()->stop_unsafe ( REMD_ADC_CHAN );
 
   /* Switch-off IRX transmitter*/
-  Pins::out_high (PIN_IRTX);    /*drive pin high*/
+  Pins::drive_high ( PIN_IRTX );    /*drive pin high*/
   
   status = false;	/* not running*/
 }

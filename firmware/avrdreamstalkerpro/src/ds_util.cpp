@@ -155,12 +155,12 @@ void Pins::set_in_pullup ( uint8_t pin)
   pinMode ( pin, INPUT_PULLUP );
 }
 
-void Pins::out_high ( uint8_t pin )
+void Pins::drive_high ( uint8_t pin )
 {
   digitalWrite ( pin, HIGH );
 }
 
-void Pins::out_low ( uint8_t pin )
+void Pins::drive_low ( uint8_t pin )
 {
   digitalWrite ( pin, LOW );
 }

@@ -69,22 +69,6 @@ using namespace avr_core;
 #define ADC_DIV		64                  /* ADC takes 13 cycles for each conversion, ~104us */
 #define ADC_CLK   (F_CPU / ADC_DIV)
 
-/* ADC convert rate */
-//#define ADC_CONVERT_RATE  31250U
-
-/** NOTE: see how often we should run the handler , i.e. calc the handler 
- * period. It depends on number of channels and the RTC frequency.
- * 
- * ADC_CHANNELS     = 2
- * RTC_CLK          = 1ms
- * ADC_CONVERT_RATE 
- * 
- * Must run handler ADC_CHANNELS times faster than ADC_CONVERT_RATE, 
- * i.e. period ~= ( 1'000'000 / ( ADC_CHANNELS * ADC_CONVERT_RATE ) ), 
- * in millisec.
- */
-//#define ADC_HANDLER_PERIOD_TICKS  (1'000'000U / ( ADC_CHANNELS * ADC_CONVERT_RATE ))
-
 
 
 // code to be executed when ADC interrupts

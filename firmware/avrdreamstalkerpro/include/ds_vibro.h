@@ -31,9 +31,9 @@
 
 namespace DS {
 /*-----------------------------------------------------------------------*/
-class VibroMotor {
+class Vibro {
 public:
-  static VibroMotor *get();
+  static Vibro *get();
 public:
   bool init (void);
 

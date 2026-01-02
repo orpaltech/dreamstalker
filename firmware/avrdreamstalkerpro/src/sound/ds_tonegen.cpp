@@ -30,8 +30,8 @@
 #include "core/tmr_avr.h"
 #include "ds_rtclock.h"
 #include "ds_config.h"
-#include "sound/ds_tonegen.h"
 #include "ds_util.h"
+#include "sound/ds_tonegen.h"
 #include "sound/pwm_notes.h"
 
 using namespace DS;
@@ -141,9 +141,9 @@ void melody_on (void)
   TCCR2 = (_BV(WGM21) | T2_N_1024);
 
   /* Generate 10ms interrupts.
-   * Max Error: (1 / 7812.5 * 78) − 0.01 = 0.000016 (s) 
+   * Max Error: (1 / 7812.5 * (OCR2+1)) − 0.01 = 0.000016 (s) 
    */
-  OCR2 = 78;
+  OCR2 = 77;
 
   TIFR &= ~(_BV(OCF2) | _BV(TOV2)); /* Reset interrupt flags */
   TIMSK |= _BV(OCIE2);				/* Enable CTC interrupt */
@@ -171,9 +171,9 @@ void melody_on (void)
   TCCR4B = (_BV(WGM42) | T4_N_64);
 
   /* Generate 10ms interrupts.
-   * Max Error: (1 / 125000 * 1250) − 0.01 = 0 (s) 
+   * Max Error: (1 / 125000 * (OCR4A+1)) − 0.01 = 0 (s) 
    */
-  OCR4A	= 1250;
+  OCR4A	= 1249;
 
   TIFR4	 = 0;			/* Reset interrupt flags */
   TIMSK4 = _BV(OCIE4A);	/* Enable CTC interrupt */

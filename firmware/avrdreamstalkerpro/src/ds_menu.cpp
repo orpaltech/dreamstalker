@@ -1005,7 +1005,7 @@ void ense_vibration_setup ( pmenu_context_t ctx, keybrd_event_t key_event)
   switch( key_event ) {
 	case ( KEY_ENTER ):
 	  if (ense_vibration_setup_read_value ()) {
-		VibroMotor::get()->start (ense_vibration_setup_read_value (), 2000);
+		Vibro::get()->start (ense_vibration_setup_read_value (), 2000);
 	  }
 	  set_handled (ctx);
 	  break;

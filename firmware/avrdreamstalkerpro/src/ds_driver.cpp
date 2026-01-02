@@ -78,6 +78,86 @@ void Driver::wakeup_timer_callback (void *context)
 }
 
 /*-----------------------------------------------------------------------*/
+#if RUN_TEST_MODE
+
+bool Driver::begin (void)
+{
+  delay(600); /* Let power stabilize */
+
+  RTClock::get()->init();
+  //Keyboard::get()->init ();
+  SQWave::get()->init();
+  Vibro::get()->init();
+  Leds::get()->init();
+  Sound::get()->init ();
+
+  return true;
+}
+
+void Driver::end (void)
+{
+  // Implement , if needed
+}
+
+bool Driver::start (void)
+{
+  interrupts();   /* Enable interrupts globally */
+
+  /* Disable hold-repeat keyboard feature by default */
+  //Keyboard::get()->hold_repeat_disable ();
+
+  /* IMPORTANT: Real-Time clock is the core component (!)
+   *            Most of the other components will NOT work 
+   *            without it.
+   */
+  RTClock::get()->start ( RTC_OPM_NORMAL );   /* Start real-time clock.*/ 
+
+
+  //delay(1000);
+
+  /////////
+  Vibro::get()->start(5, 500);
+  delay(1000);
+  /////////
+
+  /*if (card0.begin ())
+  {
+     /////////
+    Vibro::get()->start(5, 1000);
+    delay(1000);
+    /////////
+  }*/
+
+  Sound::get()->start();
+
+  //Vibro::get()->start(5, 500);
+
+  //Leds::get()->on(DS::LED1, 70, 0);
+  //Leds::get()->on(DS::LED2, 70, 0);
+
+  tonegen.play_melody(TGP_FUR_ELISE, 0);
+
+  //Leds::get()->pulse(DS::LED1, 50, 0, 1000, 50);
+  //Leds::get()->pulse(DS::LED2, 50, 0, 500, 70);
+
+
+  return true;
+}
+
+void Driver::stop (void)
+{
+  noInterrupts();
+
+  // TODO: implement, if needed
+}
+
+void Driver::process (void)
+{
+
+}
+
+#else
+
 bool Driver::begin (void)
 {
   delay(600); /* Let power stabilize */
@@ -87,8 +167,8 @@ bool Driver::begin (void)
   Keyboard::get()->init ();
   PowerMan::get()->init();
   AppMenu::get()->init();
-  SquareWave::get()->init();
-  VibroMotor::get()->init();
+  SQWave::get()->init();
+  Vibro::get()->init();
   Leds::get()->init();
   Sound::get()->init ();
   REMDetect::get()->init();
@@ -125,15 +205,7 @@ bool Driver::start (void)
    */
   RTClock::get()->start ( RTC_OPM_NORMAL );   /* Start real-time clock.*/ 
 
-  ///////////////////
 
-  /*leds.on(DS::LED1, 70, 0);
-  leds.on(DS::LED2, 70, 0);*/
-
-  //leds.pulse(DS::LED1, 20, 0, 1000, 50);
-  //leds.pulse(DS::LED2, 20, 0, 500, 70);
-
-  
   Display::get()->enable ();
   Display::get()->version ('F', fw_version(), 1000);
 
@@ -199,6 +271,8 @@ bool Driver::start (void)
 
 void Driver::stop (void)
 {
+  noInterrupts();
+
   // TODO: implement, if needed
 }
 
@@ -295,6 +369,7 @@ void Driver::process (void)
   AudioCodec::get()->process_task ();
 
 }
+#endif
 
 void Driver::reboot_on_key (void)
 {

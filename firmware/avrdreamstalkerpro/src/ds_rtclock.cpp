@@ -129,7 +129,7 @@ void RTClock::irq_handler (void)
 
   /* Let other subsystems process interrupt */
   Display::handle_isr ();
-  SquareWave::handle_isr ();
+  SQWave::handle_isr ();
   avr_core::A2DConv::handle_rtc ();
 
   rtc.ticks_second = (rtc.ticks_second + 1) % ticks_1sec;

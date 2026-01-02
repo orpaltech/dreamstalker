@@ -40,30 +40,30 @@ using namespace DS;
 static
 bool vibro_is_busy (void)
 {
-  return SquareWave::get()->is_active (SQW_VIBRO);
+  return SQWave::get()->is_active (SQW_VIBRO);
 }
 
 
 /*-----------------------------------------------------------------------*/
-static DS::VibroMotor vibro;
+static Vibro vibro;
 
 /*-----------------------------------------------------------------------*/
-void VibroMotor::sqw_transition_callback(void *context, uint8_t slot,
+void Vibro::sqw_transition_callback(void *context, uint8_t slot,
                                       sqw_transition_t trans)
 {
-  VibroMotor *pvm = static_cast<VibroMotor *>(context);
+  Vibro *pvm = static_cast<Vibro *>(context);
 
   pvm->on_sqw_transition (slot, trans);
 }
 
 /*-----------------------------------------------------------------------*/
-VibroMotor *VibroMotor::get()
+Vibro *Vibro::get()
 {
   return &vibro;
 }
 
 /*-----------------------------------------------------------------------*/
-bool VibroMotor::start (uint8_t level, uint16_t duration_ms)
+bool Vibro::start (uint8_t level, uint16_t duration_ms)
 {
   uint8_t duty_cycle;
 
@@ -88,37 +88,37 @@ bool VibroMotor::start (uint8_t level, uint16_t duration_ms)
 	  break;
   }
 
-  SquareWave::get()->start (SQW_VIBRO, duration_ms, 10, duty_cycle, 
+  SQWave::get()->start (SQW_VIBRO, duration_ms, 10, duty_cycle, 
                         sqw_transition_callback, this);
 
   return true;
 }
 
-void VibroMotor::stop (void)
+void Vibro::stop (void)
 {
   if (!vibro_is_busy())	/* skip if inactive*/
 	  return;
 
-  SquareWave::get()->stop (SQW_VIBRO);
+  SQWave::get()->stop (SQW_VIBRO);
 }
 
-bool VibroMotor::is_running (void)
+bool Vibro::is_running (void)
 {
   return vibro_is_busy ();
 }
 
-bool VibroMotor::init (void)
+bool Vibro::init (void)
 {
   /* Set vibration control pin to output mode */
   Pins::set_out (PIN_VIBRO);
 
   /* Switch off */
-  Pins::out_low (PIN_VIBRO);
+  Pins::drive_low (PIN_VIBRO);
 
   return true;
 }
 
-void VibroMotor::on_sqw_transition(uint8_t i, sqw_transition_t trans)
+void Vibro::on_sqw_transition(uint8_t i, sqw_transition_t trans)
 {
   if (i != SQW_VIBRO)
 	  return;

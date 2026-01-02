@@ -91,9 +91,9 @@ public:
   static void set_in_pullup ( uint8_t pin);
 
   /* Drives output pin high */
-  static void out_high ( uint8_t pin );
+  static void drive_high ( uint8_t pin );
   /* Drives output pin low */
-  static void out_low ( uint8_t pin );
+  static void drive_low ( uint8_t pin );
 
   /* Checks if input pin driven high */
   static bool is_in_high ( uint8_t pin );

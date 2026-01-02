@@ -26,6 +26,7 @@
 #include "core/tmr_avr.h"
 #include "ds_leds.h"
 #include "ds_rtclock.h"
+#include "ds_util.h"
 
 using namespace DS;
 
@@ -55,7 +56,7 @@ using namespace DS;
 static
 bool led_is_busy(led_id_t led)
 {
-  return SquareWave::get()->is_active (led);
+  return SQWave::get()->is_active (led);
 }
 
 static 
@@ -117,7 +118,7 @@ void Leds::off (led_id_t led)
   if (! led_is_busy (led))	/* skip if not lit*/
 	  return;
 
-  SquareWave::get()->stop (led);
+  SQWave::get()->stop (led);
 
   TMR3_OFF();
 }
@@ -141,15 +142,15 @@ void Leds::pulse (led_id_t led, uint8_t brightness, uint16_t duration_ms, uint16
 
   RTClock::get()->wait( 4 ); // found experimentally to avoid initial LED spark
 
-  SquareWave::get()->start (led, duration_ms, period_ms, duty_cycle, 
-                          sqw_transition_callback, this);
+  SQWave::get()->start (led, duration_ms, period_ms, duty_cycle, 
+                        sqw_transition_callback, this);
 }
 
 bool Leds::init (void)
 {
   /* Set pins to input mode */
-  pinMode ( PIN_LED1, INPUT );
-  pinMode ( PIN_LED2, INPUT );
+  Pins::set_in_highz ( PIN_LED1 );
+  Pins::set_in_highz ( PIN_LED2 );
 
   /* Disable timer3 interrupts */
 #if defined (__AVR_ATmega128__)

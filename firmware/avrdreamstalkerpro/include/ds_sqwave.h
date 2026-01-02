@@ -37,14 +37,14 @@ typedef enum e_sqw_transition {
 } sqw_transition_t;
 
 /*-----------------------------------------------------------------------*/
-typedef void (*SquareWaveCB_Transition_t)(void *context, uint8_t slot, sqw_transition_t trans);
-typedef void (*SquareWaveCB_Complete_t)(void *context, uint8_t slot);
+typedef void (*SQWaveCB_Transition_t)(void *context, uint8_t slot, sqw_transition_t trans);
+typedef void (*SQWaveCB_Complete_t)(void *context, uint8_t slot);
 
 
 /*-----------------------------------------------------------------------*/
-class SquareWave {
+class SQWave {
 public:
-  static SquareWave *get();
+  static SQWave *get();
 public:
   bool	init (void);
 
@@ -52,7 +52,7 @@ public:
               uint16_t duration_ms, 
               uint16_t period_ms, 
               uint8_t duty_cycle, /* in percent */
-              SquareWaveCB_Transition_t ptcb,
+              SQWaveCB_Transition_t ptcb,
               void *context);
   void	stop(uint8_t slot);
 
@@ -68,8 +68,8 @@ private:
     uint16_t period;
     uint8_t duty_cycle : 7;
     uint8_t active : 1;
-    SquareWaveCB_Transition_t pcb_transition;
-    SquareWaveCB_Complete_t pcb_complete;
+    SQWaveCB_Transition_t pcb_transition;
+    SQWaveCB_Complete_t pcb_complete;
     void *context;
   } sqw_context_t;
 

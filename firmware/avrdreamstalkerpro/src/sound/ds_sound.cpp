@@ -92,14 +92,14 @@ void Sound::irq_handler (void)
 
 void Sound::speaker_on (void)
 {
-  Pins::out_low (PIN_SND_OFF);
+  Pins::drive_low (PIN_SND_OFF);
 
 	_delay_ms ( 100 );
 }
 
 void Sound::speaker_off (void)
 {
-  Pins::out_high (PIN_SND_OFF);
+  Pins::drive_high (PIN_SND_OFF);
 
 	_delay_ms ( 10 );
 }
@@ -111,14 +111,14 @@ bool Sound::is_speaker_on() const
 
 void Sound::mic_on (void)
 {
-  Pins::out_high (PIN_MIC_PWR);
+  Pins::drive_high (PIN_MIC_PWR);
 
   _delay_ms ( 10 );
 }
 
 void Sound::mic_off (void)
 {
-  Pins::out_low (PIN_MIC_PWR);
+  Pins::drive_low (PIN_MIC_PWR);
 
   _delay_ms ( 10 );
 }

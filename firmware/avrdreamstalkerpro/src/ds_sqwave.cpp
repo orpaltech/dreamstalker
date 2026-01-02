@@ -27,22 +27,22 @@
 using namespace DS;
 
 /*-----------------------------------------------------------------------*/
-void SquareWave::handle_isr (void)
+void SQWave::handle_isr (void)
 {
 	get()->irq_handler ();
 }
 
 /*-----------------------------------------------------------------------*/
-SquareWave sqwav;
+static SQWave sqwav;
 
 /*-----------------------------------------------------------------------*/
-SquareWave *SquareWave::get()
+SQWave *SQWave::get()
 {
   return &sqwav;
 }
 
 /*-----------------------------------------------------------------------*/
-void SquareWave::irq_handler (void)
+void SQWave::irq_handler (void)
 {
   volatile sqw_context_t *ps;
   uint16_t pulse_width;
@@ -75,7 +75,7 @@ void SquareWave::irq_handler (void)
   }
 }
 
-void SquareWave::do_transition (uint8_t i, sqw_transition_t trans)
+void SQWave::do_transition (uint8_t i, sqw_transition_t trans)
 {
   volatile sqw_context_t *ps = &sqw[i];
 
@@ -83,14 +83,14 @@ void SquareWave::do_transition (uint8_t i, sqw_transition_t trans)
 	ps->pcb_transition (ps->context, i, trans);
 }
 
-bool SquareWave::init(void)
+bool SQWave::init(void)
 {
   memset ((void *)sqw, 0, SQW_SLOTS * sizeof(sqw_context_t));
 
   return true;
 }
 
-bool SquareWave::is_active (uint8_t i)
+bool SQWave::is_active (uint8_t i)
 {
   bool active;
 
@@ -104,8 +104,8 @@ bool SquareWave::is_active (uint8_t i)
   return active;
 }
 
-void SquareWave::start(uint8_t i, uint16_t duration_ms, uint16_t period_ms, uint8_t duty_cycle, 
-					SquareWaveCB_Transition_t ptcb, void *context)
+void SQWave::start(uint8_t i, uint16_t duration_ms, uint16_t period_ms, uint8_t duty_cycle, 
+					SQWaveCB_Transition_t ptcb, void *context)
 {
   sqw_context_t volatile *ps;
 
@@ -147,7 +147,7 @@ void SquareWave::start(uint8_t i, uint16_t duration_ms, uint16_t period_ms, uint
   }
 }
 
-void SquareWave::stop (uint8_t i)
+void SQWave::stop (uint8_t i)
 {
   if (i >= SQW_SLOTS)
 	return;

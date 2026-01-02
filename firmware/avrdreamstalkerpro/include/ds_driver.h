@@ -31,6 +31,8 @@
 extern SDLib::SDClass &card0;
 
 
+//#define RUN_TEST_MODE 1
+
 namespace DS {
 /*-----------------------------------------------------------------------*/
 class Driver : public REMDetectCB {
@@ -40,7 +42,6 @@ public:
 
   bool start (void);
   void stop (void);
-
   void process (void);
 
   void reboot_on_key (void);
