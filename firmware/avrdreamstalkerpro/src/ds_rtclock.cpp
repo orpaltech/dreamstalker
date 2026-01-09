@@ -35,14 +35,13 @@
 #include "ds_sqwave.h"
 #include "ds_pwrman.h"
 #include "ds_rtclock.h"
-#include "ds_remd.h"
 #include "ds_driver.h"
 
 
 using namespace DS;
 
 /*-----------------------------------------------------------------------*/
-/* Flags for Real-Time clock ISR (make sure these do not overlap)
+/* Flags for Real-Time clock ISR (make sure these do NOT overlap)
  */
 #define RTC_SHOW_HOUR		0x0001U
 #define RTC_SHOW_MINUTE		0x0002U
@@ -53,8 +52,8 @@ using namespace DS;
 #define RTC_PWRSAVE_TICK	0x0040U
 #define RTC_VISIBLE			0x0080U
 
-/* RTC interrupt interval, in milliseconds */
-#define RTC_ISR_PERIOD_MSEC	1UL
+/* RTC interrupt interval, in millisec */
+#define RTC_PERIOD_MSEC		1UL
 
 /*-----------------------------------------------------------------------*/
 #define RTC_OFF_DELAY_SEC	30U		/* seconds, max 60 */
@@ -78,12 +77,12 @@ void RTClock::handle_isr (void)
 }
 
 /*-----------------------------------------------------------------------*/
-RTClock RTC;
+static RTClock rtck;
 
 /*-----------------------------------------------------------------------*/
 RTClock *RTClock::get()
 {
-  return &RTC;
+  return &rtck;
 }
 
 /*-----------------------------------------------------------------------*/
@@ -154,7 +153,7 @@ void RTClock::irq_handler (void)
 	   * Alarm clock is set 
 	   */
 	  rtc.ticks_alarm_clock = (rtc.ticks_alarm_clock + 1) % ALARM_CLOCK_DELAY;
-  	  if (rtc.ticks_wakeup_timer == 0) {
+  	  if (rtc.ticks_alarm_clock == 0) {
 		/*
 		 * One-shot alarm, so cancel it
 		 */
@@ -179,20 +178,20 @@ void RTClock::irq_handler (void)
 		rtc.hour = (rtc.hour + 1) % 24;
 	  }
 
-	  if (flag_is_set (RTC_WAKEUP_TIMER)) {
+	  if (wakeup_timer_is_set_unsafe ()) {
 		/* 
 		 * Wake-Up timer is set 
 		 */
   		rtc.ticks_wakeup_timer = (rtc.ticks_wakeup_timer + 1) % config.get_wakeup_timer_delay ();
   		if (rtc.ticks_wakeup_timer == 0) {
 		  /*
-		   * One-shot timer, so cancel it
+		   * One-shot timer, so cancel it now
 		   */
 		  flag_unset (RTC_WAKEUP_TIMER);
 
 		  /* Notify callback object */
 		  if (rtc.pcb_wakeup_timer)
-		  	rtc.pcb_wakeup_timer (rtc.context_wakeup_timer);
+		  	(*rtc.pcb_wakeup_timer) (rtc.context_wakeup_timer);
 		}
 	  }
 
@@ -205,7 +204,7 @@ void RTClock::irq_handler (void)
 	  flag_set (RTC_SHOW_HOUR | RTC_SHOW_MINUTE);
 
 	  if ( is_visible ()) {
-		display_out (rtc.hour, rtc.minute, rtc.flags);
+		display (rtc.hour, rtc.minute, rtc.flags);
 	  }
 	}
   }
@@ -234,9 +233,9 @@ void RTClock::irq_handler (void)
 
 	if ( is_visible () ) {
 	  /* Hide wakeup timer indicator as we are 
-	   *	in the clock setup mode
+	   *	in the clock setup mode.
 	   */
-	  display_out ( rtc.hour, rtc.minute, 
+	  display ( rtc.hour, rtc.minute, 
 				rtc.flags & ~RTC_WAKEUP_TIMER );
 	}
   }
@@ -263,6 +262,7 @@ bool RTClock::init (void)
 	rtc.ticks_second = 0;
 	rtc.ticks_setup = 0;
 	rtc.ticks_wakeup_timer = 0;
+	rtc.ticks_alarm_clock = 0;
 	rtc.setup_mode = RTC_SETUP_NONE;
 	rtc.ticks_display = 0;
 	rtc.op_mode = RTC_OPM_NONE;
@@ -429,12 +429,12 @@ uint32_t RTClock::isr_period_us (void)
 
 uint32_t RTClock::isr_period_ms (void)
 {
-  return RTC_ISR_PERIOD_MSEC;
+  return RTC_PERIOD_MSEC;
 }
 
 uint32_t RTClock::msec_to_ticks (uint32_t ms)
 {
-  return ( ms / RTC_ISR_PERIOD_MSEC );
+  return ( ms / RTC_PERIOD_MSEC );
 }
 
 void RTClock::wait (uint32_t num_ticks)
@@ -524,12 +524,13 @@ void RTClock::setup_inc (int sign)
 
 void RTClock::wakeup_timer_set (RTClockCB_t prtcb, void *context)
 {
-  if (rtc.op_mode != RTC_OPM_NORMAL)
+  if (rtc.op_mode != RTC_OPM_NORMAL) {
 	return;
+  }
 
   ATOMIC_BLOCK (ATOMIC_RESTORESTATE) {
 
-	if (flag_is_set (RTC_WAKEUP_TIMER))
+	if (wakeup_timer_is_set_unsafe ())
 		return;		/* Already set */
 
 	rtc.ticks_wakeup_timer = 0;
@@ -542,12 +543,13 @@ void RTClock::wakeup_timer_set (RTClockCB_t prtcb, void *context)
 
 bool RTClock::wakeup_timer_cancel (void)
 {
-  if (rtc.op_mode != RTC_OPM_NORMAL)
+  if (rtc.op_mode != RTC_OPM_NORMAL) {
 	return false;
+  }
 
   ATOMIC_BLOCK (ATOMIC_RESTORESTATE) {
 
-	if (! flag_is_set (RTC_WAKEUP_TIMER))
+	if (! wakeup_timer_is_set_unsafe ())
 		return false;	/* Not set */
 
 	flag_unset (RTC_WAKEUP_TIMER);
@@ -567,9 +569,24 @@ bool RTClock::wakeup_timer_is_set (void)
   bool res;
 
   ATOMIC_BLOCK (ATOMIC_RESTORESTATE) {
+
   	res = wakeup_timer_is_set_unsafe ();
   }
   return res;
+}
+
+uint16_t RTClock::wakeup_timer_get_remainder (void)
+{
+	uint16_t res = 0;
+
+	ATOMIC_BLOCK (ATOMIC_RESTORESTATE) {
+
+		if (wakeup_timer_is_set_unsafe ()) {
+			res = config.get_wakeup_timer_delay () - rtc.ticks_wakeup_timer;
+		}
+	}
+
+	return res;
 }
 
 void RTClock::alarm_clock_set (RTClockCB_t prtcb, void *context)
@@ -617,7 +634,7 @@ bool RTClock::alarm_clock_is_set (void)
   return res;
 }
 
-void RTClock::display_out (int hour, int minute, uint8_t flags)
+void RTClock::display (int hour, int minute, uint8_t flags)
 {
   static char msg[7];
   char *ptr = msg;

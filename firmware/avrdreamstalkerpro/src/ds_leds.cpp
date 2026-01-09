@@ -140,7 +140,7 @@ void Leds::pulse (led_id_t led, uint8_t brightness, uint16_t duration_ms, uint16
 
   led_set_pwm_ocr (led, LEDS_TMR3_OCR_HALF_TOP + LEDS_TMR3_OCR_HALF_TOP * (1.f - fbr*fbr));
 
-  RTClock::get()->wait( 4 ); // found experimentally to avoid initial LED spark
+  RTClock::get()->wait ( 4 ); // found experimentally to avoid initial LED spark
 
   SQWave::get()->start (led, duration_ms, period_ms, duty_cycle, 
                         sqw_transition_callback, this);

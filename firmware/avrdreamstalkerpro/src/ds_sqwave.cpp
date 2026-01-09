@@ -2,7 +2,7 @@
  * This file is part of the AVR Dreamstalker software
  * (https://github.com/orpaltech/dreamstalker).
  *
- * Copyright (c) 2013-2024	ORPAL Technologies, Inc.
+ * Copyright (c) 2013-2025	ORPAL Technologies, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -80,7 +80,7 @@ void SQWave::do_transition (uint8_t i, sqw_transition_t trans)
   volatile sqw_context_t *ps = &sqw[i];
 
   if (ps->pcb_transition)
-	ps->pcb_transition (ps->context, i, trans);
+	(*ps->pcb_transition) (ps->context, i, trans);
 }
 
 bool SQWave::init(void)

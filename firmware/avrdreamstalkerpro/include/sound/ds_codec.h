@@ -24,8 +24,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include <SD.h>
-
+#include "ds_util.h"
 #include "sound/ds_tonegen.h"
 #include "vs10xx_mcu.h"
 
@@ -98,7 +97,7 @@ private:
 	uint8_t		buff[CODEC_BUF_SIZE];
 	uint32_t	count;
 	e_audio_codec_state_t status;
-  VsCodec vs;
+  VsCodec   vs;
 };
 
 /*-----------------------------------------------------------------------*/

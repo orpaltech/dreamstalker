@@ -70,6 +70,7 @@ public:
   bool wakeup_timer_cancel (void);
   bool wakeup_timer_is_set_unsafe (void);
   bool wakeup_timer_is_set (void);
+  uint16_t wakeup_timer_get_remainder (void);
 
   /* Alarm clock operations */
   void alarm_clock_set (RTClockCB_t prtcb, void *context);
@@ -99,7 +100,7 @@ private:
   void flag_toggle (uint16_t flag);
   bool flag_is_set (uint16_t flag);
 
-  void display_out (int hour, int minute, uint8_t flags);
+  void display (int hour, int minute, uint8_t flags);
 
 private:
   typedef struct s_rtc_context {

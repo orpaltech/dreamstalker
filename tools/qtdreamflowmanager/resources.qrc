@@ -1,0 +1,14 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/connect.png</file>
+        <file>images/disconnect.png</file>
+        <file>images/application-exit.png</file>
+        <file>images/serial-settings.png</file>
+        <file>images/about.png</file>
+        <file>images/line-chart.png</file>
+        <file>images/visual-settings.png</file>
+        <file>images/load-from-file.png</file>
+        <file>images/load-from-device.png</file>
+        <file>images/capture-settings.png</file>
+    </qresource>
+</RCC>

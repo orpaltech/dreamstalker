@@ -24,6 +24,8 @@
 #include <stdint.h>
 
 #include <core/adc_avr.h>
+#include "ds_lowpass.h"
+#include "ds_util.h"
 
 namespace DS {
 /*-----------------------------------------------------------------------*/
@@ -33,10 +35,7 @@ typedef enum e_remd_event_type {
 } remd_event_type_t;
 
 /*-----------------------------------------------------------------------*/
-class REMDetectCB{
-public:
-  virtual void on_remd_event (remd_event_type_t event) = 0;
-};
+typedef void (*REMDetectCB_t)(void *context, remd_event_type_t event);
 
 /*-----------------------------------------------------------------------*/
 class REMDetect {
@@ -46,12 +45,12 @@ public:
   bool init (void) ;
   void end (void);
 
-  bool start (REMDetectCB *premdcb) ;
+  bool start (REMDetectCB_t premdcb, void *context) ;
   void stop (void) ;
   bool is_running (void);
 
   /* Use the method from ISR */
-  bool start_unsafe (REMDetectCB *premdcb) ;
+  bool start_unsafe (REMDetectCB_t premdcb, void *context) ;
   void stop_unsafe (void) ;
 protected:
   void on_a2d_sample(uint16_t sample);
@@ -59,9 +58,25 @@ protected:
 private:
   static void a2d_sample_callback(void *context, uint16_t sample);
   
+  bool detect_movement(int16_t sample);
+  void handle_analysis(bool move_detected);
+
 private:
-  REMDetectCB *premdcb;
+  REMDetectCB_t premdcb;
+  void *context;
   bool status;
+  int32_t noise_level;
+  int16_t last_sample;
+  LowPassFilter lowpass_filter;
+  uint32_t epoch_sample_count;
+  uint16_t movements_in_epoch;
+  uint16_t movement_duration;
+#if TEST_REMD
+public:
+  volatile uint16_t file_buf[256]; // Holds 256 samples (512 bytes)
+  volatile int file_buf_idx;
+  volatile bool file_buf_ready;
+#endif
 };
 
 /*-----------------------------------------------------------------------*/

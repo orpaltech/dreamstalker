@@ -40,14 +40,14 @@ using namespace DS;
 /*-----------------------------------------------------------------------*/
 /* Handle RIFF file structure
  */
-#define WAV_PUT_CHUNK(chunk)		\
+#define WAV_PUT_CHUNK(fp, chunk)	\
 	do {							\
 		len = fp->write((const uint8_t*)chunk, 4);	\
 		if (len == 0)				\
 			return false;			\
 	} while( 0 )
 
-#define WAV_PUT_WORD(val)			\
+#define WAV_PUT_WORD(fp, val)		\
 	do {							\
 		uint16_t w = (val);			\
 		len = fp->write((const uint8_t*)&w, 2);		\
@@ -55,7 +55,7 @@ using namespace DS;
 			return false;			\
 	} while( 0 )
 
-#define WAV_PUT_DWORD(val)			\
+#define WAV_PUT_DWORD(fp, val)		\
 	do {							\
 		uint32_t dw = (val);		\
 		len = fp->write((const uint8_t*)&dw, 4);	\
@@ -90,50 +90,50 @@ bool write_wav_header ( SDFile *fp, uint32_t num_blocks )
 	size_t len;
 
 	/* Riff ChunkID */
-	WAV_PUT_CHUNK( "RIFF" );
+	WAV_PUT_CHUNK( fp, "RIFF" );
 	/* ChunkSize = num_blocks * BlockAlign + 52
 	 *	must be <file-size> - 8 
 	 */
-	WAV_PUT_DWORD( num_blocks * ADPCM_BLOCK_ALIGN + 52 );
+	WAV_PUT_DWORD( fp, num_blocks * ADPCM_BLOCK_ALIGN + 52 );
 	/* Format */
-	WAV_PUT_CHUNK( "WAVE" );
+	WAV_PUT_CHUNK( fp, "WAVE" );
 
 	/*SubChunk1ID*/
-	WAV_PUT_CHUNK( "fmt " );
+	WAV_PUT_CHUNK( fp, "fmt " );
 	/* SubChunk1Size */
-	WAV_PUT_DWORD( 20 );
+	WAV_PUT_DWORD( fp, 20 );
 	/* AudioFormat - IMA ADPCM */
-	WAV_PUT_WORD( WAV_FORMAT_IMA_ADPCM );
+	WAV_PUT_WORD( fp, WAV_FORMAT_IMA_ADPCM );
 	/* NumOfChannels */
-	WAV_PUT_WORD( 1 );
+	WAV_PUT_WORD( fp, 1 );
 	/* SampleRate */
-	WAV_PUT_DWORD( ADPCM_SAMPLE_RATE );
+	WAV_PUT_DWORD( fp, ADPCM_SAMPLE_RATE );
 	/* ByteRate = <SampleRate> * <BlockAlign> / <SamplesPerBlock>
 	 *	8000 * 256 / 505 ~= 4055 
 	 */
-	WAV_PUT_DWORD( ADPCM_SAMPLE_RATE * ADPCM_BLOCK_ALIGN / ADPCM_SAMPLES_PER_BLOCK );
+	WAV_PUT_DWORD( fp, ADPCM_SAMPLE_RATE * ADPCM_BLOCK_ALIGN / ADPCM_SAMPLES_PER_BLOCK );
 	/* BlockAlign */
-	WAV_PUT_WORD( ADPCM_BLOCK_ALIGN );
+	WAV_PUT_WORD( fp, ADPCM_BLOCK_ALIGN );
 	/* BitsPerSample */
-	WAV_PUT_WORD( ADPCM_BITS_PER_SAMPLE );
+	WAV_PUT_WORD( fp, ADPCM_BITS_PER_SAMPLE );
 	/* Bytes of ExtraData */
-	WAV_PUT_WORD(2);
+	WAV_PUT_WORD( fp, 2 );
 	/* ExtraData - SamplesPerBlock */
-	WAV_PUT_WORD( ADPCM_SAMPLES_PER_BLOCK );
+	WAV_PUT_WORD( fp, ADPCM_SAMPLES_PER_BLOCK );
 
 	/* SubChunk2ID */
-	WAV_PUT_CHUNK( "fact" );
+	WAV_PUT_CHUNK( fp, "fact" );
 	/* SubChunk2Size */
-	WAV_PUT_DWORD( 4 );
+	WAV_PUT_DWORD( fp, 4 );
 	/* NumOfSamples = num_blocks * SamplesPerBlock */
-	WAV_PUT_DWORD( num_blocks * ADPCM_SAMPLES_PER_BLOCK );
+	WAV_PUT_DWORD( fp, num_blocks * ADPCM_SAMPLES_PER_BLOCK );
 
 	/* SubChunk3ID */
-	WAV_PUT_CHUNK( "data" );
+	WAV_PUT_CHUNK( fp, "data" );
 	/* SubChunk3Size = num_blocks * BlockAlign 
 	 *	must be <file-size> - 60
 	 */
-	WAV_PUT_DWORD( num_blocks * ADPCM_BLOCK_ALIGN );
+	WAV_PUT_DWORD( fp, num_blocks * ADPCM_BLOCK_ALIGN );
 
 	return true;
 }
@@ -191,7 +191,7 @@ bool AudioCodec::playback (const char *file_name)
 	return false;
 
   /* open the file */
-  fp = SD.open (file_name, FILE_READ);
+  fp = card0.open (file_name, FILE_READ);
   if (! fp)
 	return false;
 
@@ -202,7 +202,6 @@ bool AudioCodec::playback (const char *file_name)
 
   if (! vs.playback_start ()) {
 	fp.close();
-
 	return false;
   }
 
@@ -222,38 +221,43 @@ bool AudioCodec::capture (const char *file_name)
 	return false;
 
   // create a new file
-  fp = SD.open (file_name, FILE_WRITE);
+  fp = card0.open (file_name, FILE_WRITE);
   if (! fp)
 	return false;
 
-  /* Write initial file header, will be updated after */
-  if (! write_wav_header ( &fp, 0 )) {
-	goto error_exit0;
+  bool error = true;
+  do {
+  	/* Write initial file header, will be updated after */
+  	if (! write_wav_header ( &fp, 0 )) {
+		break;
+  	}
+
+  	Sound::get()->mic_on ();
+
+  	if (! vs.adpcm_record_start (ADPCM_SAMPLE_RATE, 
+								config.get_record_gain_level (), 
+								ADPCM_USE_HP_FILTER)) {
+	  Sound::get()->mic_off ();
+	  break;
+  	}
+
+  	/* Reset number of ADPCM blocks */
+  	count = 0;
+
+  	/* Update status flag*/
+  	status = AUDIO_CODEC_CAPTURE;
+
+	/* Success */
+	error = false;
+  } while(false);
+
+  if (error) {
+  	fp.close();
+  	card0.remove(file_name);
+    return false;
   }
 
-  Sound::get()->mic_on ();
-
-  if (! vs.adpcm_record_start (ADPCM_SAMPLE_RATE, 
-							config.get_record_gain_level (), 
-							ADPCM_USE_HP_FILTER)) {
-	goto error_exit1;
-  }
-
-  /* Reset number of ADPCM blocks */
-  count = 0;
-
-  /* Update status flag*/
-  status = AUDIO_CODEC_CAPTURE;
   return true;
-
-error_exit1:
-  Sound::get()->mic_off ();
-
-error_exit0:
-  fp.close();
-  SD.remove(file_name);
-
-  return false;
 }
 
 void AudioCodec::end_playback (AudioCodec *c, bool on_error)
@@ -290,28 +294,27 @@ void AudioCodec::end_capture (AudioCodec *c, bool on_error)
   if (! on_error) {
 	/* update wav header */
 	c->fp.seek (0);
-	write_wav_header (&c->fp,
-					c->count);
+	write_wav_header (&c->fp, c->count);
   }
 
+  c->fp.flush();
   c->fp.close ();
 }
 
 void AudioCodec::process_playback (AudioCodec *c)
 {
-	uint16_t	len;
-	uint16_t	pos;
+	int16_t	len;
+	int16_t	pos;
 
 	len	= c->fp.read (c->buff, CODEC_BUF_SIZE);
-
-	if (len == 0) {
+	if (len < 0) {
 		end_playback (c, true);
 
 		return;
 	}
 
-	if (len && len < CODEC_BUF_SIZE) {
-		/* Zero block ending if there is no enough data */
+	/* Pad block with 0 if there is no enough data */
+	if (len < CODEC_BUF_SIZE) {
 		memset (&c->buff[ len ], 0, 
 				CODEC_BUF_SIZE - len);
 	}

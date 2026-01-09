@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ManagerMainWindow</class>
+ <widget class="QMainWindow" name="ManagerMainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1039</width>
+    <height>558</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dreamstalker Manager</string>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout"/>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1039</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionCommSettings"/>
+    <addaction name="separator"/>
+    <addaction name="actionQuit"/>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="actionAbout"/>
+   </widget>
+   <widget class="QMenu" name="menuCapture">
+    <property name="title">
+     <string>Capture</string>
+    </property>
+    <addaction name="actionCaptureStart"/>
+    <addaction name="actionCaptureStop"/>
+    <addaction name="separator"/>
+    <addaction name="actionCaptureSettings"/>
+   </widget>
+   <widget class="QMenu" name="menuVisualization">
+    <property name="title">
+     <string>Visualization</string>
+    </property>
+    <widget class="QMenu" name="menuVisualLoadFrom">
+     <property name="title">
+      <string>Load Data ...</string>
+     </property>
+     <addaction name="actionVisualLoadFromFile"/>
+     <addaction name="actionVisualLoadFromDevice"/>
+    </widget>
+    <addaction name="menuVisualLoadFrom"/>
+    <addaction name="actionVisualToggleChart"/>
+    <addaction name="separator"/>
+    <addaction name="actionVisualSettings"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuCapture"/>
+   <addaction name="menuVisualization"/>
+   <addaction name="menuHelp"/>
+  </widget>
+  <widget class="QStatusBar" name="statusBar"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionCaptureStart"/>
+   <addaction name="actionCaptureStop"/>
+   <addaction name="separator"/>
+   <addaction name="actionCommSettings"/>
+   <addaction name="separator"/>
+   <addaction name="actionCaptureSettings"/>
+   <addaction name="separator"/>
+   <addaction name="actionVisualLoadFromFile"/>
+   <addaction name="actionVisualLoadFromDevice"/>
+   <addaction name="actionVisualToggleChart"/>
+   <addaction name="actionVisualSettings"/>
+   <addaction name="separator"/>
+   <addaction name="actionAbout"/>
+   <addaction name="separator"/>
+  </widget>
+  <action name="actionQuit">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/images/application-exit.png</normaloff>:/images/application-exit.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Quit</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/images/about.png</normaloff>:/images/about.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;About</string>
+   </property>
+   <property name="toolTip">
+    <string>About program</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+A</string>
+   </property>
+  </action>
+  <action name="actionCaptureStart">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/images/connect.png</normaloff>:/images/connect.png</iconset>
+   </property>
+   <property name="text">
+    <string>St&amp;art capture</string>
+   </property>
+   <property name="toolTip">
+    <string>Start capture from device</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+A</string>
+   </property>
+  </action>
+  <action name="actionCaptureStop">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/images/disconnect.png</normaloff>:/images/disconnect.png</iconset>
+   </property>
+   <property name="text">
+    <string>St&amp;op capture</string>
+   </property>
+   <property name="toolTip">
+    <string>Stop capture from device</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
+  </action>
+  <action name="actionCaptureSettings">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/images/capture-settings.png</normaloff>:/images/capture-settings.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Capture Settings</string>
+   </property>
+   <property name="toolTip">
+    <string>Edit capture settings</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+C</string>
+   </property>
+  </action>
+  <action name="actionVisualToggleChart">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/images/line-chart.png</normaloff>:/images/line-chart.png</iconset>
+   </property>
+   <property name="text">
+    <string>Toggle &amp;Chart</string>
+   </property>
+   <property name="toolTip">
+    <string>Toggle data chart visibility</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+T</string>
+   </property>
+  </action>
+  <action name="actionVisualSettings">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/images/visual-settings.png</normaloff>:/images/visual-settings.png</iconset>
+   </property>
+   <property name="text">
+    <string>Visualization S&amp;ettings</string>
+   </property>
+   <property name="toolTip">
+    <string>Edit visualization settings</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+E</string>
+   </property>
+  </action>
+  <action name="actionCommSettings">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/images/serial-settings.png</normaloff>:/images/serial-settings.png</iconset>
+   </property>
+   <property name="text">
+    <string>Co&amp;mmunication Settings</string>
+   </property>
+   <property name="toolTip">
+    <string>Edit communication settings</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+M</string>
+   </property>
+  </action>
+  <action name="actionVisualLoadFromFile">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/images/load-from-file.png</normaloff>:/images/load-from-file.png</iconset>
+   </property>
+   <property name="text">
+    <string>From &amp;File</string>
+   </property>
+   <property name="toolTip">
+    <string>Load historical data from file</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+F</string>
+   </property>
+  </action>
+  <action name="actionVisualLoadFromDevice">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/images/load-from-device.png</normaloff>:/images/load-from-device.png</iconset>
+   </property>
+   <property name="text">
+    <string>From &amp;Device</string>
+   </property>
+   <property name="toolTip">
+    <string>Acquire real-time data directly from device</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+D</string>
+   </property>
+  </action>
+ </widget>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
+ <connections/>
+</ui>

@@ -174,7 +174,7 @@ void Config::set_default_ ## name (void)	\
 
 
 /*-----------------------------------------------------------------------*/
-PROGMEM const uint16_t u_FirmwareVersion = MAKE_VER ( 2,0 );
+PROGMEM const uint16_t u_FirmwareVersion = MAKE_VER ( 2,4 );
 
 /*-----------------------------------------------------------------------*/
 Config config;

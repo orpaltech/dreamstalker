@@ -27,14 +27,13 @@
 #include "display/ds_disp_msgs.h"
 #include "sound/ds_sound.h"
 #include "sound/ds_codec.h"
-#include "ds_remd.h"
+#include "ds_remdetect.h"
 #include "ds_pwrman.h"
 #include "input/ds_keybrd.h"
-#include "ds_menu.h"
+#include "ds_appmenu.h"
 #include "ds_sqwave.h"
 #include "ds_vibro.h"
 #include "ds_leds.h"
-#include "ds_util.h"
 
 
 using namespace DS;
@@ -46,10 +45,6 @@ using namespace avr_core;
  * Defines the key to exit from sleep mode
  */
 #define KEY_EXIT_SLEEP  KEY_POWER
-
-
-/*-----------------------------------------------------------------------*/
-SDLib::SDClass &card0 = SDLib::SD;
 
 
 /*-----------------------------------------------------------------------*/
@@ -75,6 +70,13 @@ void Driver::wakeup_timer_callback (void *context)
   Driver *pdrv = static_cast<Driver *>(context);
 
   pdrv->on_wakeup_timer ();
+}
+
+void Driver::remd_callback(void *context, remd_event_type_t event)
+{
+  Driver *pdrv = static_cast<Driver *>(context);
+
+  pdrv->on_remd_event( event );
 }
 
 /*-----------------------------------------------------------------------*/
@@ -193,6 +195,7 @@ bool Driver::start (void)
 {
   bool success = true;
   char msg[ 5 ];
+  auto disp = Display::get();
 
   interrupts();   /* Enable interrupts globally */
 
@@ -206,31 +209,31 @@ bool Driver::start (void)
   RTClock::get()->start ( RTC_OPM_NORMAL );   /* Start real-time clock.*/ 
 
 
-  Display::get()->enable ();
-  Display::get()->version ('F', fw_version(), 1000);
+  disp->enable ();
+  disp->version ('P', fw_version(), 1000);
 
 
   /* SD-card initialization */
   while (! card0.begin ()) {
 
     /* handle error */
-    Display::get()->message (__disp_msg_no_sd__, 1);
+    disp->message (__disp_msg_no_sd__, 1);
 
     /* let user insert SD-card and press ON/OFF */
     Keyboard::get()->wait_for_key_press (KEY_POWER);
 
     /* try SD-card again...*/
-    Display::get()->message (__disp_msg_all_dots__, 500);
+    disp->message (__disp_msg_all_dots__, 500);
   }
 
    /* SD-card found */
-  Display::get()->message (__disp_msg_sd_0__, 1000);
+  disp->message (__disp_msg_sd_0__, 1000);
 
   do {
     if ( ! AudioCodec::get()->begin () ) {
 
       // codec initialization failed!
-      Display::get()->message (__disp_msg_codec_error__, 1);
+      disp->message (__disp_msg_codec_error__, 1);
 
       success = false;
       break;
@@ -238,7 +241,7 @@ bool Driver::start (void)
 
     /* Display codec version */
     snprintf (msg, 5, __disp_msg_codec_spec__, VS_HW_SPEC);
-    Display::get()->message (msg, 1000);
+    disp->message (msg, 1000);
 
 
     if ( ! config.begin () ) {
@@ -265,6 +268,17 @@ bool Driver::start (void)
   } while ( false );
 
   Keyboard::get()->clear_events ();
+
+#if TEST_REMD
+  // create a new file
+  //const char *filename = "RECORDS/REMDSAMP.HEX";
+  const char *filename = "RECORDS/REMDSAMP.BIN";
+  if (card0.exists(filename))
+    card0.remove(filename);
+  remd_fp = card0.open (filename, FILE_WRITE);
+  if (! remd_fp)
+	  return false;
+#endif
 
   return success;
 }
@@ -350,10 +364,10 @@ void Driver::process (void)
 
       }*/
 
-      if ( REMDetect::get()->is_running () ) {
+      /*if ( REMDetect::get()->is_running () ) {
         REMDetect::get()->stop();
 
-      }/* else {
+      } else {
         REMDetect::get()->start();
 
       }*/
@@ -367,6 +381,31 @@ void Driver::process (void)
    * Process different tasks
    */
   AudioCodec::get()->process_task ();
+
+#if TEST_REMD
+  auto premd = REMDetect::get();
+  if (premd->file_buf_ready) {
+    if ( remd_fp ) {
+      // copy buffer and release it
+      memcpy( remd_buf, (const void *)premd->file_buf, 512 );
+      /*remd_buf[0] = '\0';
+      int index = 0;
+      while (index < 256) {
+        //sprintf(remd_hex, "%04X", premd->file_buf[index++]);
+        //Strings::hex_str (premd->file_buf[index++], remd_hex, 4);
+        String hex = Strings::hex_str (premd->file_buf[index++]);
+        strcat(remd_buf, hex.c_str() );
+      }*/
+    }
+    premd->file_buf_ready = false;
+
+    if ( remd_fp ) {
+      // write to SD card
+      //remd_fp.write(remd_buf);
+      remd_fp.write((const uint8_t*)remd_buf, 512);
+    }
+  }
+#endif
 
 }
 #endif
@@ -395,6 +434,10 @@ void Driver::on_remd_event (remd_event_type_t event)
   // TODO: do actions on REM detected
   // серию вспышек и звуков во время сновидения
 
+  //Serial.println("EPOCH_RESULT: REM");
+  
+  //REMDetect::get()->stop_unsafe ();
+
   /* Сheck if alarm clock is enabled */
   if (config.get_alarm_clock_enabled ()) {
     
@@ -404,50 +447,61 @@ void Driver::on_remd_event (remd_event_type_t event)
 
 void Driver::wakeup_timer_toggle (void)
 {
-  if (RTClock::get()->wakeup_timer_is_set ()) {
+  auto rtck = RTClock::get();
 
-    RTClock::get()->wakeup_timer_cancel ();
+  if (rtck->wakeup_timer_is_set ()) {
+
+    rtck->wakeup_timer_cancel ();
 
   } else {
 
-    RTClock::get()->wakeup_timer_set (wakeup_timer_callback, this);
+    rtck->wakeup_timer_set (wakeup_timer_callback, this);
   }
 }
 
 void Driver::wakeup_timer_quick_set (keybrd_event_t key_event)
 {
-  /* Wake-Up timer */
-  if ( RTClock::get()->wakeup_timer_is_set ()) {
+  auto rtck = RTClock::get();
+  auto disp = Display::get();
 
-    RTClock::get()->wakeup_timer_cancel ();
+  /* Wake-Up timer */
+  if ( rtck->wakeup_timer_is_set ()) {
+
+    rtck->wakeup_timer_cancel ();
     return;
   }
 
-  RTClock::get()->hide();
-  Display::get()->message ( __disp_msg_set__, 500 );
+  rtck->hide();
+  disp->message ( __disp_msg_set__, 500 );
 
   if ( key_event & KEY_MINUS ) {
     config.set_wakeup_timer_delay ( 20 );
-    Display::get()->time ( 0, 20 );
+    disp->time ( 0, 20 );
 
   } else {
     config.set_wakeup_timer_delay ( WAKEUP_TIMER_DELAY_DEFAULT );
-    Display::get()->time ( 0, WAKEUP_TIMER_DELAY_DEFAULT );
+    disp->time ( 0, WAKEUP_TIMER_DELAY_DEFAULT );
   }
-  Display::get()->wait_cycles ( 800 );
+  disp->wait_cycles ( 800 );
 
-  RTClock::get()->wakeup_timer_set (wakeup_timer_callback, this);
-  RTClock::get()->show();
+  rtck->wakeup_timer_set (wakeup_timer_callback, this);
+  rtck->show();
 }
 
 #if TEST_REMD
 static Timer tmr;
 static volatile int8_t evt_id = -1;
-#define REMD_TIMEOUT_MIN  120UL
-static void stop_remd (void *ctx){
-
-  ((REMDetect *)ctx)->stop_unsafe ();
+#define REMD_TIMEOUT_MIN  180UL
+static void stop_remd (void *context)
+{
+  Driver *prd = static_cast<Driver *>(context);
+  REMDetect::get()->stop_unsafe ();
   evt_id = -1;
+
+  if (prd->remd_fp) {
+    prd->remd_fp.flush();
+    prd->remd_fp.close();
+  }
 }
 #endif
 
@@ -463,20 +517,24 @@ void Driver::handle_isr (void)
 
 void Driver::start_lucid_dream (void)
 {
-  if ( !REMDetect::get()->start_unsafe (this) ) {
+  if ( !REMDetect::get()->start_unsafe (
+                  remd_callback, this) ) {
     return;
   }
 
 #if TEST_REMD
-  /* Stop after N min */
-  evt_id = tmr.after(REMD_TIMEOUT_MIN * 60'000UL, stop_remd, REMDetect::get() );
+  /* Stop after REMD_TIMEOUT_MIN */
+  evt_id = tmr.after(REMD_TIMEOUT_MIN * 60'000UL, stop_remd, this );
 #endif
 }
 
 void Driver::power_off (void)
 {
-  RTClock::get()->hide ();
-  Display::get()->message (__disp_msg_off__, 500);
+  auto rtck = RTClock::get();
+  auto disp = Display::get();
+
+  rtck->hide ();
+  disp->message (__disp_msg_off__, 500);
 
   AudioCodec::get()->stop ();
 
@@ -486,13 +544,13 @@ void Driver::power_off (void)
 
   Sound::get()->stop();
 
-  Display::get()->disable ();
+  disp->disable ();
 
   /* Restart RTC in power-save mode and 
    * keep current time for the user 
    */
-  RTClock::get()->stop();
-  RTClock::get()->start ( RTC_OPM_PWRSAVE );
+  rtck->stop();
+  rtck->start ( RTC_OPM_PWRSAVE );
 
 
   /*
@@ -513,14 +571,14 @@ void Driver::power_off (void)
   } while (! (Keyboard::get()->get_irq_keys() & KEY_EXIT_SLEEP));
 
   /* Wait for next tick and restart RTC in normal mode */
-  RTClock::get()->wait_for_next_tick ();
-  RTClock::get()->stop ();
-  RTClock::get()->start ( RTC_OPM_NORMAL );
+  rtck->wait_for_next_tick ();
+  rtck->stop ();
+  rtck->start ( RTC_OPM_NORMAL );
 
-  Display::get()->enable ();
-  Display::get()->message (__disp_msg_on__, 500);
+  disp->enable ();
+  disp->message (__disp_msg_on__, 500);
 
-  RTClock::get()->show ();
+  rtck->show ();
 
   A2DConv::get()->enable ();
   PowerMan::get()->start ();

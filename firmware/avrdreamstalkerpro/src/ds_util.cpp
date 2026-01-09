@@ -27,11 +27,13 @@
 #include <avr/wdt.h>
 #include <compat/ina90.h>
 
-#include <SD.h>
-
 #include "ds_util.h"
 #include "ds_arduino.h"
 #include "shared_fp.h"
+
+
+/*-----------------------------------------------------------------------*/
+SDLib::SDClass &card0 = SDLib::SD;
 
 
 /*-----------------------------------------------------------------------*/
@@ -94,6 +96,22 @@ bool Strings::hex_str ( uint32_t decimal, char *buffer, int precision )
   return true;
 }
 
+const static char* HEX_DIGITS = "0123456789ABCDEF";
+
+String Strings::hex_str ( uint16_t val )
+{
+  String result;
+  result.reserve(4); // 4 digits + implicit null terminator
+
+  result[0] = HEX_DIGITS[(val >> 12) & 0xF]; // Get the 4th hex digit
+  result[1] = HEX_DIGITS[(val >> 8) & 0xF];  // Get the 3rd hex digit
+  result[2] = HEX_DIGITS[(val >> 4) & 0xF];  // Get the 2nd hex digit
+  result[3] = HEX_DIGITS[val & 0xF];         // Get the 1st hex digit
+  result[4] = '\0';                          // Add null terminator
+
+  return result;
+}
+
 uint16_t Maths::pow_u16 ( uint16_t base, uint8_t exp )
 {
   if( exp == 0 )
@@ -116,7 +134,7 @@ void Files::make_next_file_path(char *file_path, unsigned len,
   strncpy (prefix, file_prefix, 6);
   prefix [6] = '\0';
 
-  SDFile dir = SD.open (dir_path);
+  SDFile dir = card0.open (dir_path);
   if ( dir ) {
 	  for (;;) {
 	    entry =  dir.openNextFile ();

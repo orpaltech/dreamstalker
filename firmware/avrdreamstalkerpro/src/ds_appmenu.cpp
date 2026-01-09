@@ -33,7 +33,7 @@
 #include "ds_config.h"
 #include "ds_rtclock.h"
 #include "ds_util.h"
-#include "ds_menu.h"
+#include "ds_appmenu.h"
 #include "ds_driver.h"
 
 
@@ -1064,33 +1064,39 @@ int ense_speaker_setup_read_value (void)
 
 void clock_setup_activate (void)
 {
+  auto rtck = RTClock::get();
+
   // setup real-time clock
-  RTClock::get()->set_setup ( RTC_SETUP_HOUR );
-  RTClock::get()->show ();
+  rtck->set_setup ( RTC_SETUP_HOUR );
+  rtck->show ();
 
   Keyboard::get()->hold_repeat_default ();
 }
 
 void clock_setup_exit (void)
 {
+  auto rtck = RTClock::get();
+
   // exit from setup
-  RTClock::get()->set_setup ( RTC_SETUP_NONE );
-  RTClock::get()->hide ();
+  rtck->set_setup ( RTC_SETUP_NONE );
+  rtck->hide ();
 
   Keyboard::get()->hold_repeat_disable ();
 }
 
 void clock_setup ( pmenu_context_t ctx, keybrd_event_t key_event )
 {
+  auto rtck = RTClock::get();
+
   switch ( key_event ) {
 	case ( KEY_ENTER ):
 	  // switch between hours and minutes
-	  if ( RTClock::get()->get_setup () == RTC_SETUP_HOUR ) {
+	  if ( rtck->get_setup () == RTC_SETUP_HOUR ) {
 
-		RTClock::get()->set_setup ( RTC_SETUP_MINUTE );
+		rtck->set_setup ( RTC_SETUP_MINUTE );
 	  } else {
 
-		RTClock::get()->set_setup ( RTC_SETUP_HOUR );
+		rtck->set_setup ( RTC_SETUP_HOUR );
 	  }
 
 	  set_handled (ctx);
@@ -1098,13 +1104,13 @@ void clock_setup ( pmenu_context_t ctx, keybrd_event_t key_event )
 
 	case ( KEY_MINUS ):
 	case ( KEY_MINUS | KEYBRD_HOLD ):
-	  RTClock::get()->setup_inc ( -1 );
+	  rtck->setup_inc ( -1 );
 	  set_handled (ctx);
 	  break;
 
 	case ( KEY_PLUS ):
 	case ( KEY_PLUS | KEYBRD_HOLD ):
-	  RTClock::get()->setup_inc ( 1 );
+	  rtck->setup_inc ( 1 );
 	  set_handled (ctx);
 	  break;
   }
@@ -1112,13 +1118,28 @@ void clock_setup ( pmenu_context_t ctx, keybrd_event_t key_event )
 
 void disp_wakeup_timer_delay (void)
 {
-  unsigned delay;
-  unsigned hour, minute;
+  uint16_t delay;
+  uint8_t hour, minute;
   char msg[ 6 ];
 
   delay = config.get_wakeup_timer_delay ();
   hour = delay / 60;
   minute = delay - ( 60U * hour );
+  snprintf (msg, 6, __disp_msg_time__, hour, minute);
+
+  Display::get()->message (msg, 1);
+}
+
+// How much time is left before the timer goes off
+void disp_wakeup_timer_remainder (void)
+{
+  uint16_t remainder;
+  uint8_t hour, minute;
+  char msg[ 6 ];
+
+  remainder = RTClock::get()->wakeup_timer_get_remainder ();
+  hour = remainder / 60;
+  minute = remainder - ( 60U * hour );
   snprintf (msg, 6, __disp_msg_time__, hour, minute);
 
   Display::get()->message (msg, 1);
@@ -1136,9 +1157,9 @@ void wakeup_timer_setup_exit (void)
   Keyboard::get()->hold_repeat_disable ();
 }
 
-void AppMenu::wakeup_timer_setup ( pmenu_context_t ctx, keybrd_event_t key_event )
+void AppMenu::wakeup_timer_setup (pmenu_context_t ctx, keybrd_event_t key_event)
 {
-  bool timer_on = RTClock::get()->wakeup_timer_is_set ();
+  bool is_active = RTClock::get()->wakeup_timer_is_set ();
 
   switch ( key_event ) {
 	case ( KEY_ENTER ):
@@ -1150,7 +1171,7 @@ void AppMenu::wakeup_timer_setup ( pmenu_context_t ctx, keybrd_event_t key_event
 
 	case ( KEY_MINUS ):
 	case ( KEY_MINUS | KEYBRD_HOLD ):
-	  if (! timer_on ) {
+	  if (! is_active ) {
 
 	  	DSCONF_DECREMENT_PROPERTY(config, wakeup_timer_delay );
 	  	disp_wakeup_timer_delay ();
@@ -1161,12 +1182,21 @@ void AppMenu::wakeup_timer_setup ( pmenu_context_t ctx, keybrd_event_t key_event
 
 	case ( KEY_PLUS ):
 	case ( KEY_PLUS | KEYBRD_HOLD ):
-	  if (! timer_on ) {
+	  if (! is_active ) {
 
 	  	DSCONF_INCREMENT_PROPERTY(config, wakeup_timer_delay );
 	  	disp_wakeup_timer_delay ();
 	  }
 
+	  set_handled (ctx);
+	  break;
+
+	case ( KEY_CHECK ):
+	  if ( is_active ) {
+		/* Remainder is only valid if timer is active
+		 */
+	  	disp_wakeup_timer_remainder ();
+	  }
 	  set_handled (ctx);
 	  break;
   }

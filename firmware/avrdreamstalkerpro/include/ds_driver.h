@@ -24,18 +24,15 @@
 #include <stdint.h>
 
 #include "ds_rtclock.h"
-#include "ds_remd.h"
+#include "ds_remdetect.h"
 #include "input/ds_keybrd.h"
-
-#include <SD.h>
-extern SDLib::SDClass &card0;
-
+#include "ds_util.h"
 
 //#define RUN_TEST_MODE 1
 
 namespace DS {
 /*-----------------------------------------------------------------------*/
-class Driver : public REMDetectCB {
+class Driver {
 public:
   bool begin (void);
   void end (void);
@@ -51,7 +48,7 @@ public:
 protected:
   void on_wakeup_timer (void);
   void on_alarm_clock (void);
-  virtual void on_remd_event (remd_event_type_t event);
+  void on_remd_event (remd_event_type_t event);
 
   friend class AppMenu;
 private:
@@ -61,6 +58,13 @@ private:
   void power_off (void);
   static void alarm_clock_callback (void *context);
   static void wakeup_timer_callback (void *context);
+  static void remd_callback(void *context, remd_event_type_t event);
+#if TEST_REMD
+public:
+  SDFile remd_fp;
+  //char remd_buf[256 * 4 + 1];
+  uint16_t remd_buf[256];
+#endif
 };
 
 /*-----------------------------------------------------------------------*/

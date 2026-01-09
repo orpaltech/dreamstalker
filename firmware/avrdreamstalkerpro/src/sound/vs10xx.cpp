@@ -31,6 +31,7 @@
 #include "sound/vs1002.h"
 #include "sound/vs1003.h"
 #include "sound/vs1053.h"
+#include "ds_util.h"
 
 using namespace VLSI;
 
@@ -160,8 +161,10 @@ void Vs10xx::sdi_write ( const uint8_t *block )
 
   sdi_select ();				/* Select SDI device */
 
-  for( uint8_t i = 0; i < SDI_BLOCK_LEN; i++) 
+  for (uint8_t i = 0; i < SDI_BLOCK_LEN; i++) {
+
 	  SPI.transfer ( block[i] );
+  }
 
   sdi_unsel ();				/* Deselect SDI */
   SPI.endTransaction ();
@@ -496,12 +499,12 @@ patch_file_next_instr( vs_patch_t *patch, vs_sci_instr_t *instr )
 }
 
 bool Vs10xx::patch_process_file ( const char *file_name, 
-							pvs_patch_state_t state,
-							/*pfnvs_patch_handler handler_func,*/
-							pfnvs_patch_init init_func,
-							pfnvs_patch_end end_func )
+                                pvs_patch_state_t state,
+                                /*pfnvs_patch_handler handler_func,*/
+                                pfnvs_patch_init init_func,
+                                pfnvs_patch_end end_func )
 {
-  vs_patch_t		patch;
+  vs_patch_t  patch;
   vs_patch_file_t	patch_file;
   bool res = true;
 
@@ -512,7 +515,7 @@ bool Vs10xx::patch_process_file ( const char *file_name,
   memset ( &patch_file, 0, sizeof( patch_file ));
 
   /* open file */
-  SDFile fp = SD.open (file_name, FILE_READ);
+  SDFile fp = card0.open (file_name, FILE_READ);
   if (! fp)
 	  return false;
 

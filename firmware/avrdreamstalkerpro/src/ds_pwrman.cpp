@@ -118,8 +118,8 @@ bool PowerMan::init (void)
 {
   /* NOTE: Set GBUF line to be controlled by the codec.
    */
-  //Pins::set_in_pullup ( PIN_MGBUF );  /* set for input & pullup */
-  Pins::set_in_highz (PIN_MGBUF);     /* set for input & high-Z */
+  Pins::set_in_pullup( PIN_MGBUF );  /* set for input & pullup */
+  //Pins::set_in_highz( PIN_MGBUF );     /* set for input & high-Z */
 
   /* 
    * Disable unused hardware 
@@ -135,8 +135,8 @@ void PowerMan::start (void)
   if (battmon_status)
     return;
   
-  if (! A2DConv::get()->setup_channel ( BATTMON_CHANNEL,
-                                    ADC_CF_VREF_2_56))
+  if (! A2DConv::get()->setup_channel( BATTMON_CHANNEL,
+                                      ADC_CF_VREF_2_56))
 	  return;
 
   batt_level = 0;

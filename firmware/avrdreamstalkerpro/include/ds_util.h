@@ -23,6 +23,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <SD.h>
+extern SDLib::SDClass &card0;
+
 /*-----------------------------------------------------------------------*/
 #define MIN(X,Y)    ((X) < (Y) ? (X) : (Y))
 
@@ -59,6 +62,8 @@ namespace DS {
 class Strings {
 public:
   static bool hex_str ( uint32_t decimal, char *buffer, int precision );
+
+  static String hex_str ( uint16_t decimal );
 };
 
 /*-----------------------------------------------------------------------*/

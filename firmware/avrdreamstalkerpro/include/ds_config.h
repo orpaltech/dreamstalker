@@ -52,78 +52,74 @@
 /*-----------------------------------------------------------------------*/
 
 #define DSCONF_DECLARE_PROPERTY(name, type)	\
-	typedef type name ## _t;				\
-	type	min_ ## name (void);			\
-	type	max_ ## name (void);			\
-	type	step_ ## name (void);			\
-	type	get_ ## name (void);			\
-	type	get_default_ ## name (void);	\
-	void	set_ ## name (type);			\
-	void	set_default_ ## name (void);	\
-	bool	is_readonly_ ## name (void);	\
-	void	set_readonly_ ## name (bool);
+  typedef type name ## _t;					\
+  type	min_ ## name (void);				\
+  type	max_ ## name (void);				\
+  type	step_ ## name (void);				\
+  type	get_ ## name (void);				\
+  type	get_default_ ## name (void);		\
+  void	set_ ## name (type);				\
+  void	set_default_ ## name (void);		\
+  bool	is_readonly_ ## name (void);		\
+  void	set_readonly_ ## name (bool);
 
 #define DSCONF_DECLARE_PROPERTY_WITH_INVALID(name, type)	\
-	DSCONF_DECLARE_PROPERTY(name, type)		\
-	type	get_invalid_ ## name (void);	\
-	void	set_invalid_ ## name (void);	\
-	bool	is_invalid_ ## name (void);
+  DSCONF_DECLARE_PROPERTY(name, type)						\
+  type	get_invalid_ ## name (void);						\
+  void	set_invalid_ ## name (void);						\
+  bool	is_invalid_ ## name (void);
 
 #define DSCONF_DECLARE_STATIC_COUNTER_PROPERTY(name, type)	\
-	typedef type name ## _t;			\
-	static name ## _t v_ ## name;		\
-	type	get_ ## name (void);		\
-	void	inc_ ## name (void);		\
-	void	reset_ ## name (void);
+  typedef type name ## _t;									\
+  static name ## _t v_ ## name;								\
+  type	get_ ## name (void);								\
+  void	inc_ ## name (void);								\
+  void	reset_ ## name (void);
 
 #define DSCONF_DECLARE_BOOL_PROPERTY(name)	\
-	bool	get_ ## name (void);		\
-	void	set_ ## name (bool);		\
-	void	toggle_ ## name (void);		\
-	void	set_default_ ## name (void);
+  bool	get_ ## name (void);				\
+  void	set_ ## name (bool);				\
+  void	toggle_ ## name (void);				\
+  void	set_default_ ## name (void);
 
-#define DSCONF_DECREMENT_PROPERTY(cfg, name)	\
-	if (! cfg.is_readonly_ ## name ())			\
-	{											\
-		DS::Config::name ## _t val = cfg.get_ ## name ();	\
-		/* disable values below zero !!*/		\
-		if(val < cfg.step_ ## name ())			\
-			val = cfg.max_ ## name ();			\
-		else {									\
-			val -= cfg.step_ ## name ();		\
-			if(val < cfg.min_ ## name ())		\
-				val = cfg.max_ ## name ();		\
-		}										\
-		cfg.set_ ## name (val);					\
-	}
+#define DSCONF_DECREMENT_PROPERTY(cfg, name)			\
+  if (! cfg.is_readonly_ ## name ()) {					\
+	DS::Config::name ## _t val = cfg.get_ ## name ();	\
+	/* disable values below zero !!*/					\
+	if(val < cfg.step_ ## name ())						\
+	  val = cfg.max_ ## name ();						\
+	else {												\
+	  val -= cfg.step_ ## name ();						\
+	  if(val < cfg.min_ ## name ())						\
+		val = cfg.max_ ## name ();						\
+	}													\
+	cfg.set_ ## name (val);								\
+  }
 
-#define DSCONF_INCREMENT_PROPERTY(cfg, name)	\
-	if (! cfg.is_readonly_ ## name ())			\
-	{											\
-		DS::Config::name ## _t val = cfg.get_ ## name ();	\
-												\
-		val += cfg.step_ ## name ();			\
-		if(val > cfg.max_ ## name ())			\
-			val = cfg.min_ ## name ();			\
-		cfg.set_ ## name (val);					\
-	}
+#define DSCONF_INCREMENT_PROPERTY(cfg, name)			\
+  if (! cfg.is_readonly_ ## name ()) {					\
+	DS::Config::name ## _t val = cfg.get_ ## name ();	\
+	val += cfg.step_ ## name ();						\
+	if (val > cfg.max_ ## name ())						\
+	  val = cfg.min_ ## name ();						\
+	cfg.set_ ## name (val);								\
+  }
 
 #define DSCONF_DECREMENT_PROPERTY_WITH_INVALID(cfg, name)	\
-	if (! cfg.is_invalid_ ## name ())						\
-		DSCONF_DECREMENT_PROPERTY(cfg, name)
+  if (! cfg.is_invalid_ ## name ())							\
+	DSCONF_DECREMENT_PROPERTY(cfg, name)
 
 #define DSCONF_INCREMENT_PROPERTY_WITH_INVALID(cfg, name)	\
-	if (! cfg.is_invalid_ ## name ())						\
-		DSCONF_INCREMENT_PROPERTY(cfg, name)
+  if (! cfg.is_invalid_ ## name ())							\
+	DSCONF_INCREMENT_PROPERTY(cfg, name)
 
 #define DSCONF_TOGGLE_PROPERTY_WITH_INVALID(cfg, name)	\
-	if (! cfg.is_readonly_ ## name ())		\
-	{										\
-		if (cfg.is_invalid_ ## name ())		\
-			cfg.set_default_ ## name ();	\
-		else								\
-			cfg.set_invalid_ ## name ();	\
-	}
+  if (! cfg.is_readonly_ ## name ()) {					\
+	if (cfg.is_invalid_ ## name ())						\
+	  cfg.set_default_ ## name ();						\
+	else												\
+	  cfg.set_invalid_ ## name ();						\
+  }
 
 
 /*-----------------------------------------------------------------------*/

@@ -37,20 +37,21 @@ using namespace DS;
 
 
 //#define DD_SILENT		_BV(DDC2)		// silent
-#define DD_MLEFT		_BV(DDG1)
+//#define DD_MLEFT		_BV(DDG1)
 //#define DD_HPTS			_BV(DDE2)
 //#define DD_SNDOFF		_BV(DDE5)		// sound off
 //#define DD_MICP			_BV(DDE6)		// mic on/off
 
 //#define PF_SILENT		_BV(PC2)
-#define PF_MLEFT		_BV(PG1)
+//#define PF_MLEFT		_BV(PG1)
 //#define PF_HPTS			_BV(PE2)
 //#define PF_SNDOFF		_BV(PE5)
 //#define PF_MICP			_BV(PE6)
+#define PIN_MLEFT     PIN_PG1
 
 #define PIN_SILENT		PIN_PC2
 
-#define PIN_HPTS		PIN_PE2
+#define PIN_HPTS		  PIN_PE2
 #define PIN_SND_OFF		PIN_PE5
 #define PIN_MIC_PWR		PIN_PE6
 
@@ -77,7 +78,7 @@ Sound::Sound()
 
 void Sound::irq_handler (void)
 {
-  if (Pins::is_in_low (PIN_HPTS)) {
+  if (Pins::is_in_low ( PIN_HPTS )) {
 
     // off loudspeaker
     if ( is_speaker_on () )
@@ -92,58 +93,60 @@ void Sound::irq_handler (void)
 
 void Sound::speaker_on (void)
 {
-  Pins::drive_low (PIN_SND_OFF);
+  Pins::drive_low ( PIN_SND_OFF );
 
 	_delay_ms ( 100 );
 }
 
 void Sound::speaker_off (void)
 {
-  Pins::drive_high (PIN_SND_OFF);
+  Pins::drive_high ( PIN_SND_OFF );
 
 	_delay_ms ( 10 );
 }
 
 bool Sound::is_speaker_on() const
 {
-	return Pins::is_out_low (PIN_SND_OFF);
+	return Pins::is_out_low ( PIN_SND_OFF );
 }
 
 void Sound::mic_on (void)
 {
-  Pins::drive_high (PIN_MIC_PWR);
+  Pins::drive_high ( PIN_MIC_PWR );
 
   _delay_ms ( 10 );
 }
 
 void Sound::mic_off (void)
 {
-  Pins::drive_low (PIN_MIC_PWR);
+  Pins::drive_low ( PIN_MIC_PWR );
 
   _delay_ms ( 10 );
 }
 
 bool Sound::init ( void )
 {
-  /* set control pins to output */
-  Pins::set_out ( PIN_MIC_PWR );
-  Pins::set_out ( PIN_SND_OFF );
+  /* Set control pins to output */
+  Pins::set_out( PIN_MIC_PWR );
+  Pins::set_out( PIN_SND_OFF );
 
-  /* set headphones tip sensing pin to input */
-  Pins::set_in_pullup ( PIN_HPTS );
+  /* Set headphones tip sensing pin to input */
+  Pins::set_in_pullup( PIN_HPTS );
 
   /* set silent pin to input */
-  Pins::set_in_highz ( PIN_SILENT );
+  Pins::set_in_highz( PIN_SILENT );
 
-	/* Left channel sensing pin */
-	DDRG &= ~DD_MLEFT;		/* set input */
+	/* TODO: Left channel M-pin - what is it for ???? */
+  Pins::set_in_highz( PIN_MLEFT);
+	//DDRG &= ~DD_MLEFT;		/* set input */
 	//DDRG |= DD_MLEFT;		/* set output */
-	PORTG &= ~PF_MLEFT;		/* high z / drive low */
+	//PORTG &= ~PF_MLEFT;		/* high z / drive low */
 	//PORTG |= PF_MLEFT;		/* pull up */
 
   speaker_off ();
 
-  mic_off ();		/* power down microphone */
+  /* Power down microphone */
+  mic_off ();
 
   tonegen.init ();
 

@@ -48,12 +48,9 @@ public:
 public:
   bool	init (void);
 
-  void	start (uint8_t slot,
-              uint16_t duration_ms, 
-              uint16_t period_ms, 
+  void	start (uint8_t slot, uint16_t duration_ms, uint16_t period_ms, 
               uint8_t duty_cycle, /* in percent */
-              SQWaveCB_Transition_t ptcb,
-              void *context);
+              SQWaveCB_Transition_t ptcb, void *context);
   void	stop(uint8_t slot);
 
   bool	is_active (uint8_t slot);

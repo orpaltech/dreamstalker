@@ -70,7 +70,6 @@ using namespace DS;
 #define NDIGITS	4
 
 #ifdef DISP_NUM_CODE_ENABLE
-
 PROGMEM const uint8_t num_code[] = {
 	/*0*/ SEGA	| SEGB	| SEGC	| SEGD	| SEGE	| SEGF,
 	/*1*/		  SEGB	| SEGC,
@@ -194,11 +193,10 @@ PROGMEM const uint8_t pf_digits[NDIGITS] = {
 static
 uint8_t get_ascii_code (int index)
 {
-  return pgm_read_byte_far ( &(ascii_code[ index ]));
+  return pgm_read_byte_far( &(ascii_code[ index ]));
 }
 
 #ifdef DISP_NUM_CODE_ENABLE
-
 static
 uint8_t get_num_code (int index)
 {
@@ -209,7 +207,7 @@ uint8_t get_num_code (int index)
 static
 uint8_t get_pf_digit ( int index )
 {
-  return pgm_read_byte_far ( &pf_digits[ index ] );
+  return pgm_read_byte_far( &pf_digits[ index ] );
 }
 
 /*-----------------------------------------------------------------------*/
@@ -234,7 +232,7 @@ void pins_on (void)
 }
 
 /*-----------------------------------------------------------------------*/
-Display disp;
+static Display disp;
 
 /*-----------------------------------------------------------------------*/
 Display *Display::get()
@@ -260,8 +258,10 @@ void Display::wait_one_cycle (void)
 
 void Display::wait_cycles (unsigned num_cycles)
 {
-  for (unsigned i = 0; i < num_cycles; i++)
+  for (unsigned i = 0; i < num_cycles; i++) {
+
 	wait_one_cycle ();
+  }
 }
 
 /*-----------------------------------------------------------------------*/
@@ -281,8 +281,10 @@ bool Display::init (void)
   dig_index = 0;
   enabled = false;
 
-  for (uint8_t i = 0; i < NDIGITS; i++)
+  for (uint8_t i = 0; i < NDIGITS; i++) {
+
   	pf_segments[0] = 0;
+  }
 
   pins_off ();
 
@@ -302,6 +304,7 @@ void Display::enable_unsafe (void)
 void Display::enable (void)
 {
   ATOMIC_BLOCK (ATOMIC_RESTORESTATE) {
+
 	enable_unsafe ();
   }
 }
@@ -321,6 +324,7 @@ void Display::disable_unsafe (void)
 void Display::disable (void)
 {
   ATOMIC_BLOCK (ATOMIC_RESTORESTATE) {
+
 	disable_unsafe ();
   }
 }
@@ -332,13 +336,16 @@ bool Display::is_enabled (void) const
 
 void Display::clear_unsafe (void)
 {
-  for (uint8_t i = 0; i < NDIGITS; i++ )
+  for (uint8_t i = 0; i < NDIGITS; i++) {
+
 	pf_segments[ i ] = 0;
+  }
 }
 
 void Display::clear (void)
 {
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+
 	clear_unsafe ();
   }
 }
@@ -356,13 +363,13 @@ void Display::text_out_unsafe (const char *text)
 
   for ( pos=0; pos<len; pos++ ) {
 	if ( i>0 && text[ pos ]=='.' ) {
-		pf_segments[ i-1 ] |= SEGH;
+	  pf_segments[ i-1 ] |= SEGH;
 	} else {
-		if ( i< NDIGITS ) {
-			pf_segments[ i ] = get_ascii_code ((int)text[ pos ]);
-			i++;
-		} else
-			break;
+	  if ( i< NDIGITS ) {
+		pf_segments[ i ] = get_ascii_code ((int)text[ pos ]);
+		i++;
+	  } else
+		break;
 	}
   }
 
@@ -373,12 +380,12 @@ void Display::text_out_unsafe (const char *text)
 	
 	pf_segments[NDIGITS-1] |= SEGH;
   }
-
 }
 
 void Display::text_out (const char *text)
 {
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+
 	text_out_unsafe (text);
   }
 }
@@ -392,7 +399,6 @@ void Display::version (char ver_type, uint16_t ver, uint16_t cycles_to_wait)
 }
 
 #ifdef DISP_NUM_CODE_ENABLE
-
 void Display::disp_hex ( uint16_t num )
 {
   ATOMIC_BLOCK (ATOMIC_RESTORESTATE) {
@@ -444,7 +450,6 @@ void Display::time (uint8_t hour, unsigned minute)
   	hour = 23;
 
   snprintf ( msg, 6, "%02u.%02u", (unsigned)hour, minute );
-
   text_out ( msg );
 }
 
@@ -465,14 +470,14 @@ void Display::confirm (void)
 
 void Display::test_on (void)
 {
-	pins_on ();
+  pins_on ();
 
-	/* Power ON all digits & segments */
-	PORT_DIG &= ~PF_ALL_DIG;	/* drive low */
-	PORT_SEG = 0x00;			/* drive low */
+  /* Power ON all digits & segments */
+  PORT_DIG &= ~PF_ALL_DIG;	/* drive low */
+  PORT_SEG = 0x00;			/* drive low */
 }
 
 void Display::test_off (void)
 {
-	pins_off ();
+  pins_off ();
 }
