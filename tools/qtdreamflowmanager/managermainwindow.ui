@@ -26,7 +26,7 @@
      <x>0</x>
      <y>0</y>
      <width>1039</width>
-     <height>20</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -44,6 +44,9 @@
     <addaction name="actionAbout"/>
    </widget>
    <widget class="QMenu" name="menuCapture">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
     <property name="title">
      <string>Capture</string>
     </property>
@@ -56,14 +59,21 @@
     <property name="title">
      <string>Visualization</string>
     </property>
-    <widget class="QMenu" name="menuVisualLoadFrom">
+    <widget class="QMenu" name="menuVisualSamplesFrom">
      <property name="title">
-      <string>Load Data ...</string>
+      <string>Load Samples ...</string>
      </property>
-     <addaction name="actionVisualLoadFromFile"/>
-     <addaction name="actionVisualLoadFromDevice"/>
+     <addaction name="actionVisualSamplesFromFile"/>
+     <addaction name="actionVisualSamplesFromDevice"/>
     </widget>
-    <addaction name="menuVisualLoadFrom"/>
+    <widget class="QMenu" name="menuVisualEpochsFrom">
+     <property name="title">
+      <string>Analyze Epochs ...</string>
+     </property>
+     <addaction name="actionVisualEpochsFromFile"/>
+    </widget>
+    <addaction name="menuVisualSamplesFrom"/>
+    <addaction name="menuVisualEpochsFrom"/>
     <addaction name="actionVisualToggleChart"/>
     <addaction name="separator"/>
     <addaction name="actionVisualSettings"/>
@@ -91,8 +101,8 @@
    <addaction name="separator"/>
    <addaction name="actionCaptureSettings"/>
    <addaction name="separator"/>
-   <addaction name="actionVisualLoadFromFile"/>
-   <addaction name="actionVisualLoadFromDevice"/>
+   <addaction name="dropdownVisualFromFile"/>
+   <addaction name="actionVisualSamplesFromDevice"/>
    <addaction name="actionVisualToggleChart"/>
    <addaction name="actionVisualSettings"/>
    <addaction name="separator"/>
@@ -222,7 +232,10 @@
     <string>Alt+M</string>
    </property>
   </action>
-  <action name="actionVisualLoadFromFile">
+  <action name="actionVisualSamplesFromFile">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset resource="resources.qrc">
      <normaloff>:/images/load-from-file.png</normaloff>:/images/load-from-file.png</iconset>
@@ -231,15 +244,12 @@
     <string>From &amp;File</string>
    </property>
    <property name="toolTip">
-    <string>Load historical data from file</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+F</string>
+    <string>Load historical sample data from file</string>
    </property>
   </action>
-  <action name="actionVisualLoadFromDevice">
+  <action name="actionVisualSamplesFromDevice">
    <property name="checkable">
-    <bool>true</bool>
+    <bool>false</bool>
    </property>
    <property name="checked">
     <bool>false</bool>
@@ -252,10 +262,53 @@
     <string>From &amp;Device</string>
    </property>
    <property name="toolTip">
-    <string>Acquire real-time data directly from device</string>
+    <string>Acquire real-time samples directly from device</string>
    </property>
-   <property name="shortcut">
-    <string>Ctrl+D</string>
+  </action>
+  <action name="actionVisualEpochsFromFile">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/images/load-from-file.png</normaloff>:/images/load-from-file.png</iconset>
+   </property>
+   <property name="text">
+    <string>From &amp;File...</string>
+   </property>
+   <property name="toolTip">
+    <string>Load &amp; analyze epochs from file</string>
+   </property>
+  </action>
+  <action name="dropdownVisualFromFile">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/images/load-from-file.png</normaloff>:/images/load-from-file.png</iconset>
+   </property>
+   <property name="text">
+    <string>Visualize From File</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="dropdownVisualEpochsFromFile">
+   <property name="text">
+    <string>Epochs From File ...</string>
+   </property>
+   <property name="toolTip">
+    <string>Load &amp; analyze epochs from file</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="dropdownVisualSamplesFromFile">
+   <property name="text">
+    <string>Samples From File ...</string>
+   </property>
+   <property name="toolTip">
+    <string>Load historical sample data from file</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
    </property>
   </action>
  </widget>

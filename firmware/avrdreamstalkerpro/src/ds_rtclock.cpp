@@ -32,7 +32,7 @@
 #include "display/ds_display.h"
 #include "sound/ds_sound.h"
 #include "ds_config.h"
-#include "ds_sqwave.h"
+#include "ds_remhints.h"
 #include "ds_pwrman.h"
 #include "ds_rtclock.h"
 #include "ds_driver.h"
@@ -56,7 +56,8 @@ using namespace DS;
 #define RTC_PERIOD_MSEC		1UL
 
 /*-----------------------------------------------------------------------*/
-#define RTC_OFF_DELAY_SEC	30U		/* seconds, max 60 */
+#define DISP_OFF_DELAY_SEC	30U		/* seconds, max 60 */
+
 
 /*-----------------------------------------------------------------------*/
 /* Interrupt Handler 													 */
@@ -77,7 +78,20 @@ void RTClock::handle_isr (void)
 }
 
 /*-----------------------------------------------------------------------*/
+void RTClock::fat_datetime(uint16_t *date_val, uint16_t *time_val)
+{
+  struct tm ltmp;
+  const time_t now = time (nullptr);
+  localtime_r(&now, &ltmp);
+
+  *date_val = FAT_DATE(ltmp.tm_year + 1900, ltmp.tm_mon + 1, ltmp.tm_mday);
+  *time_val = FAT_TIME(ltmp.tm_hour, ltmp.tm_min, ltmp.tm_sec);
+}
+
+/*-----------------------------------------------------------------------*/
 static RTClock rtck;
+
+static uint32_t EEMEM eeprom_timestamp; // Allocate 4 bytes in EEPROM
 
 /*-----------------------------------------------------------------------*/
 RTClock *RTClock::get()
@@ -88,34 +102,26 @@ RTClock *RTClock::get()
 /*-----------------------------------------------------------------------*/
 void RTClock::irq_handler (void)
 {
-  /* Power-save mode */
+  /* -------------------------------------------------
+   * Power-save mode
+   */
 
   if (rtc.op_mode == RTC_OPM_PWRSAVE) {
-
 	/*
 	 * get here every SECOND
 	 */
-	rtc.second = (rtc.second + 1) % 60;
-	if (rtc.second == 0) {
-	  /*
-	   * get here every MINUTE
-	   */
-	  rtc.minute = (rtc.minute + 1) % 60;
-	  if (rtc.minute == 0) {
-		/*
-		 * get here every HOUR
-		 */
-		rtc.hour = (rtc.hour + 1) % 24;
-	  }
-	}
+	system_tick(); // Updates the internal timestamp
+
 	flag_set (RTC_PWRSAVE_TICK);
 	return;
   }
 
-  /* Normal mode */
+  /* -------------------------------------------------
+   * Normal mode
+   */
 
-  uint16_t ticks_1sec = msec_to_ticks (1000);
-  uint8_t ticks_200ms = msec_to_ticks (200);
+  const uint16_t ticks_1sec = msec_to_ticks (1000);
+  const uint8_t ticks_200ms = msec_to_ticks (200);
 
   /* Let keyboard first process the interrupt 
    */
@@ -127,18 +133,26 @@ void RTClock::irq_handler (void)
   }
 
   /* Let other subsystems process interrupt */
-  Display::handle_isr ();
-  SQWave::handle_isr ();
+  Display::handle_rtc ();
+  SQWave::handle_rtc ();
+  REMHints::handle_rtc ();
   avr_core::A2DConv::handle_rtc ();
+
+  struct tm last_time;
 
   rtc.ticks_second = (rtc.ticks_second + 1) % ticks_1sec;
   if (rtc.ticks_second == 0) {
 	/*
 	 * get here every SECOND
 	 */
-	if (rtc.ticks_display < RTC_OFF_DELAY_SEC) {
+	system_tick(); // Updates the internal timestamp
+
+	const time_t now = time (nullptr);
+	localtime_r(&now, &last_time);
+
+	if (rtc.ticks_display < DISP_OFF_DELAY_SEC) {
 	  rtc.ticks_display++;
-	  if ((rtc.ticks_display >= RTC_OFF_DELAY_SEC)
+	  if ((rtc.ticks_display >= DISP_OFF_DELAY_SEC)
 			&& is_visible () 
 			&& !is_setup ()) {
 		Display::get()->disable_unsafe ();
@@ -160,23 +174,16 @@ void RTClock::irq_handler (void)
 		flag_unset (RTC_ALARM_CLOCK);
 
 		/* Notify callback object */
-		if (rtc.pcb_alarm_clock)
-		  rtc.pcb_alarm_clock (rtc.context_alarm_clock);
+		if (rtc.pcb_alarm_clock) {
+		  (*rtc.pcb_alarm_clock) (rtc.context_alarm_clock);
+		}
 	  }
 	}
 
-	rtc.second = (rtc.second + 1) % 60;
-	if (rtc.second == 0) {
+	if (last_time.tm_sec == 0) {
 	  /*
 	   * get here every MINUTE
 	  */
-	  rtc.minute = (rtc.minute + 1) % 60;
-	  if (rtc.minute == 0) {
-		/*
-		 * get here every HOUR
-		 */
-		rtc.hour = (rtc.hour + 1) % 24;
-	  }
 
 	  if (wakeup_timer_is_set_unsafe ()) {
 		/* 
@@ -190,8 +197,9 @@ void RTClock::irq_handler (void)
 		  flag_unset (RTC_WAKEUP_TIMER);
 
 		  /* Notify callback object */
-		  if (rtc.pcb_wakeup_timer)
+		  if (rtc.pcb_wakeup_timer) {
 		  	(*rtc.pcb_wakeup_timer) (rtc.context_wakeup_timer);
+		  }
 		}
 	  }
 
@@ -204,39 +212,58 @@ void RTClock::irq_handler (void)
 	  flag_set (RTC_SHOW_HOUR | RTC_SHOW_MINUTE);
 
 	  if ( is_visible ()) {
-		display (rtc.hour, rtc.minute, rtc.flags);
+
+		display (last_time.tm_hour, last_time.tm_min, rtc.flags);
 	  }
 	}
   }
 
   rtc.ticks_setup = (rtc.ticks_setup + 1) % ticks_200ms;
-  if( is_setup () && rtc.ticks_setup == 0) {
-
+  if (is_setup () && rtc.ticks_setup == 0) {
 	/*
 	 * get here around 5 times/sec
 	 */
+	const time_t now = time (nullptr);
+	localtime_r(&now, &last_time);
+
 	switch( get_setup ())
 	{
 	  case RTC_SETUP_MINUTE:
 		flag_set (RTC_SHOW_HOUR);
 		flag_toggle (RTC_SHOW_MINUTE);
+
+		/* Hide wakeup timer indicator as we are 
+	 	 *	in the clock setup mode.
+	 	 */
+		display (last_time.tm_hour, last_time.tm_min, 
+				rtc.flags & ~RTC_WAKEUP_TIMER);
 		break;
 
 	  case RTC_SETUP_HOUR:
 		flag_set (RTC_SHOW_MINUTE);
 		flag_toggle (RTC_SHOW_HOUR);
+
+		/* Hide wakeup timer indicator as we are 
+	     *	in the clock setup mode.
+	     */
+		display (last_time.tm_hour, last_time.tm_min, 
+				rtc.flags & ~RTC_WAKEUP_TIMER);
 		break;
+
+	  case RTC_SETUP_YEAR:
+		display_year (&last_time);
+	    break;
+
+	  case RTC_SETUP_MONTH:
+	  	display_month (&last_time);
+	    break;
+
+	  case RTC_SETUP_MDAY:
+	    display_mday (&last_time);
+	    break;
 
 	  default:
 		break;
-	}
-
-	if ( is_visible () ) {
-	  /* Hide wakeup timer indicator as we are 
-	   *	in the clock setup mode.
-	   */
-	  display ( rtc.hour, rtc.minute, 
-				rtc.flags & ~RTC_WAKEUP_TIMER );
 	}
   }
 }
@@ -247,18 +274,30 @@ void RTClock::wait_for_next_tick (void)
 	return;
 
   ATOMIC_BLOCK (ATOMIC_RESTORESTATE) {
+
 	flag_unset (RTC_PWRSAVE_TICK);
   }
   while ( ! flag_is_set (RTC_PWRSAVE_TICK))
 	_NOP() ;
 }
 
+void RTClock::process_task (void)
+{
+  // Backup time to EEPROM every hour (3,600,000 milliseconds)
+  // Only write if the time has actually changed significantly to save EEPROM life
+  //
+  unsigned long current_stamp = millis();
+  if (current_stamp - backup_stamp > 3600000) {
+	backup_current_time ();
+    backup_stamp = current_stamp;
+  }
+}
+
 bool RTClock::init (void)
 {
+	_delay_ms (200);	/* let XTAL stabilize */
+
 	rtc.flags = 0;
-	rtc.hour = 12;	/* Initial time */
-	rtc.minute = 0;
-	rtc.second = 0;
 	rtc.ticks_second = 0;
 	rtc.ticks_setup = 0;
 	rtc.ticks_wakeup_timer = 0;
@@ -269,7 +308,30 @@ bool RTClock::init (void)
 
 	flag_set (RTC_SHOW_HOUR | RTC_SHOW_MINUTE);
 
-	_delay_ms (200);	/* let 32KHz XTAL stabilize */
+	backup_stamp = 0;	/* Reset last backup timestamp */
+
+	struct tm ltm;
+	ltm.tm_year = 2026 - 1900;
+	ltm.tm_mon  = 0;   // January
+	ltm.tm_mday = 1;
+	ltm.tm_hour = 12;
+	ltm.tm_min  = 0;
+	ltm.tm_sec  = 0;
+	ltm.tm_isdst = 0;  // We are telling it this is Standard Time
+
+	// mktime converts to UTC-based time_t
+    time_t start_time = mktime(&ltm);
+    uint32_t stored_time = eeprom_read_dword(&eeprom_timestamp);
+	uint32_t unix_time;
+
+    // If EEPROM is empty (0xFFFFFFFF) or older than our build date
+    if (stored_time == 0xFFFFFFFF || stored_time < start_time) {
+		unix_time = start_time;
+    } else {
+		unix_time = stored_time;
+	}
+    set_system_time (unix_time - UNIX_OFFSET);  
+
 	return true;
 }
 
@@ -442,91 +504,177 @@ void RTClock::wait (uint32_t num_ticks)
   _delay_us (isr_period_us () * num_ticks);
 }
 
+void RTClock::show_unsafe (void)
+{
+  flag_set ( RTC_VISIBLE );
+}
+
 void RTClock::show (void)
 {
-	flag_set ( RTC_VISIBLE );
+  ATOMIC_BLOCK (ATOMIC_RESTORESTATE) {
+
+    show_unsafe ();
+  }
+}
+
+void RTClock::hide_unsafe (void)
+{
+  flag_unset ( RTC_VISIBLE );
 }
 
 void RTClock::hide (void)
 {
-	flag_unset ( RTC_VISIBLE );
+  ATOMIC_BLOCK (ATOMIC_RESTORESTATE) {
+
+	hide_unsafe ();
+  }
 }
 
-bool RTClock::is_visible (void)
+bool RTClock::is_visible (void) const
 {
-	return flag_is_set ( RTC_VISIBLE );
-}
-
-bool RTClock::is_setup (void)
-{
-	return ( get_setup () != RTC_SETUP_NONE );
-}
-
-void RTClock::set_setup (rtc_setup_mode_t mode)
-{
-	rtc.setup_mode = mode;
-}
-
-rtc_setup_mode_t RTClock::get_setup (void)
-{
-	return (rtc_setup_mode_t) rtc.setup_mode;
+  return flag_is_set ( RTC_VISIBLE );
 }
 
 void RTClock::flag_set (uint16_t flag)
 {
-	rtc.flags |= flag;
+  rtc.flags |= flag;
 }
 
 void RTClock::flag_unset (uint16_t flag)
 {
-	rtc.flags &= ~flag;
+  rtc.flags &= ~flag;
 }
 
 void RTClock::flag_toggle (uint16_t flag)
 {
-	rtc.flags ^= flag;
+  rtc.flags ^= flag;
 }
 
-bool RTClock::flag_is_set (uint16_t flag)
+bool RTClock::flag_is_set (uint16_t flag) const
 {
-	return (( rtc.flags & flag ) == flag);
+  return (( rtc.flags & flag ) == flag);
+}
+
+bool RTClock::is_setup (void) const
+{
+  return ( get_setup () != RTC_SETUP_NONE );
+}
+
+void RTClock::set_setup (rtc_setup_mode_t mode)
+{
+  ATOMIC_BLOCK (ATOMIC_RESTORESTATE) {
+
+    rtc.setup_mode = mode;
+  }
+}
+
+#define RTC_SETUP_FIRST	RTC_SETUP_HOUR
+#define RTC_SETUP_LAST  RTC_SETUP_MDAY
+
+rtc_setup_mode_t RTClock::next_setup (void)
+{ 
+  uint8_t next_mode = rtc.setup_mode + 1;
+  if (next_mode > RTC_SETUP_LAST)
+	rtc.setup_mode = RTC_SETUP_FIRST;
+  else
+	rtc.setup_mode = next_mode;
+  rtc_setup_mode_t mode = get_setup ();
+
+  if ( mode == RTC_SETUP_HOUR || mode == RTC_SETUP_MINUTE ) {
+
+	show ();
+  } else {
+
+	hide ();
+  }
+
+  return mode;
+}
+
+rtc_setup_mode_t RTClock::get_setup (void) const
+{
+  return (rtc_setup_mode_t) rtc.setup_mode;
 }
 
 void RTClock::setup_inc (int sign)
 {
+  struct tm ltm;
+  const time_t now = time(nullptr);
+  localtime_r(&now, &ltm);
+
+  int16_t year	= ltm.tm_year + 1900;
+#define YEAR_MIN	2026
+
   switch ( get_setup ()) {
 	case RTC_SETUP_MINUTE:
-	  ATOMIC_BLOCK (ATOMIC_RESTORESTATE) {
-		if (sign < 0) {
-			rtc.minute--;
-		} else {
-			rtc.minute++;
-		}
-		rtc.minute %= 60;
-	  }
+	  if ( sign < 0 )
+	  	--ltm.tm_min;
+	  else
+	  	++ltm.tm_min;
+
+	  ltm.tm_min %= 60;
 	  break;
 
 	case RTC_SETUP_HOUR:
-	  ATOMIC_BLOCK (ATOMIC_RESTORESTATE) {
-		if ( sign < 0 ) {
-			rtc.hour--;
-		} else {
-			rtc.hour++;
-		}
-		rtc.hour %= 24;
-	  }
+	  if ( sign < 0 )
+	  	--ltm.tm_hour;
+	  else
+	  	++ltm.tm_hour;
+
+	  ltm.tm_hour %= 24;
+	  break;
+
+	case RTC_SETUP_MDAY:
+	  if ( sign < 0 )
+	  	--ltm.tm_mday;
+	  else
+	  	++ltm.tm_mday;
+
+	  if (ltm.tm_mday < 1)		 ltm.tm_mday = 31;
+	  else if (ltm.tm_mday > 31) ltm.tm_mday = 1;
+	  break;
+
+	case RTC_SETUP_MONTH:
+	  if ( sign < 0 )
+	  	--ltm.tm_mon;
+	  else
+	  	++ltm.tm_mon;
+
+	  if (ltm.tm_mon < 0)		ltm.tm_mon = 11;
+	  else if (ltm.tm_mon > 11)	ltm.tm_mon = 0;
+	  break;
+
+	case RTC_SETUP_YEAR:
+	  if ( sign < 0 )
+	  	--year;
+	  else
+	  	++year;
+
+	  if ( year < YEAR_MIN )
+	  	year = YEAR_MIN;
+
+	  ltm.tm_year = year - 1900;
 	  break;
 
 	default:
-	  break;
+	  return;
   }
+
+  ltm.tm_sec = 0;
+  ltm.tm_isdst = 0; // not use DST
+  ltm.tm_wday = 0;
+  ltm.tm_yday = 0;
+
+  // Manually update the internal AVR time counter
+  const time_t new_time = mktime (&ltm);
+  set_system_time (new_time);
+
 }
 
 void RTClock::wakeup_timer_set (RTClockCB_t prtcb, void *context)
 {
-  if (rtc.op_mode != RTC_OPM_NORMAL) {
+  if (rtc.op_mode != RTC_OPM_NORMAL)
 	return;
-  }
 
   ATOMIC_BLOCK (ATOMIC_RESTORESTATE) {
 
@@ -543,9 +691,8 @@ void RTClock::wakeup_timer_set (RTClockCB_t prtcb, void *context)
 
 bool RTClock::wakeup_timer_cancel (void)
 {
-  if (rtc.op_mode != RTC_OPM_NORMAL) {
+  if (rtc.op_mode != RTC_OPM_NORMAL)
 	return false;
-  }
 
   ATOMIC_BLOCK (ATOMIC_RESTORESTATE) {
 
@@ -577,19 +724,19 @@ bool RTClock::wakeup_timer_is_set (void)
 
 uint16_t RTClock::wakeup_timer_get_remainder (void)
 {
-	uint16_t res = 0;
+  uint16_t res = 0;
 
-	ATOMIC_BLOCK (ATOMIC_RESTORESTATE) {
+  ATOMIC_BLOCK (ATOMIC_RESTORESTATE) {
 
-		if (wakeup_timer_is_set_unsafe ()) {
-			res = config.get_wakeup_timer_delay () - rtc.ticks_wakeup_timer;
-		}
+	if (wakeup_timer_is_set_unsafe ()) {
+	  res = config.get_wakeup_timer_delay () - rtc.ticks_wakeup_timer;
 	}
+  }
 
-	return res;
+  return res;
 }
 
-void RTClock::alarm_clock_set (RTClockCB_t prtcb, void *context)
+void RTClock::alarm_clock_set (RTClockCB_t prtcb, void *pcontext)
 {
   if (rtc.op_mode != RTC_OPM_NORMAL)
 	return;
@@ -597,11 +744,11 @@ void RTClock::alarm_clock_set (RTClockCB_t prtcb, void *context)
   ATOMIC_BLOCK (ATOMIC_RESTORESTATE) {
 
   	if (flag_is_set (RTC_ALARM_CLOCK))
-		return;		/* Already set*/
+	  return;		/* Already set*/
 
 	rtc.ticks_alarm_clock = 0;
 	rtc.pcb_alarm_clock = prtcb;
-	rtc.context_alarm_clock = context;
+	rtc.context_alarm_clock = pcontext;
 
 	flag_set (RTC_ALARM_CLOCK);
   }
@@ -629,12 +776,13 @@ bool RTClock::alarm_clock_is_set (void)
   bool res;
 
   ATOMIC_BLOCK (ATOMIC_RESTORESTATE) {
+
 	res = flag_is_set (RTC_ALARM_CLOCK);
   }
   return res;
 }
 
-void RTClock::display (int hour, int minute, uint8_t flags)
+void RTClock::display (unsigned hour, unsigned minute, uint8_t flags)
 {
   static char msg[7];
   char *ptr = msg;
@@ -661,4 +809,26 @@ void RTClock::display (int hour, int minute, uint8_t flags)
 	strcat (ptr, ".");
 
   Display::get()->text_out_unsafe (msg);
+}
+
+void RTClock::display_year(struct tm *ptm)
+{
+  Display::get()->number (ptm->tm_year + 1900);
+}
+
+void RTClock::display_month(struct tm *ptm)
+{
+  Display::get()->number (ptm->tm_mon + 1);	// 1-12
+}
+
+void RTClock::display_mday(struct tm *ptm)
+{
+  Display::get()->number (ptm->tm_mday);	// 1-31
+}
+
+void RTClock::backup_current_time (void)
+{
+  const time_t now = time(nullptr);
+  // Convert back to Unix 1970 format
+  eeprom_update_dword(&eeprom_timestamp, (uint32_t)now + UNIX_OFFSET);
 }

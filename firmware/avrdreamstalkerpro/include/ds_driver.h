@@ -48,23 +48,18 @@ public:
 protected:
   void on_wakeup_timer (void);
   void on_alarm_clock (void);
-  void on_remd_event (remd_event_type_t event);
+  void on_remd_stable_rem (uint16_t intensity);
 
   friend class AppMenu;
 private:
   void wakeup_timer_toggle (void);
   void wakeup_timer_quick_set (keybrd_event_t key_event);
   void start_lucid_dream (void);
+  void stop_lucid_dream (void);
   void power_off (void);
   static void alarm_clock_callback (void *context);
   static void wakeup_timer_callback (void *context);
-  static void remd_callback(void *context, remd_event_type_t event);
-#if TEST_REMD
-public:
-  SDFile remd_fp;
-  //char remd_buf[256 * 4 + 1];
-  uint16_t remd_buf[256];
-#endif
+  static void remd_callback(void *context, remd_event_type_t event, uint16_t arg);
 };
 
 /*-----------------------------------------------------------------------*/

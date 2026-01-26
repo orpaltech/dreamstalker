@@ -2,7 +2,7 @@
  * This file is part of the AVR Dreamstalker software
  * (https://github.com/orpaltech/dreamstalker).
  *
- * Copyright (c) 2013-2025	ORPAL Technologies, Inc.
+ * Copyright (c) 2013-2026	ORPAL Technologies, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,8 +25,6 @@
 #include <avr/pgmspace.h>
 #include <avr/power.h>
 
-#include <SD.h>
-
 #include "sound/vs10xx_mcu.h"
 #include "sound/vs10xx.h"
 #include "sound/vs1002.h"
@@ -34,38 +32,12 @@
 #include "sound/ds_sound.h"
 #include "sound/ds_codec.h"
 #include "ds_config.h"
+#include "ds_util.h"
 
 using namespace DS;
 
-/*-----------------------------------------------------------------------*/
-/* Handle RIFF file structure
- */
-#define WAV_PUT_CHUNK(fp, chunk)	\
-	do {							\
-		len = fp->write((const uint8_t*)chunk, 4);	\
-		if (len == 0)				\
-			return false;			\
-	} while( 0 )
-
-#define WAV_PUT_WORD(fp, val)		\
-	do {							\
-		uint16_t w = (val);			\
-		len = fp->write((const uint8_t*)&w, 2);		\
-		if (len == 0)				\
-			return false;			\
-	} while( 0 )
-
-#define WAV_PUT_DWORD(fp, val)		\
-	do {							\
-		uint32_t dw = (val);		\
-		len = fp->write((const uint8_t*)&dw, 4);	\
-		if (len == 0)				\
-			return false;			\
-	} while( 0 )
-
 
 /*-----------------------------------------------------------------------*/
-
 
 PROGMEM const uint8_t __vol_to_reg [] = {
 	VS_VOL_MIN, 
@@ -81,79 +53,81 @@ PROGMEM const uint8_t __vol_to_reg [] = {
 };
 
 
-/*
- * num_blocks - number of blocks in a file
- */
-static
-bool write_wav_header ( SDFile *fp, uint32_t num_blocks )
-{
-	size_t len;
-
-	/* Riff ChunkID */
-	WAV_PUT_CHUNK( fp, "RIFF" );
-	/* ChunkSize = num_blocks * BlockAlign + 52
-	 *	must be <file-size> - 8 
-	 */
-	WAV_PUT_DWORD( fp, num_blocks * ADPCM_BLOCK_ALIGN + 52 );
-	/* Format */
-	WAV_PUT_CHUNK( fp, "WAVE" );
-
-	/*SubChunk1ID*/
-	WAV_PUT_CHUNK( fp, "fmt " );
-	/* SubChunk1Size */
-	WAV_PUT_DWORD( fp, 20 );
-	/* AudioFormat - IMA ADPCM */
-	WAV_PUT_WORD( fp, WAV_FORMAT_IMA_ADPCM );
-	/* NumOfChannels */
-	WAV_PUT_WORD( fp, 1 );
-	/* SampleRate */
-	WAV_PUT_DWORD( fp, ADPCM_SAMPLE_RATE );
-	/* ByteRate = <SampleRate> * <BlockAlign> / <SamplesPerBlock>
-	 *	8000 * 256 / 505 ~= 4055 
-	 */
-	WAV_PUT_DWORD( fp, ADPCM_SAMPLE_RATE * ADPCM_BLOCK_ALIGN / ADPCM_SAMPLES_PER_BLOCK );
-	/* BlockAlign */
-	WAV_PUT_WORD( fp, ADPCM_BLOCK_ALIGN );
-	/* BitsPerSample */
-	WAV_PUT_WORD( fp, ADPCM_BITS_PER_SAMPLE );
-	/* Bytes of ExtraData */
-	WAV_PUT_WORD( fp, 2 );
-	/* ExtraData - SamplesPerBlock */
-	WAV_PUT_WORD( fp, ADPCM_SAMPLES_PER_BLOCK );
-
-	/* SubChunk2ID */
-	WAV_PUT_CHUNK( fp, "fact" );
-	/* SubChunk2Size */
-	WAV_PUT_DWORD( fp, 4 );
-	/* NumOfSamples = num_blocks * SamplesPerBlock */
-	WAV_PUT_DWORD( fp, num_blocks * ADPCM_SAMPLES_PER_BLOCK );
-
-	/* SubChunk3ID */
-	WAV_PUT_CHUNK( fp, "data" );
-	/* SubChunk3Size = num_blocks * BlockAlign 
-	 *	must be <file-size> - 60
-	 */
-	WAV_PUT_DWORD( fp, num_blocks * ADPCM_BLOCK_ALIGN );
-
-	return true;
-}
-
-/*-----------------------------------------------------------------------*/
-AudioCodec AC;
-
 /*-----------------------------------------------------------------------*/
 AudioCodec *AudioCodec::get()
 {
-  return &AC;
+  static AudioCodec codec;
+  return &codec;
+}
+
+/*
+ * num_blocks - number of blocks in a file
+ */
+bool AudioCodec::write_wav_header (AudioCodec *c, uint32_t num_blocks)
+{
+  uint8_t idx = 0;
+  uint8_t *b = c->buff; // Reuse existing class buffer
+
+  auto pack32 = [&](uint32_t val) { memcpy(&b[idx], &val, 4); idx += 4; };
+  auto pack16 = [&](uint16_t val) { memcpy(&b[idx], &val, 2); idx += 2; };
+  auto packStr = [&](const char* s) { memcpy(&b[idx], s, 4); idx += 4; };
+
+  /* Riff ChunkID */
+  packStr("RIFF");
+  /* ChunkSize = num_blocks * BlockAlign + 52
+   *	must be <file-size> - 8 
+   */
+  pack32((num_blocks * ADPCM_BLOCK_ALIGN) + 52);
+  /* Format */
+  packStr("WAVE");
+
+  /*SubChunk1ID*/
+  packStr("fmt ");
+  /* SubChunk1Size */
+  pack32(20);
+  /* AudioFormat - IMA ADPCM */
+  pack16(WAV_FORMAT_IMA_ADPCM);
+  /* NumOfChannels */
+  pack16(1);
+  /* SampleRate */
+  pack32(ADPCM_SAMPLE_RATE);
+  /* ByteRate = <SampleRate> * <BlockAlign> / <SamplesPerBlock>
+   *	8000 * 256 / 505 ~= 4055 
+   */
+  pack32((ADPCM_SAMPLE_RATE * ADPCM_BLOCK_ALIGN) / ADPCM_SAMPLES_PER_BLOCK);
+  /* BlockAlign */
+  pack16(ADPCM_BLOCK_ALIGN);
+  /* BitsPerSample */
+  pack16(ADPCM_BITS_PER_SAMPLE);
+  /* Bytes of ExtraData */
+  pack16(2);
+  /* ExtraData - SamplesPerBlock */
+  pack16(ADPCM_SAMPLES_PER_BLOCK);
+
+  /* SubChunk2ID */
+  packStr("fact");
+  /* SubChunk2Size */
+  pack32(4);
+  /* NumOfSamples = num_blocks * SamplesPerBlock */
+  pack32(num_blocks * ADPCM_SAMPLES_PER_BLOCK);
+
+  /* SubChunk3ID */
+  packStr("data");
+  /* SubChunk3Size = num_blocks * BlockAlign 
+   *	must be <file-size> - 60
+   */
+  pack32(num_blocks * ADPCM_BLOCK_ALIGN);
+
+  return (c->fp.write(b, 60) == 60);
 }
 
 /*-----------------------------------------------------------------------*/
 bool AudioCodec::begin (void)
 {
   if (! vs.init ())
-	return false;
+	  return false;
 
-  status = AUDIO_CODEC_IDLE;	/* Set initial state */
+  state = STATE_IDLE;	/* Set initial state */
   return true;
 }
 
@@ -167,9 +141,9 @@ bool AudioCodec::apply_patches (void)
   return vs.process_patches ();
 }
 
-e_audio_codec_state_t AudioCodec::get_status (void)
+AudioCodec::State AudioCodec::get_state (void) const
 {
-  return status;
+  return state;
 }
 
 void AudioCodec::set_volume (uint8_t left_chan, uint8_t right_chan)
@@ -187,83 +161,75 @@ bool AudioCodec::playback (const char *file_name)
 {
   uint8_t vol;
 
-  if (get_status() != AUDIO_CODEC_IDLE)
+  if (get_state() != STATE_IDLE)
 	return false;
 
   /* open the file */
-  fp = card0.open (file_name, FILE_READ);
+  fp = card0.open (file_name);
   if (! fp)
-	return false;
-
-  /*res = f_open(&shared_fp, "/sd/playback.log", 
-			FA_WRITE | FA_CREATE_ALWAYS);
-  if (res != FR_OK)
-	return false;*/
+	  return false;
 
   if (! vs.playback_start ()) {
-	fp.close();
-	return false;
+	  fp.close();
+	  return false;
   }
 
   /* Read volume level from config */
   vol = config.get_volume_level ();
   set_volume (vol, vol);
 
+  /* Reset number of VS blocks processed */
+  count_blocks = 0;
+
   /* Update status flag*/
-  status = AUDIO_CODEC_PLAYBACK;
+  state = STATE_PLAYBACK;
 
   return true;
 }
 
 bool AudioCodec::capture (const char *file_name)
 {
-  if (get_status () != AUDIO_CODEC_IDLE)
-	return false;
+  if (get_state () != STATE_IDLE) return false;
 
-  // create a new file
+  auto handle_error = [&]() {
+    fp.close ();
+  	card0.remove (file_name);
+  };
+
+  // Create a new file
   fp = card0.open (file_name, FILE_WRITE);
   if (! fp)
-	return false;
+	  return false;
 
-  bool error = true;
-  do {
-  	/* Write initial file header, will be updated after */
-  	if (! write_wav_header ( &fp, 0 )) {
-		break;
-  	}
-
-  	Sound::get()->mic_on ();
-
-  	if (! vs.adpcm_record_start (ADPCM_SAMPLE_RATE, 
-								config.get_record_gain_level (), 
-								ADPCM_USE_HP_FILTER)) {
-	  Sound::get()->mic_off ();
-	  break;
-  	}
-
-  	/* Reset number of ADPCM blocks */
-  	count = 0;
-
-  	/* Update status flag*/
-  	status = AUDIO_CODEC_CAPTURE;
-
-	/* Success */
-	error = false;
-  } while(false);
-
-  if (error) {
-  	fp.close();
-  	card0.remove(file_name);
+  // Write initial file header, will be updated after */
+  if (! write_wav_header ( this, 0 )) {
+    handle_error ();
     return false;
   }
 
+  Sound::get()->microphone_on ();
+
+  bool started =  vs.adpcm_record_start (ADPCM_SAMPLE_RATE, 
+                    config.get_record_gain_level (),
+                    ADPCM_USE_HP_FILTER);
+  if (!started) {
+	  Sound::get()->microphone_off ();
+  	handle_error ();
+    return false;
+  }
+
+  // Reset number of ADPCM blocks processed
+  count_blocks = 0;
+
+  // Update status flag
+  state = STATE_CAPTURE;
   return true;
 }
 
 void AudioCodec::end_playback (AudioCodec *c, bool on_error)
 {
   /* Update status flag*/
-  c->status = AUDIO_CODEC_IDLE;
+  c->state = STATE_IDLE;
 
   c->vs.playback_stop ();
 
@@ -271,124 +237,141 @@ void AudioCodec::end_playback (AudioCodec *c, bool on_error)
 
   }
 
-  ////////////////////
-  /*UINT len;
-  snprintf((char *)codec.block, 32, "bytes sent = %d\n", (int)codec.count);
-  f_write( &shared_fp, codec.block, 
-		strlen((const char *)codec.block), &len );*/
-  ///////////////////////
-
-  //f_close(&shared_fp);
   c->fp.close();
 }
 
 void AudioCodec::end_capture (AudioCodec *c, bool on_error)
 {
-  /* Update status flag*/
-  c->status = AUDIO_CODEC_IDLE;
-
   c->vs.adpcm_record_stop ();
 
-  Sound::get()->mic_off ();
+  Sound::get()->microphone_off ();
 
-  if (! on_error) {
-	/* update wav header */
-	c->fp.seek (0);
-	write_wav_header (&c->fp, c->count);
+  if (!on_error) {
+    // Calculate how many blocks are sitting in RAM unwritten.
+    const uint16_t blocks_per_page = page_size / buff_block_size;
+    uint16_t remaining_blocks = c->count_blocks % blocks_per_page;
+
+    if (remaining_blocks > 0) {
+      // Find the START of the remaining data.
+      // It is located at the slot just before the current 'count_blocks' index.
+      uint16_t start_pos = (c->count_blocks - remaining_blocks) % buff_num_blocks;
+      uint8_t *write_ptr = &c->buff[start_pos * buff_block_size];
+
+      c->fp.write(write_ptr, remaining_blocks * buff_block_size);
+    }
+    
+    c->fp.flush();
+
+    // Update wav header with the TOTAL number of blocks recorded
+    c->fp.seek(0);
+    write_wav_header (c, c->count_blocks);
   }
 
-  c->fp.flush();
-  c->fp.close ();
+  c->fp.close();
+
+  // Update status flag
+  c->state = STATE_IDLE;
 }
 
 void AudioCodec::process_playback (AudioCodec *c)
 {
-	int16_t	len;
-	int16_t	pos;
+  // Check if the buffer is empty or fully processed
+  if (c->count_blocks >= buff_num_blocks || c->count_blocks == 0) {
+    int16_t size = c->fp.read ( c->buff, buff_size );
+    
+	  if (size <= 0) {
+      end_playback(c, (size < 0)); // false if EOF (0), true if error (<0)
+      return;
+    }
 
-	len	= c->fp.read (c->buff, CODEC_BUF_SIZE);
-	if (len < 0) {
-		end_playback (c, true);
+    /* Pad remaining buffer with 0 if we read less than CODEC_BUF_SIZE */
+    if ((uint8_t)size < buff_size) {
+      memset(&c->buff[size], 0, buff_size - size);
+    }
 
-		return;
-	}
+    c->count_blocks = 0; // Reset position for the new buffer
+  }
 
-	/* Pad block with 0 if there is no enough data */
-	if (len < CODEC_BUF_SIZE) {
-		memset (&c->buff[ len ], 0, 
-				CODEC_BUF_SIZE - len);
-	}
+  // Non-blocking send: Only send ONE SDI byte block if VS is ready
+  uint16_t buff_pos = c->count_blocks * SDI_BLOCK_LEN;
 
-	if (len == 0) {
-		/* Nothing to play */
-		end_playback (c, false);
-
-		return;
-	}
-
-	for (pos = 0; pos < CODEC_BUF_SIZE;
-				pos += CODEC_BLOCK_LEN) {
-		c->vs.playback_send_block (&c->buff[ pos ]);
-	}
-
+  c->vs.playback_send_block(&c->buff[buff_pos]);
+  c->count_blocks ++;
 }
 
+/**
+ * Drains the VS FIFO and writes to SD in 512-byte aligned pages.
+ * * CRITICAL LOGIC:
+ * We use a 'while' loop to empty the VS1003 completely in every cycle.
+ * This prevents "Internal Overflow" which causes 2/3 data loss if the 
+ * SD card has a latency spike during a write operation.
+ */
 void AudioCodec::process_capture (AudioCodec *c)
-{
-	size_t	len;
+{   
+  // Drain loop: Pull everything possible from VS
+  while (c->vs.adpcm_has_block ()) 
+  {
+    uint16_t slot = c->count_blocks % buff_num_blocks;
+    uint8_t *buff_ptr = &c->buff[slot * buff_block_size];
 
-	if (! c->vs.adpcm_read_block (c->buff))
-		return;
+    if (c->vs.adpcm_read_block ( buff_ptr )) {
+      c->count_blocks++;
 
-	/*
-	char msg[50];
-	snprintf(msg, 50, "flush block, total blocks = %d\n", (int)c->count);
-	res	= f_write( &c->fp, msg, 
-				strlen(msg), &len );*/
+      // Trigger write every time we fill a 512-byte 'page'
+      if (c->count_blocks % blocks_per_page == 0) {
 
-	/* Flush buffer to disk */
-	len	= c->fp.write (c->buff, ADPCM_BLOCK_ALIGN);
+        // Find the start of the 512-byte chunk we just finished.
+        // This math works for any buffer size (1K, 2K, etc.)
+        uint16_t page_index = (c->count_blocks - blocks_per_page) % buff_num_blocks;
+        uint8_t *write_ptr = &c->buff[page_index * buff_block_size];
 
-	if (len == 0) {
-		/* Disk write error */
-		end_capture (c, true);
-	}
+        size_t written = c->fp.write ( write_ptr, page_size );
+        if (written < page_size) {
+          end_capture ( c, true );
+          return;
+        }
+                
+        // Break after the synchronous write to allow one main loop 
+        // cycle before coming back to drain the next batch.
+        break; 
+      }
 
-	c->count++;	/* Increment number of blocks */
+    } else {
+      break; 
+    }
+  }
 }
 
 void AudioCodec::stop (void)
 {
-  switch (get_status ()) {
+  switch (get_state ()) {
+	  case STATE_PLAYBACK: {
+	    end_playback ( this, false );
+	    break;
+	  }
 
-	case AUDIO_CODEC_PLAYBACK: {
-	  end_playback ( this, false );
-	  break;
-	}
+	  case STATE_CAPTURE: {
+	    end_capture ( this, false );
+	    break;
+	  }
 
-	case AUDIO_CODEC_CAPTURE: {
-	  end_capture ( this, false );
-	  break;
-	}
-
-	default:
-	  break;
+	  default:
+	    break;
   }
 }
 
 void AudioCodec::process_task (void)
 {
-  switch (get_status ()) {
+  switch (get_state ()) {
+	  case STATE_PLAYBACK:
+	    process_playback (this);
+	    break;
 
-	case AUDIO_CODEC_PLAYBACK:
-	  process_playback (this);
-	  break;
+	  case STATE_CAPTURE:
+	    process_capture (this);
+	    break;
 
-	case AUDIO_CODEC_CAPTURE:
-	  process_capture (this);
-	  break;
-
-	default:
-	  break;
+	  default:
+	    break;
   }
 }

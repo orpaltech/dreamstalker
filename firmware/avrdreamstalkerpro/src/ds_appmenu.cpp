@@ -40,12 +40,28 @@
 using namespace DS;
 
 /*-----------------------------------------------------------------------*/
-#define RECORDS_PATH	"/SYSTEM/RECORDS"
-
-/*-----------------------------------------------------------------------*/
 
 #define MENU_LABEL_LEN	7
 #define MENU_INVALID_LEVEL	(-1)
+
+/*-----------------------------------------------------------------------*/
+#define MENU_NUMERIC_PROPERTY_SETUP(setup, property, ctx, key_event)	\
+  switch ( key_event ) {												\
+	case ( KEY_MINUS ):													\
+	case ( KEY_MINUS | KEYBRD_HOLD ):									\
+	  DSCONF_DECREMENT_PROPERTY(config, property);						\
+	  Display::get()->number ( setup ## _setup_read_value ());			\
+	  set_handled (ctx);												\
+	  break;															\
+	  																	\
+	case ( KEY_PLUS ):													\
+	case ( KEY_PLUS | KEYBRD_HOLD ):									\
+	  DSCONF_INCREMENT_PROPERTY(config, property);						\
+	  Display::get()->number ( setup ## _setup_read_value ());			\
+	  set_handled (ctx);												\
+	  break;															\
+  }
+
 
 /*-----------------------------------------------------------------------*/
 typedef void (*pfn_activate)(void);
@@ -77,7 +93,7 @@ static void ense_recording_setup (pmenu_context_t, keybrd_event_t);
 static void ense_record_gain_setup (pmenu_context_t, keybrd_event_t);
 static void ense_volume_level_setup (pmenu_context_t, keybrd_event_t);
 static void ense_tunes_setup (pmenu_context_t, keybrd_event_t);
-static void ense_delete_records (pmenu_context_t, keybrd_event_t);
+static void ense_delete_records_setup (pmenu_context_t, keybrd_event_t);
 static void ense_vibration_setup (pmenu_context_t, keybrd_event_t);
 static void ense_speaker_setup (pmenu_context_t, keybrd_event_t);
 
@@ -90,7 +106,7 @@ static void ense_volume_level_setup_activate (void);
 static void ense_tunes_setup_activate (void);
 static void ense_vibration_setup_activate (void);
 static void ense_speaker_setup_activate (void);
-static void ense_delete_records_activate (void);
+static void ense_delete_records_setup_activate (void);
 
 static int ense_before_hints_setup_read_value (void);
 static int ense_after_hints_setup_read_value (void);
@@ -101,7 +117,35 @@ static int ense_volume_level_setup_read_value (void);
 static int ense_tunes_setup_read_value (void);
 static int ense_vibration_setup_read_value (void);
 static int ense_speaker_setup_read_value (void);
+
+static void remd_profile_setup (pmenu_context_t, keybrd_event_t);
+static void remd_sensitivity_setup (pmenu_context_t, keybrd_event_t);
+static void remd_required_rem_epochs_setup (pmenu_context_t, keybrd_event_t);
+static void remd_cooldown_epochs_setup (pmenu_context_t, keybrd_event_t);
+static void remd_min_move_duration_setup (pmenu_context_t, keybrd_event_t);
+static void remd_min_epoch_moves_setup (pmenu_context_t, keybrd_event_t);
+static void remd_restlessness_factor_setup (pmenu_context_t, keybrd_event_t);
+static void remd_profile_setup_activate (void);
+static void remd_sensitivity_setup_activate (void);
+static void remd_required_rem_epochs_setup_activate (void);
+static void remd_cooldown_epochs_setup_activate (void);
+static void remd_min_move_duration_setup_activate (void);
+static void remd_min_epoch_moves_setup_activate (void);
+static void remd_restlessness_factor_setup_activate (void);
+static void remd_sensitivity_setup_exit (void);
+static void remd_required_rem_epochs_setup_exit (void);
+static void remd_cooldown_epochs_setup_exit (void);
+static void remd_min_move_duration_setup_exit (void);
+static void remd_min_epoch_moves_setup_exit (void);
+static void remd_restlessness_factor_setup_exit (void);
+static int remd_profile_setup_read_value (void);
 static int remd_sensitivity_setup_read_value (void);
+static int remd_required_rem_epochs_setup_read_value (void);
+static int remd_cooldown_epochs_setup_read_value (void);
+static int remd_min_move_duration_setup_read_value (void);
+static int remd_min_epoch_moves_setup_read_value (void);
+static int remd_restlessness_factor_setup_read_value (void);
+
 static int duplex_mode_setup_read_value (void);
 static int wakeup_mode_setup_read_value (void);
 static int alarm_clock_setup_read_value (void);
@@ -114,7 +158,6 @@ static int sound_hints_duration_setup_read_value (void);
 
 static void clock_setup (pmenu_context_t, keybrd_event_t);
 static void trigger_clocks_setup (pmenu_context_t, keybrd_event_t);
-static void remd_sensitivity_setup (pmenu_context_t, keybrd_event_t);
 static void duplex_mode_setup (pmenu_context_t, keybrd_event_t);
 static void wakeup_mode_setup (pmenu_context_t, keybrd_event_t);
 static void alarm_clock_setup (pmenu_context_t, keybrd_event_t);
@@ -132,7 +175,6 @@ static void save_settings_handler (pmenu_context_t, keybrd_event_t);
 static void clock_setup_activate (void);
 static void wakeup_timer_setup_activate (void);
 static void trigger_count_display (void);
-static void remd_sensitivity_setup_activate (void);
 static void trigger_clocks_setup_activate (void);
 static void duplex_mode_setup_activate (void);
 static void wakeup_mode_setup_activate (void);
@@ -149,12 +191,77 @@ static void save_settings_activate (void);
 static void clock_setup_exit (void);
 static void wakeup_timer_setup_exit (void);
 static void trigger_clocks_setup_exit (void);
-static void remd_sensitivity_setup_exit (void);
 static void light_hints_duration_setup_exit (void);
 static void sound_hints_duration_setup_exit (void);
 
+// REM Detector Settings
+PROGMEM const menu_desc_t desc_rdse[] = {
+  {
+	"dP-%i\0\0",
+	1,
+	remd_profile_setup_activate,
+	nullptr,
+	remd_profile_setup,
+	remd_profile_setup_read_value,
+  },
+  {
+	// REM Detector Sensitivity 
+	"SE-%i\0",
+	1,
+	remd_sensitivity_setup_activate,
+	remd_sensitivity_setup_exit,
+	remd_sensitivity_setup,
+	remd_sensitivity_setup_read_value,
+  },
+  {
+	// Min Required REM Epochs
+	"rE-%i\0\0",
+	1,
+	remd_required_rem_epochs_setup_activate,
+	remd_required_rem_epochs_setup_exit,
+	remd_required_rem_epochs_setup,
+	remd_required_rem_epochs_setup_read_value,
+  },
+  {
+	// REM Detector Cooldown Epochs
+	"C-%.2i\0",
+	2,
+	remd_cooldown_epochs_setup_activate,
+	remd_cooldown_epochs_setup_exit,
+	remd_cooldown_epochs_setup,
+	remd_cooldown_epochs_setup_read_value,
+  },
+  {
+	// Minimum Required Move Duration
+	"d-%.2i\0",
+	2,
+	remd_min_move_duration_setup_activate,
+	remd_min_move_duration_setup_exit,
+	remd_min_move_duration_setup,
+	remd_min_move_duration_setup_read_value,
+  },
+  {
+	// Minimum Required Moves Per Epoch
+	"t-%.2i\0",
+	2,
+	remd_min_epoch_moves_setup_activate,
+	remd_min_epoch_moves_setup_exit,
+	remd_min_epoch_moves_setup,
+	remd_min_epoch_moves_setup_read_value,
+  },
+  {
+	// Restlessness factor
+	"F-%.2i\0",
+	2,
+	remd_restlessness_factor_setup_activate,
+	remd_restlessness_factor_setup_exit,
+	remd_restlessness_factor_setup,
+	remd_restlessness_factor_setup_read_value,
+  },
+};
 
-PROGMEM const menu_desc_t desc_en_se[] = {
+// Enhanced Settings
+PROGMEM const menu_desc_t desc_ense[] = {
   {
 	"bE-%i\0\0",
 	1,
@@ -214,9 +321,9 @@ PROGMEM const menu_desc_t desc_en_se[] = {
   {
 	"dELr\0\0\0",
 	0,
-	ense_delete_records_activate,
+	ense_delete_records_setup_activate,
 	nullptr,
-	ense_delete_records,
+	ense_delete_records_setup,
   },
   {
 	"FL-%i\0\0",
@@ -263,8 +370,8 @@ PROGMEM const menu_desc_t desc_root[] = {
 	nullptr,
 	nullptr,
 	nullptr,
-	desc_en_se,
-	sizeof(desc_en_se)/sizeof(desc_en_se[0]),
+	desc_ense,
+	sizeof(desc_ense)/sizeof(desc_ense[0]),
   },
   {
 	"Cotr\0\0\0",
@@ -279,13 +386,14 @@ PROGMEM const menu_desc_t desc_root[] = {
 	trigger_clocks_setup,
   },
   {
-	// REM Detector Sensitivity 
-	"d-%.2i\0",
-	2,
-	remd_sensitivity_setup_activate,
-	remd_sensitivity_setup_exit,
-	remd_sensitivity_setup,
-	remd_sensitivity_setup_read_value,
+	"rdSE\0\0\0",
+	0,
+	nullptr,
+	nullptr,
+	nullptr,
+	nullptr,
+	desc_rdse,
+	sizeof(desc_rdse)/sizeof(desc_rdse[0]),
   },
   {
 	"du-%i\0\0",
@@ -638,7 +746,7 @@ bool AppMenu::is_active (void)
 
 void AppMenu::play_tone (void)
 {
-  tonegen.beep ( 80, 4, 6 );
+  Tonegen::get()->beep ( 80, 4, 6, config.get_volume_level ());
 }
 
 int AppMenu::handle_key (uint8_t key_event)
@@ -825,16 +933,17 @@ void ense_recording_setup_activate ( void )
 
 void ense_recording_setup ( pmenu_context_t ctx, keybrd_event_t key_event )
 {
-  char newfile[50];
+  String newfile;
+  auto codec = AudioCodec::get();
 
   switch ( key_event ) {
 	
 	case ( KEY_ENTER ):
-	  if (AudioCodec::get()->get_status() == AUDIO_CODEC_PLAYBACK) {
+	  if (codec->get_state() == AudioCodec::STATE_PLAYBACK) {
 
-		AudioCodec::get()->stop ();
+		codec->stop ();
 	  }
-	  if (AudioCodec::get()->get_status() == AUDIO_CODEC_IDLE) {
+	  if (codec->get_state() == AudioCodec::STATE_IDLE) {
 
 		// TODO: playback next recording
 	  }
@@ -842,16 +951,16 @@ void ense_recording_setup ( pmenu_context_t ctx, keybrd_event_t key_event )
 	  break;
 
 	case ( KEY_CHECK ):
-	  if (AudioCodec::get()->get_status() == AUDIO_CODEC_CAPTURE) {
+	  if (codec->get_state() == AudioCodec::STATE_CAPTURE) {
 
-		AudioCodec::get()->stop ();
+		codec->stop ();
 	  }
-	  else if (AudioCodec::get()->get_status() == AUDIO_CODEC_IDLE) {
+	  else if (codec->get_state() == AudioCodec::STATE_IDLE) {
 		/*
 		 * start new recording 
 		 */
-		Files::make_next_file_path(newfile, 50, RECORDS_PATH, "MYREC", "WAV");
-		AudioCodec::get()->capture (newfile);
+		Files::make_next_file_path(newfile, RECORDS_PATH, "MYREC", "WAV", 3);
+		codec->capture (newfile.c_str());
 	  }
 	  else {
 		/* TODO: is a real case ? playing music ? */
@@ -879,9 +988,11 @@ void ense_record_gain_setup_activate (void)
   Display::get()->number ( ense_record_gain_setup_read_value ());
 }
 
-void ense_record_gain_setup ( pmenu_context_t ctx, keybrd_event_t key_event )
+void ense_record_gain_setup (pmenu_context_t ctx, keybrd_event_t key_event)
 {
-  switch ( key_event ) {
+  MENU_NUMERIC_PROPERTY_SETUP(ense_record_gain, record_gain_level, ctx, key_event)
+
+  /*switch ( key_event ) {
 	case ( KEY_MINUS ):
 	case ( KEY_MINUS | KEYBRD_HOLD):
 	  DSCONF_DECREMENT_PROPERTY(config, record_gain_level);
@@ -897,7 +1008,7 @@ void ense_record_gain_setup ( pmenu_context_t ctx, keybrd_event_t key_event )
 	  Display::get()->number ( ense_record_gain_setup_read_value ());
 	  set_handled ( ctx );
 	  break;
-  }
+  }*/
 }
 
 int ense_record_gain_setup_read_value (void)
@@ -910,9 +1021,11 @@ void ense_volume_level_setup_activate (void)
   Display::get()->number ( ense_volume_level_setup_read_value ());
 }
 
-void ense_volume_level_setup ( pmenu_context_t ctx, keybrd_event_t key_event )
+void ense_volume_level_setup (pmenu_context_t ctx, keybrd_event_t key_event)
 {
-  switch ( key_event ) {
+  MENU_NUMERIC_PROPERTY_SETUP(ense_volume_level, volume_level, ctx, key_event)
+
+  /*switch ( key_event ) {
 	case ( KEY_MINUS ):
 	case ( KEY_MINUS | KEYBRD_HOLD ):
 	  DSCONF_DECREMENT_PROPERTY(config, volume_level);
@@ -928,7 +1041,7 @@ void ense_volume_level_setup ( pmenu_context_t ctx, keybrd_event_t key_event )
 	  Display::get()->number ( ense_volume_level_setup_read_value ());
 	  set_handled ( ctx );
 	  break;
-  }
+  }*/
 }
 
 int ense_volume_level_setup_read_value (void)
@@ -978,21 +1091,21 @@ int ense_tunes_setup_read_value (void)
   return config.get_relax_tunes ();
 }
 
-void ense_delete_records ( pmenu_context_t ctx, keybrd_event_t key_event)
+void ense_delete_records_setup ( pmenu_context_t ctx, keybrd_event_t key_event)
 {
   switch( key_event )	{
 	case ( KEY_ENTER ):
 	  // TODO: delete records
-	  Display::get()->message (__disp_msg_done__, 1);
+	  Display::get()->message (__disp_msg_done__, 300);
 	  set_handled (ctx);
 	  set_return (ctx);
 	  break;
   }
 }
 
-void ense_delete_records_activate (void)
+void ense_delete_records_setup_activate (void)
 {
-
+  Display::get()->confirm ();
 }
 
 void ense_vibration_setup_activate (void)
@@ -1077,11 +1190,12 @@ void clock_setup_exit (void)
 {
   auto rtck = RTClock::get();
 
+  Keyboard::get()->hold_repeat_disable ();
+
   // exit from setup
   rtck->set_setup ( RTC_SETUP_NONE );
   rtck->hide ();
-
-  Keyboard::get()->hold_repeat_disable ();
+  rtck->backup_current_time ();
 }
 
 void clock_setup ( pmenu_context_t ctx, keybrd_event_t key_event )
@@ -1090,15 +1204,8 @@ void clock_setup ( pmenu_context_t ctx, keybrd_event_t key_event )
 
   switch ( key_event ) {
 	case ( KEY_ENTER ):
-	  // switch between hours and minutes
-	  if ( rtck->get_setup () == RTC_SETUP_HOUR ) {
-
-		rtck->set_setup ( RTC_SETUP_MINUTE );
-	  } else {
-
-		rtck->set_setup ( RTC_SETUP_HOUR );
-	  }
-
+	  // switch between settings
+	  rtck->next_setup ();
 	  set_handled (ctx);
 	  break;
 
@@ -1231,6 +1338,49 @@ void trigger_clocks_setup ( pmenu_context_t, keybrd_event_t key_event )
   }
 }
 
+static
+void disp_remd_profile (void)
+{
+  if ( config.is_remd_profile_invalid ()) {
+
+	Display::get()->message ( __disp_msg_off__, 1 );
+  } else {
+
+	Display::get()->number (remd_profile_setup_read_value ());
+  }
+}
+
+void remd_profile_setup_activate (void)
+{
+  disp_remd_profile ();
+}
+
+void remd_profile_setup (pmenu_context_t ctx, keybrd_event_t key_event)
+{
+  switch ( key_event ) {
+	case ( KEY_ENTER ):
+	  DSCONF_TOGGLE_PROPERTY_WITH_INVALID(config, remd_profile);
+
+	  disp_remd_profile ();
+	  set_handled (ctx);
+	  break;
+
+	case ( KEY_MINUS ):
+	  DSCONF_DECREMENT_PROPERTY(config, remd_profile);
+
+	  disp_remd_profile ();
+	  set_handled (ctx);
+	  break;
+
+	case ( KEY_PLUS ):
+	  DSCONF_INCREMENT_PROPERTY(config, remd_profile);
+
+	  disp_remd_profile ();
+	  set_handled (ctx);
+	  break;
+  }
+}
+
 void remd_sensitivity_setup_activate (void)
 {
   Display::get()->number (remd_sensitivity_setup_read_value ());
@@ -1243,25 +1393,99 @@ void remd_sensitivity_setup_exit (void)
   Keyboard::get()->hold_repeat_disable ();
 }
 
-void remd_sensitivity_setup ( pmenu_context_t ctx, keybrd_event_t key_event )
+void remd_sensitivity_setup (pmenu_context_t ctx, keybrd_event_t key_event)
 {
-  switch ( key_event ) {
-	case ( KEY_MINUS ):
-	case ( KEY_MINUS | KEYBRD_HOLD ):
-	  DSCONF_DECREMENT_PROPERTY(config, remd_sensitivity);
+  MENU_NUMERIC_PROPERTY_SETUP(remd_sensitivity, remd_sensitivity, ctx, key_event)
+}
 
-	  Display::get()->number (remd_sensitivity_setup_read_value ());
-	  set_handled (ctx);
-	  break;
+void remd_required_rem_epochs_setup_activate (void)
+{
+  Display::get()->number (remd_required_rem_epochs_setup_read_value ());
 
-	case ( KEY_PLUS ):
-	case ( KEY_PLUS | KEYBRD_HOLD ):
-	  DSCONF_INCREMENT_PROPERTY(config, remd_sensitivity);
+  Keyboard::get()->hold_repeat_fast ();
+}
 
-	  Display::get()->number (remd_sensitivity_setup_read_value ());
-	  set_handled (ctx);
-	  break;
-  }
+void remd_required_rem_epochs_setup_exit (void)
+{
+  Keyboard::get()->hold_repeat_disable ();
+}
+
+void remd_required_rem_epochs_setup (pmenu_context_t ctx, keybrd_event_t key_event)
+{
+  MENU_NUMERIC_PROPERTY_SETUP(remd_required_rem_epochs, remd_required_rem_epochs, ctx, key_event)
+}
+
+void remd_cooldown_epochs_setup_activate (void)
+{
+  Display::get()->number (remd_cooldown_epochs_setup_read_value ());
+
+  Keyboard::get()->hold_repeat_fast ();
+}
+
+void remd_cooldown_epochs_setup_exit (void)
+{
+  Keyboard::get()->hold_repeat_disable ();
+}
+
+void remd_cooldown_epochs_setup (pmenu_context_t ctx, keybrd_event_t key_event)
+{
+  MENU_NUMERIC_PROPERTY_SETUP(remd_cooldown_epochs, remd_cooldown_epochs, ctx, key_event)
+}
+
+void remd_min_move_duration_setup_activate (void)
+{
+  Display::get()->number (remd_min_move_duration_setup_read_value ());
+
+  Keyboard::get()->hold_repeat_fast ();
+}
+
+void remd_min_move_duration_setup_exit (void)
+{
+  Keyboard::get()->hold_repeat_disable ();
+}
+
+void remd_min_move_duration_setup (pmenu_context_t ctx, keybrd_event_t key_event)
+{
+  MENU_NUMERIC_PROPERTY_SETUP(remd_min_move_duration, remd_min_move_duration, ctx, key_event)
+}
+
+void remd_min_epoch_moves_setup_activate (void)
+{
+  Display::get()->number (remd_min_epoch_moves_setup_read_value ());
+
+  Keyboard::get()->hold_repeat_fast ();
+}
+
+void remd_min_epoch_moves_setup_exit (void)
+{
+  Keyboard::get()->hold_repeat_disable ();
+}
+
+void remd_min_epoch_moves_setup (pmenu_context_t ctx, keybrd_event_t key_event)
+{
+  MENU_NUMERIC_PROPERTY_SETUP(remd_min_epoch_moves, remd_min_epoch_moves, ctx, key_event)
+}
+
+void remd_restlessness_factor_setup_activate (void)
+{
+  Display::get()->number (remd_restlessness_factor_setup_read_value ());
+
+  Keyboard::get()->hold_repeat_fast ();
+}
+
+void remd_restlessness_factor_setup_exit (void)
+{
+  Keyboard::get()->hold_repeat_disable ();
+}
+
+void remd_restlessness_factor_setup (pmenu_context_t ctx, keybrd_event_t key_event)
+{
+  MENU_NUMERIC_PROPERTY_SETUP(remd_restlessness_factor, remd_restlessness_factor, ctx, key_event)
+}
+
+int remd_profile_setup_read_value (void)
+{
+	return config.get_remd_profile ();
 }
 
 int remd_sensitivity_setup_read_value (void)
@@ -1269,10 +1493,35 @@ int remd_sensitivity_setup_read_value (void)
   return config.get_remd_sensitivity ();
 }
 
+int remd_required_rem_epochs_setup_read_value (void)
+{
+  return config.get_remd_required_rem_epochs ();
+}
+
+int remd_cooldown_epochs_setup_read_value (void)
+{
+  return config.get_remd_cooldown_epochs ();
+}
+
+int remd_min_move_duration_setup_read_value (void)
+{
+  return config.get_remd_min_move_duration ();
+}
+
+int remd_min_epoch_moves_setup_read_value (void)
+{
+  return config.get_remd_min_epoch_moves ();
+}
+
+int remd_restlessness_factor_setup_read_value (void)
+{
+  return config.get_remd_restlessness_factor ();
+}
+
 static
 void disp_duplex_mode (void)
 {
-  if ( config.is_invalid_duplex_mode ())
+  if ( config.is_duplex_mode_invalid ())
 	Display::get()->message ( __disp_msg_off__, 1 );
   else
 	Display::get()->number (duplex_mode_setup_read_value ());
@@ -1317,10 +1566,13 @@ int duplex_mode_setup_read_value (void)
 static
 void disp_wakeup_mode (void)
 {
-  if ( config.is_invalid_wakeup_mode ())
+  if ( config.is_wakeup_mode_invalid ()) {
+
 	Display::get()->message ( __disp_msg_off__, 1 );
-  else
+  } else {
+
 	Display::get()->number (wakeup_mode_setup_read_value ());
+  }
 }
 
 void wakeup_mode_setup_activate ( void )
@@ -1510,9 +1762,11 @@ void light_hints_duration_setup_exit (void)
   Keyboard::get()->hold_repeat_disable ();
 }
 
-void light_hints_duration_setup ( pmenu_context_t ctx, keybrd_event_t key_event)
+void light_hints_duration_setup (pmenu_context_t ctx, keybrd_event_t key_event)
 {
-  switch ( key_event ) {
+  MENU_NUMERIC_PROPERTY_SETUP(light_hints_duration, light_hints_duration, ctx, key_event)
+
+  /*switch ( key_event ) {
 	case ( KEY_MINUS ):
 	case ( KEY_MINUS | KEYBRD_HOLD ):
 	  DSCONF_DECREMENT_PROPERTY(config, light_hints_duration);
@@ -1528,7 +1782,7 @@ void light_hints_duration_setup ( pmenu_context_t ctx, keybrd_event_t key_event)
 	  Display::get()->number (light_hints_duration_setup_read_value ());
 	  set_handled ( ctx );
 	  break;
-  }
+  }*/
 }
 
 int light_hints_duration_setup_read_value (void)
@@ -1550,7 +1804,9 @@ void sound_hints_duration_setup_exit (void)
 
 void sound_hints_duration_setup ( pmenu_context_t ctx, keybrd_event_t key_event)
 {
-  switch ( key_event ) {
+  MENU_NUMERIC_PROPERTY_SETUP(sound_hints_duration, sound_hints_duration, ctx, key_event)
+
+  /*switch ( key_event ) {
 	case ( KEY_MINUS ):
 	case ( KEY_MINUS | KEYBRD_HOLD ):
 	  DSCONF_DECREMENT_PROPERTY(config, sound_hints_duration);
@@ -1566,7 +1822,7 @@ void sound_hints_duration_setup ( pmenu_context_t ctx, keybrd_event_t key_event)
 	  Display::get()->number (sound_hints_duration_setup_read_value ());
 	  set_handled ( ctx );
 	  break;
-  }
+  }*/
 }
 
 int sound_hints_duration_setup_read_value (void)
@@ -1576,42 +1832,39 @@ int sound_hints_duration_setup_read_value (void)
 
 void wakeup_signal_check_handler ( pmenu_context_t, keybrd_event_t key_event )
 {
-
 }
 
 void remd_check_handler ( pmenu_context_t, keybrd_event_t key_event)
 {
-
 }
 
 void set_defaults_handler ( pmenu_context_t, keybrd_event_t key_event)
 {
-	switch ( key_event ) {
+  switch ( key_event ) {
 	case ( KEY_ENTER ):
-		config.set_defaults ();
-		/* NOTE: device will restart */
-		break;
-	}
+	  config.set_defaults ();
+	  /* NOTE: device will restart */
+	  break;
+  }
 }
 
 void set_defaults_activate (void)
 {
-
 }
 
 void save_settings_handler ( pmenu_context_t ctx, keybrd_event_t key_event)
 {
-	switch ( key_event ) {
+  switch ( key_event ) {
 	case ( KEY_ENTER ):
-		config.save_to_storage ();
-
-		set_handled (ctx);
-		set_return (ctx);
-		break;
-	}
+	  config.save_to_storage ();
+	  Display::get()->message (__disp_msg_done__, 300);
+	  set_handled (ctx);
+	  set_return (ctx);
+	  break;
+  }
 }
 
 void save_settings_activate (void)
 {
-
+  Display::get()->confirm ();
 }

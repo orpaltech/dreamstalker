@@ -17,12 +17,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <avr/io.h>
+#include <avr/pgmspace.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <util/delay.h>
-#include <avr/io.h>
-#include <avr/pgmspace.h>
 
 #include "sound/vs10xx_mcu.h"
 #include "sound/vs1002.h"
@@ -189,35 +189,48 @@ void Vs1002::vs_playback_stop (void)
 
 bool Vs1002::vs_adpcm_rec_start (uint16_t sample_rate, uint8_t gain, bool highpass_filter)
 {
-	uint16_t div;
+  uint16_t div;
 
 #if ( VS1002_HW_REV == VS1002_D )
 	
-	soft_reset ( 0, 0 );
+  soft_reset ( 0, 0 );
 
-	patch_process_rom ( vs_patch_rom(), 0, NULL, NULL, NULL );
+  patch_process_rom ( vs_patch_rom(), 0, NULL, NULL, NULL );
 #endif
 
-	/* Set clock after software reset */
-	set_clockf ();
+  /* Set clock after software reset */
+  set_clockf ();
 	
-	/* write a clock divider value, div, can be obtained by formula below:
-	 * Fs = (2 * Fc) / (256 * div), where
-	 * 		2	- 	multiplier used only if clock doubler is in use;
-	 *		Fc	-	Xtal frequency, i.e. 12288000 Hz;
-	 *		fs	-	sampling rate, i.e. 8000 Hz;
-	 * i.e. with div=12, Fs = (2 * 122880000) / (256 * 12) = 8000 Hz
-	 */
-	div = ((VS_USE_CLK_DBL ? 2UL : 1UL) * VS_XTAL_FREQ) / (256UL * sample_rate);
+  /* Write a clock divider value, div, can be obtained by formula below:
+   * Fs = (2 * Fc) / (256 * div), where
+   * 		2	- 	multiplier used only if clock doubler is in use;
+   *		Fc	-	Xtal frequency, i.e. 12288000 Hz;
+   *		fs	-	sampling rate, i.e. 8000 Hz;
+   * i.e. with div=12, Fs = (2 * 122880000) / (256 * 12) = 8000 Hz
+   */
+  div = ((VS_USE_CLK_DBL ? 2UL : 1UL) * VS_XTAL_FREQ) / (256UL * sample_rate);
 
-	/* Set clock divider */
-	sci_write ( SCI_REG_AICTRL0, div );
+  // Set the Sample Rate divider 
+  sci_write ( SCI_REG_AICTRL0, div );
 
-	/* Set linear recording gain control, 1024 is equal to gain 1, 512 - gain 0.5, etc.
-	 *	The maximum value 65535, i.e.0xFFFF, is equal to gain 64.
-	 *	Write 0 to use automatic gain control (AGC)
-	 */
-	sci_write ( SCI_REG_AICTRL1, AICTRL1_GAIN(gain));
+  if ( gain == 0 ) {
+	// Use Automatic Gain Control (AGC)
+    sci_write ( SCI_REG_AICTRL1, AICTRL1_AGC );
+	
+    /* Set Maximum AGC Gain Ceiling (AICTRL2)
+     * 0 = 64x (too loud, causes initial distortion/hiss)
+     * 1024 = 1x
+     * 4096 = 4x (Recommended: clear voice, low distortion)
+     */
+    sci_write ( SCI_REG_AICTRL2, AICTRL1_GAIN(4) ); 
+
+  } else {
+  	/* Set linear recording gain control, 1024 is equal to gain 1, 512 - gain 0.5, etc.
+     *	The maximum value 65535, i.e.0xFFFF, is equal to gain 64.
+     *	Write 0 to use automatic gain control (AGC)
+     */
+  	sci_write ( SCI_REG_AICTRL1, AICTRL1_GAIN(gain));
+  }
 
 #if ( VS1002_HW_REV == VS1002_C )
 	/* By adding SM ADPCM flag during the software reset
@@ -240,23 +253,23 @@ bool Vs1002::vs_adpcm_rec_start (uint16_t sample_rate, uint8_t gain, bool highpa
 
 #elif ( VS1002_HW_REV == VS1002_D )
 
-	/* Activate ADPCM recording patch */
-	sci_write ( SCI_REG_AIADDR, 0x30 );
+  /* Activate ADPCM recording patch */
+  sci_write ( SCI_REG_AIADDR, 0x30 );
 #endif
 
-	return true;
+  return true;
 }
 
 void Vs1002::vs_adpcm_rec_stop (void)
 {
 #if ( VS1002_HW_REV == VS1002_C )
-	/* Software reset to disable ADPCM recording */
-	soft_reset ( 0, _BV(SM_ADPCM) | _BV(SM_ADPCM_HP));
+  /* Software reset to disable ADPCM recording */
+  soft_reset ( 0, _BV(SM_ADPCM) | _BV(SM_ADPCM_HP));
 
 #elif ( VS1002_HW_REV == VS1002_D )
-	sci_write ( SCI_REG_AIADDR, 0 );
+  sci_write ( SCI_REG_AIADDR, 0 );
 
-	soft_reset ( 0, 0 );
+  soft_reset ( 0, 0 );
 #endif
 }
 

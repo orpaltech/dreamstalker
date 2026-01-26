@@ -21,18 +21,17 @@
 
 #include "ds_driver.h"
 #include "ds_util.h"
-#include "shared_fp.h"
-
 
 /*-----------------------------------------------------------------------*/
-SDFile shared_fp;
+File shared_fp;
 
 
 /*-----------------------------------------------------------------------*/
 // put function declarations here:
 
 /*-----------------------------------------------------------------------*/
-void setup( ) {
+void setup()
+{
   // put your setup code here, to run once
 
   driver.begin ();
@@ -64,8 +63,8 @@ void setup( ) {
 }
 
 /*-----------------------------------------------------------------------*/
-void loop() {
-
+void loop()
+{
   driver.process ();
 
   /* End of app loop */

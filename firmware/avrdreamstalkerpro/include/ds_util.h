@@ -23,8 +23,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include <SD.h>
-extern SDLib::SDClass &card0;
+//#include <SD.h>
+//extern SDLib::SDClass &card0;
+#include <SdFat.h>
+extern SdFat &card0;
 
 /*-----------------------------------------------------------------------*/
 #define MIN(X,Y)    ((X) < (Y) ? (X) : (Y))
@@ -57,16 +59,6 @@ void soft_reset (void);
 namespace DS {
 
 /*-----------------------------------------------------------------------*/
-/* String utils 
-*/
-class Strings {
-public:
-  static bool hex_str ( uint32_t decimal, char *buffer, int precision );
-
-  static String hex_str ( uint16_t decimal );
-};
-
-/*-----------------------------------------------------------------------*/
 /* Math utils 
 */
 class Maths {
@@ -79,9 +71,11 @@ public:
 */
 class Files {
 public:
-  static void make_next_file_path ( char *file_path, unsigned len, 
+  static bool make_next_file_path( String &file_path, 
                                   const char *dir_path, const char *prefix, 
-                                  const char *ext );
+                                  const char *ext,
+                                  uint8_t num_digits = 2, 
+                                  bool remove_existing = true );
 };
 
 /*-----------------------------------------------------------------------*/

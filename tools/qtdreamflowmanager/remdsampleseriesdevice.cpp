@@ -1,26 +1,26 @@
-#include "remddataseriesdevice.h"
+#include "remdsampleseriesdevice.h"
 #include <QXYSeries>
 
 /****************************************************/
 
-QRemDDataSeriesDevice::QRemDDataSeriesDevice(QXYSeries *series, QObject *parent)
+QRemDSampleSeriesDevice::QRemDSampleSeriesDevice(QXYSeries *series, QObject *parent)
     : QIODevice(parent)
     , m_series(series)
 {
 }
 
-QRemDDataSeriesDevice::~QRemDDataSeriesDevice()
+QRemDSampleSeriesDevice::~QRemDSampleSeriesDevice()
 {
 }
 
-qint64 QRemDDataSeriesDevice::readData(char *data, qint64 maxlen)
+qint64 QRemDSampleSeriesDevice::readData(char *data, qint64 maxlen)
 {
     Q_UNUSED(data);
     Q_UNUSED(maxlen);
-    return -1;
+    return 0;
 }
 
-qint64 QRemDDataSeriesDevice::writeData(const char *data, qint64 maxSize)
+qint64 QRemDSampleSeriesDevice::writeData(const char *data, qint64 maxSize)
 {
     quint16 *samples = (quint16*)data;
 

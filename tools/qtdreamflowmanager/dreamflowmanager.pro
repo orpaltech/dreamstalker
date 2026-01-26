@@ -15,9 +15,11 @@ SOURCES += \
     managermainwindow.cpp \
     remddatafilesource.cpp \
     remddataserialsource.cpp \
-    remddataseriesdevice.cpp \
     remddatasource.cpp \
-    remddatawidget.cpp
+    remdepochseriesdevice.cpp \
+    remdepochswidget.cpp \
+    remdsampleseriesdevice.cpp \
+    remdsampleswidget.cpp
 
 HEADERS += \
     capturesettingsdialog.h \
@@ -25,9 +27,11 @@ HEADERS += \
     managermainwindow.h \
     remddatafilesource.h \
     remddataserialsource.h \
-    remddataseriesdevice.h \
     remddatasource.h \
-    remddatawidget.h
+    remdepochseriesdevice.h \
+    remdepochswidget.h \
+    remdsampleseriesdevice.h \
+    remdsampleswidget.h
 
 FORMS += \
     capturesettingsdialog.ui \

@@ -42,9 +42,11 @@ typedef enum e_tonegen_piece {
 
 class Tonegen {
 public:
+  static Tonegen *get();
+public:
   void init (void);
 
-  void beep (uint16_t millisec, uint8_t note, uint8_t octave);
+  void beep (uint32_t millisec, uint8_t note, uint8_t octave, uint8_t volume);
 
   /**
    * piece        : melody to play
@@ -54,9 +56,13 @@ public:
   bool is_playing (void);
   void stop (void);
 
+  void set_intensity(uint16_t intensity, uint16_t max_intensity);
+
+  /* Unsafe operations (must be called from ISR)*/
+  void stop_unsafe (void);
+
   /* Intended for use in RTC ISR only. Do not call it directly! */
   static void handle_isr (void);
-  void stop_unsafe (void);
 
 private:
   void irq_handler (void);
@@ -67,7 +73,7 @@ private:
     const char *head;
     const char *buffer;
     uint8_t storage_mode : 2; /* where a melody is stored */
-    uint16_t ticks;
+    uint32_t ticks;
     uint16_t duration;        /* duration of current note */
     uint16_t whole_duration;  /* duration of whole note */
     uint8_t note_default_len;
@@ -81,11 +87,10 @@ private:
   } tonegen_melody_t;
 
   volatile tonegen_melody_t melody;
+  uint16_t tone_icr_base;
 };
 
 /*-----------------------------------------------------------------------*/
 };  //DS
-
-extern DS::Tonegen tonegen;
 
 #endif  // _DS_TONEGEN_DEFINED

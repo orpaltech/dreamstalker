@@ -18,7 +18,6 @@ QT_FORWARD_DECLARE_CLASS(QLabel)
 QT_FORWARD_DECLARE_CLASS(QFile)
 QT_FORWARD_DECLARE_CLASS(QCommSettingsDialog)
 QT_FORWARD_DECLARE_CLASS(QCaptureSettingsDialog)
-QT_FORWARD_DECLARE_CLASS(QRemDDataWidget)
 QT_FORWARD_DECLARE_CLASS(QRemDDataSource)
 
 /****************************************************/
@@ -37,23 +36,28 @@ private slots:
     void stopDataCapture();
     void onSerialData();
     void onSerialError(QSerialPort::SerialPortError error);
-    void loadDataFromFile();
-    void loadDataFromDevice();
-    void toggleDataChart();
+    void loadSamplesFromFile();
+    void loadEpochsFromFile();
+    void loadSamplesFromSerial();
+    void toggleActiveWidget();
     void onDataSourceStopped(int error, const QString& message);
 
 
 private:
     void initActionsConnections();
     void showStatusMessage(const QString &message);
+
     bool openSerialPort();
     void closeSerialPort();
-    void createDataWidget(QRemDDataSource *dataSource);
-    void deleteDataWidget();
+
+    void createSamplesWidget(QRemDDataSource *dataSource);
+    void deleteActiveWidget();
+
+    void createEpochsWidget(QRemDDataSource *dataSource);
 
 private:
     Ui::ManagerMainWindow *m_ui;
-    QRemDDataWidget *m_dataWidget;
+    QWidget     *m_activeWidget;
     QCommSettingsDialog *m_commSettings;
     QCaptureSettingsDialog *m_captureSettings;
     QSerialPort *m_serialPort;

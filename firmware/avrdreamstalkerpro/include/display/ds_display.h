@@ -32,7 +32,7 @@ public:
   static uint32_t get_cycle_us(void);	/* length of cycle in microseconds */
 
   /* Intended for use in RTC ISR. Do not call it directly! */
-  static void handle_isr (void);
+  static void handle_rtc (void);
 
   bool init (void);
 

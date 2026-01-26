@@ -27,13 +27,14 @@
 #include <avr/wdt.h>
 #include <compat/ina90.h>
 
-#include "ds_util.h"
 #include "ds_arduino.h"
-#include "shared_fp.h"
+#include "ds_util.h"
 
 
 /*-----------------------------------------------------------------------*/
-SDLib::SDClass &card0 = SDLib::SD;
+//SDLib::SDClass &card0 = SDLib::SD;
+static SdFat sd_internal;
+SdFat &card0 = sd_internal;
 
 
 /*-----------------------------------------------------------------------*/
@@ -69,95 +70,90 @@ void soft_reset ( void )
 /*-----------------------------------------------------------------------*/
 namespace DS {
 
-bool Strings::hex_str ( uint32_t decimal, char *buffer, int precision )
-{
-  char hexadecimal[10] = {0};
-  int indx = 0;
-  int i, k = 0;
-
-  while( decimal > 0 ) {
-	  int remainder = decimal % 16;
-	  if (remainder < 10)
-	    hexadecimal[indx++] = remainder + '0';
-	  else
-	    hexadecimal[indx++] = remainder + 'A' - 10;
-    decimal /= 16;
-  }
-
-  while( indx < precision ) {
-    buffer[k++] = '0';
-    --precision;
-  }
-
-  for( i = indx - 1; i >= 0; i--, k++ )
-	  buffer[k] = hexadecimal[i];
-  buffer[k] = 0;
-
-  return true;
-}
-
-const static char* HEX_DIGITS = "0123456789ABCDEF";
-
-String Strings::hex_str ( uint16_t val )
-{
-  String result;
-  result.reserve(4); // 4 digits + implicit null terminator
-
-  result[0] = HEX_DIGITS[(val >> 12) & 0xF]; // Get the 4th hex digit
-  result[1] = HEX_DIGITS[(val >> 8) & 0xF];  // Get the 3rd hex digit
-  result[2] = HEX_DIGITS[(val >> 4) & 0xF];  // Get the 2nd hex digit
-  result[3] = HEX_DIGITS[val & 0xF];         // Get the 1st hex digit
-  result[4] = '\0';                          // Add null terminator
-
-  return result;
-}
-
+/*-----------------------------------------------------------------------*/
 uint16_t Maths::pow_u16 ( uint16_t base, uint8_t exp )
 {
   if( exp == 0 )
 	  return 1;
- 
+
   return base * pow_u16 ( base, exp - 1 );
 }
 
-void Files::make_next_file_path(char *file_path, unsigned len, 
-                                const char *dir_path, 
+/*-----------------------------------------------------------------------*/
+bool Files::make_next_file_path(String &file_path, 
+                                const char *dir_path,
                                 const char *file_prefix, 
-                                const char *file_ext)
+                                const char *file_ext,
+                                uint8_t num_digits, 
+                                bool remove_existing )
 {
-  uint8_t max = 0, num;
-  char prefix [7];
-  char *endp, *ptr;
-  SDFile entry;
+  uint32_t max_val = 0, num;
+  bool overrun = false;
+  char prefix[9]; // Max 8 chars + null
 
-  /* Take only 6 (or less) characters from the prefix */
-  strncpy (prefix, file_prefix, 6);
-  prefix [6] = '\0';
+  if (num_digits < 2) num_digits = 2;
+  else if (num_digits > 4) num_digits = 4;
 
-  SDFile dir = card0.open (dir_path);
-  if ( dir ) {
-	  for (;;) {
-	    entry =  dir.openNextFile ();
-	    if (! entry )
-		    break;	/* Terminate if any error or end of dir */
+  // 1. Calculate numerical limit (e.g., 4 digits -> 9999)
+  uint32_t limit = 1;
+  for(int i = 0; i < num_digits; i++) limit *= 10;
+  limit -= 1;
 
-	    ptr = strchr (entry.name(), '.');
-	    if ( ptr ) {
-		    ptr -= 2;
-		    num = strtoul (ptr, &endp, 10);
-		    if (num > max)
-		      max = num;
-	    }
+  // 2. Open Directory
+  File dir = card0.open(dir_path);
+  if (dir) {
+    File entry;
+    while (entry = dir.openNextFile()) {
+      //const char *name = entry.name();
+      char name[13]; 
+      entry.getName(name, sizeof(name)); // The compiler will be happy now
+      char *dot = strchr(name, '.');
+      
+      // Look back from dot to extract number
+      if (dot && (dot - name) >= num_digits) {
+        char *endp;
+        num = strtoul(dot - num_digits, &endp, 10);
+        if (num > max_val) max_val = num;
+      }
+      entry.close();
+    }
+    dir.close();
 
-	    entry.close ();
-	  }
-
-	  dir.close ();
+    if (max_val >= limit) {
+      overrun = true;
+      max_val = 0;
+    }
   }
 
-  snprintf(file_path, len, "%s/%s%02u.%s", dir_path, prefix, ++max, file_ext);
+  // 3. Construct the filename safely on the Stack
+  // 8.3 filenames mean: 8 (name) + 1 (.) + 3 (ext) + 1 (\0) = 13 bytes.
+  // Add dir_path length. Let's assume a safe stack buffer of 64.
+  char local_buffer[64];
+  
+  int max_prefix_len = 8 - num_digits;
+  strncpy(prefix, file_prefix, max_prefix_len);
+  prefix[max_prefix_len] = '\0';
+
+  // Explicitly building the format: e.g., "%s/%s%04u.%s"
+  char num_fmt[10]; 
+  snprintf(num_fmt, sizeof(num_fmt), "%%0%du", num_digits); // i.e. creates "%04u"
+
+  // 4. Now combine everything into the final path
+  int written = snprintf(local_buffer, sizeof(local_buffer), "%s/%s", dir_path, prefix);
+  written += snprintf(local_buffer + written, sizeof(local_buffer) - written, num_fmt, ++max_val);
+  snprintf(local_buffer + written, sizeof(local_buffer) - written, ".%s", file_ext);
+
+  // 5. Single assignment (Safe heap management)
+  file_path = local_buffer; 
+
+  if (remove_existing && card0.exists(file_path)) {
+    card0.remove(file_path);
+  }
+
+  return !overrun;
 }
 
+/*-----------------------------------------------------------------------*/
 void Pins::set_out ( uint8_t pin )
 {
   pinMode ( pin, OUTPUT );

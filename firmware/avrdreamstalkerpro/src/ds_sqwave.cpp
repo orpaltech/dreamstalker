@@ -27,7 +27,7 @@
 using namespace DS;
 
 /*-----------------------------------------------------------------------*/
-void SQWave::handle_isr (void)
+void SQWave::handle_rtc (void)
 {
 	get()->irq_handler ();
 }
@@ -141,7 +141,6 @@ void SQWave::start(uint8_t i, uint16_t duration_ms, uint16_t period_ms, uint8_t 
 	ps->active = true;
 	ps->pcb_transition = ptcb;
 	ps->context = context;
-	ps->pcb_complete = nullptr;
 
 	do_transition ( i, SQW_TRANS_HIGH );
   }

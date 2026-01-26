@@ -2,8 +2,6 @@
 #define REMDDATASERIALSOURCE_H
 
 #include "remddatasource.h"
-
-#include <QByteArray>
 #include <QSerialPort>
 
 /****************************************************/

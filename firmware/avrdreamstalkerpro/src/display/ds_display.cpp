@@ -241,7 +241,7 @@ Display *Display::get()
 }
 
 /*-----------------------------------------------------------------------*/
-void Display::handle_isr (void)
+void Display::handle_rtc (void)
 {
   get()->irq_handler ();
 }

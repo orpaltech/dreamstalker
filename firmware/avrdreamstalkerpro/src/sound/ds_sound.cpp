@@ -95,14 +95,14 @@ void Sound::speaker_on (void)
 {
   Pins::drive_low ( PIN_SND_OFF );
 
-	_delay_ms ( 100 );
+	delay ( 10 );
 }
 
 void Sound::speaker_off (void)
 {
   Pins::drive_high ( PIN_SND_OFF );
 
-	_delay_ms ( 10 );
+  delay ( 10 );
 }
 
 bool Sound::is_speaker_on() const
@@ -110,18 +110,18 @@ bool Sound::is_speaker_on() const
 	return Pins::is_out_low ( PIN_SND_OFF );
 }
 
-void Sound::mic_on (void)
+void Sound::microphone_on (void)
 {
   Pins::drive_high ( PIN_MIC_PWR );
 
-  _delay_ms ( 10 );
+  delay ( 100 );
 }
 
-void Sound::mic_off (void)
+void Sound::microphone_off (void)
 {
   Pins::drive_low ( PIN_MIC_PWR );
 
-  _delay_ms ( 10 );
+  delay ( 10 );
 }
 
 bool Sound::init ( void )
@@ -146,9 +146,9 @@ bool Sound::init ( void )
   speaker_off ();
 
   /* Power down microphone */
-  mic_off ();
+  microphone_off ();
 
-  tonegen.init ();
+  Tonegen::get()->init ();
 
   return true;
 }

@@ -24,7 +24,6 @@
 #include <avr/pgmspace.h>
 #include <avr/io.h>
 
-#include <SD.h>
 #include <SPI.h>
 
 #include "sound/vs10xx_mcu.h"
@@ -43,11 +42,13 @@ using namespace VLSI;
 
 #define VS_EOF			0x80
 
+#define VS_MHZ      1000000UL
+
 /*-----------------------------------------------------------------------*/
 
 typedef struct s_vs_patch_file {
 	uint8_t flags;
-	SDFile *fp;
+	File *fp;
 } vs_patch_file_t, *pvs_patch_file_t;
 
 
@@ -61,18 +62,21 @@ static SPISettings sci_settings, sdi_settings;
 bool Vs10xx::init ( void )
 {
   /* MCU data direction setup */
-  pinMode ( VS_PIN_DREQ, INPUT );
-  pinMode ( VS_PIN_XRST, OUTPUT );
-  pinMode ( VS_PIN_XCS, OUTPUT );
-  pinMode ( VS_PIN_XDCS, OUTPUT );
+  DS::Pins::set_in_highz( VS_PIN_DREQ );
+  DS::Pins::set_out( VS_PIN_XRST );
+  DS::Pins::set_out( VS_PIN_XCS );
+  DS::Pins::set_out( VS_PIN_XDCS );
+  // Ensure Chip Select pins aren't pulled low
+  DS::Pins::drive_high( VS_PIN_XCS );
+  DS::Pins::drive_high( VS_PIN_XDCS );
 
   SPI.begin();
   
   /* SCI: put SPI-controller in mode-0, bus clock to 2MHz*/
-  sci_settings = SPISettings( F_CPU / 4, MSBFIRST, SPI_MODE0 );
+  sci_settings = SPISettings( VS_MHZ * 2, MSBFIRST, SPI_MODE0 );
 
   /* SDI: put SPI-controller in mode-0, bus clock to 4MHz*/
-  sdi_settings = SPISettings( F_CPU / 2, MSBFIRST, SPI_MODE0 );
+  sdi_settings = SPISettings( VS_MHZ * 4, MSBFIRST, SPI_MODE0 );
 
   /* Deselect data & command SPI devices */
   sci_unsel ();
@@ -114,9 +118,7 @@ uint16_t Vs10xx::sci_read ( uint8_t reg )
 void Vs10xx::sci_write ( uint8_t reg, uint16_t data )
 {
   wait_for_dreq ();
-
   SPI.beginTransaction ( sci_settings );
-
   sci_select ();			/* Select SCI device */
 
   /* Write 2 bytes of the command */
@@ -156,17 +158,18 @@ void Vs10xx::sci_remove ( uint8_t reg, uint16_t flags )
 void Vs10xx::sdi_write ( const uint8_t *block )
 {
   wait_for_dreq ();
-
   SPI.beginTransaction ( sdi_settings );
+  sdi_select ();      // Select SDI device
 
-  sdi_select ();				/* Select SDI device */
+  const uint8_t *p = block;
+  // we can use a simple countdown which is even faster than comparing addresses
+  uint8_t count = SDI_BLOCK_LEN; 
 
-  for (uint8_t i = 0; i < SDI_BLOCK_LEN; i++) {
+  do {
+    SPI.transfer (*p++);
+  } while (--count);
 
-	  SPI.transfer ( block[i] );
-  }
-
-  sdi_unsel ();				/* Deselect SDI */
+  sdi_unsel ();         // Deselect SDI
   SPI.endTransaction ();
 }
 
@@ -215,13 +218,12 @@ uint8_t Vs10xx::read_hw_spec ( void )
 
 void Vs10xx::hard_reset ( void )
 {
-	digitalWrite ( VS_PIN_XRST, LOW ); 		/* force reset line low */
+	DS::Pins::drive_low( VS_PIN_XRST );   /* force reset line low */
 	delay( 10 );
-	digitalWrite ( VS_PIN_XRST, HIGH );		/* restore reset line */
+	DS::Pins::drive_high( VS_PIN_XRST );  /* restore reset line */
 	delay( 100 );
 
 	SPI.beginTransaction ( sci_settings );
-
 	sci_select ();
 
 	/* clock the chip a little bit*/
@@ -245,8 +247,8 @@ void Vs10xx::resume ( void )
 void Vs10xx::soft_reset ( uint16_t mask_add, uint16_t mask_remove )
 {
   uint16_t val = read_mode ();
-  val &= ~mask_remove;
-  val |= mask_add;
+          val &= ~mask_remove;
+          val |= mask_add;
   write_mode (val | _BV(SM_SDINEW) | _BV(SM_RESET));
 
   wait_for_dreq ();
@@ -254,13 +256,13 @@ void Vs10xx::soft_reset ( uint16_t mask_add, uint16_t mask_remove )
 
 void Vs10xx::wait_for_dreq ( void )
 {
-  while ( LOW == digitalRead ( VS_PIN_DREQ ))
+  while ( DS::Pins::is_in_low( VS_PIN_DREQ ))
     _NOP ();
 }
 
 bool Vs10xx::is_dreq ( void )
 {
-  return ( HIGH == digitalRead ( VS_PIN_DREQ ) );
+  return ( DS::Pins::is_in_high( VS_PIN_DREQ ) );
 }
 
 void Vs10xx::analog_pwr_down ( void )
@@ -285,28 +287,34 @@ void Vs10xx::set_volume ( uint8_t left_db, uint8_t right_db )
 	sci_write ( SCI_REG_VOL, val );
 }
 
+bool Vs10xx::adpcm_has_block ( void ) const
+{
+  uint16_t count = ADPCM_BLOCK_ALIGN >> 1;
+  uint16_t fill = sci_read ( SCI_REG_RECFILL );
+  return ( fill >= count );
+}
+
 bool Vs10xx::adpcm_read_block ( uint8_t *buf )
 {
-	uint16_t fill, w;
-	uint16_t count = ADPCM_BLOCK_ALIGN / 2;
+	uint16_t count = ADPCM_BLOCK_ALIGN >> 1;
 	uint16_t pos = 0;
 
-	/* Check for buffer fill to be good */
-	fill = sci_read ( SCI_REG_RECFILL );
+	// Check for buffer fill to be good 
+	uint16_t fill = sci_read ( SCI_REG_RECFILL );
 
-	if ( fill >= 896 ) {
-		/* To avoid buffer aliasing */
+  if ( fill >= 896 ) {
+    // Buffer is too full and risk of aliasing is high
 		return false;
 	}
 
-	if ( fill < count ) {
-		/* No enough data in the buffer */
+  if ( fill < count ) {
+		// No enough data in the buffer 
 		return false;
 	}
 
-	/* Read exactly one block */
+	// Read exactly one block 
 	while ( count ) {
-		w = sci_read ( SCI_REG_RECDATA );
+		uint16_t w = sci_read ( SCI_REG_RECDATA );
 		buf[ pos++ ] = ( w >> 8 );
 		buf[ pos++ ] = ( w & 0xff );
 		count--;
@@ -324,8 +332,8 @@ bool Vs10xx::playback_start (void)
 
   bool res = vs_playback_start ();
   if ( !res ) {
-	/* Something went wrong */
-	suspend ();
+	  /* Something went wrong */
+	  suspend ();
   }
 
   return res;
@@ -352,10 +360,10 @@ bool Vs10xx::adpcm_record_start( uint16_t sample_rate, uint8_t gain, bool highpa
 
   bool res = vs_adpcm_rec_start ( sample_rate, gain, highpass_filter );
   if ( !res ) {
-	/* Something went wrong.
-	 * Return to power-saving mode
-	 */
-	suspend ();
+	  /* Something went wrong.
+	   * Return to power-saving mode
+	   */
+	  suspend ();
   }
 
   return res;
@@ -373,22 +381,22 @@ void Vs10xx::adpcm_record_stop ( void )
 \*-----------------------------------------------------------------------*/
 void Vs10xx::sci_select ( void )
 {
-  digitalWrite ( VS_PIN_XCS, LOW );
+  DS::Pins::drive_low( VS_PIN_XCS );
 }
 
 void Vs10xx::sci_unsel ( void )
 {
-  digitalWrite ( VS_PIN_XCS, HIGH );
+  DS::Pins::drive_high( VS_PIN_XCS );
 }
 
 void Vs10xx::sdi_select ( void )
 {
-  digitalWrite ( VS_PIN_XDCS, LOW );
+  DS::Pins::drive_low( VS_PIN_XDCS );
 }
 
 void Vs10xx::sdi_unsel ( void )
 {
-  digitalWrite ( VS_PIN_XDCS, HIGH );
+  DS::Pins::drive_high( VS_PIN_XDCS );
 }
 
 /*-----------------------------------------------------------------------*\
@@ -402,7 +410,7 @@ bool Vs10xx::process_patches ( void )
   /* TODO: Use revision until checksum is not implemented */
   res = ( pgm_read_word_far ( &rom->revision ) == VS_PATCH_ROM_REVISION );
   if (!res)
-	return false;
+	  return false;
 
   res = vs_process_patches ();
   return res;
@@ -415,13 +423,13 @@ patch_rom_get_data ( vs_patch_rom_t *rom, uint8_t pos )
   int instr_count;
 
   if (pos > patch_count)
-	return NULL;
+	  return nullptr;
 
   uint8_t *buff = (uint8_t *)rom->patch_data;
 
   for (uint8_t i=0; i< pos; i++) {
-	instr_count = pgm_read_word_far (&((vs_patch_data_t *)buff)->count);
-	buff += (sizeof(vs_patch_data_t) + (instr_count-1) * sizeof(vs_sci_instr_t));
+	  instr_count = pgm_read_word_far (&((vs_patch_data_t *)buff)->count);
+	  buff += (sizeof(vs_patch_data_t) + (instr_count-1) * sizeof(vs_sci_instr_t));
   }
   return (vs_patch_data_t *)buff;
 }
@@ -429,15 +437,15 @@ patch_rom_get_data ( vs_patch_rom_t *rom, uint8_t pos )
 bool Vs10xx::patch_apply( vs_patch_t *patch, vs_patch_state_t *state )
 {
   vs_sci_instr_t instr, *pinstr;
-  vs_patch_nir_t nir;
+  vs_patch_result_t nir;
   uint8_t index = 0;
 
-  while ( ( nir = (*patch->next_instr) ( patch, &instr ) ) != VS_PNIR_EOP ) {
-	if ( nir == VS_PNIR_ERR )	/* error */
+  while ( ( nir = (*patch->next_instr) ( patch, &instr ) ) != VS_PRES_EOP ) {
+	if ( nir == VS_PRES_ERR )	/* error */
 	  return false;
 
-	if ( nir == VS_PNIR_OK )
-	  sci_write( instr.reg, instr.data );
+	if ( nir == VS_PRES_OK )
+	  sci_write ( instr.reg, instr.data );
   }
 
   /*
@@ -445,9 +453,9 @@ bool Vs10xx::patch_apply( vs_patch_t *patch, vs_patch_state_t *state )
    * Check if the patch requires activations steps
    */
   while ( patch->act.num_instr && index < patch->act.num_instr ) {
-	/* Send next activation command */
-	pinstr = &patch->act.instr[ index++ ];
-	sci_write( pinstr->reg, pinstr->data );
+	  /* Send next activation command */
+	  pinstr = &patch->act.instr[ index++ ];
+	  sci_write ( pinstr->reg, pinstr->data );
   }
 
   return true;
@@ -469,33 +477,33 @@ patch_file_parse_line( const char *line_text, vs_sci_instr_t *instr )
   return false;
 }
 
-static vs_patch_nir_t
+static vs_patch_result_t
 patch_file_next_instr( vs_patch_t *patch, vs_sci_instr_t *instr )
 {
   vs_patch_file_t *pfd = (vs_patch_file_t *)patch->user_data;
   String line;
 
   if (( pfd->flags & VS_EOF ) == 0) {
-	line = pfd->fp->readStringUntil( '\n' );
-	line.trim( );
+	  line = pfd->fp->readStringUntil( '\n' );
+	  line.trim( );
 
-	if( line.length( ) != 0 ) {
-	  if( line.startsWith( "#" ))
-		return VS_PNIR_SKIP;	/* comment line */
+	  if( line.length( ) != 0 ) {
+	    if( line.startsWith( "#" ))
+		    return VS_PRES_SKIP;	/* comment line */
 
-	  if (! patch_file_parse_line ( line.c_str(), instr ))
-		return VS_PNIR_ERR;
-	}
-	else if ( pfd->fp->available( ) == 0 )
-	  pfd->flags |= VS_EOF;
-	else
-	  return VS_PNIR_ERR; /* error occurred */
+	    if (! patch_file_parse_line ( line.c_str(), instr ))
+		    return VS_PRES_ERR;
+	  }
+	  else if ( pfd->fp->available( ) == 0 )
+	    pfd->flags |= VS_EOF;
+	  else
+	    return VS_PRES_ERR; /* error occurred */
   }
 
   if ( pfd->flags & VS_EOF )
-	return VS_PNIR_EOP;
+	  return VS_PRES_EOP;
 
-  return VS_PNIR_OK;
+  return VS_PRES_OK;
 }
 
 bool Vs10xx::patch_process_file ( const char *file_name, 
@@ -515,7 +523,7 @@ bool Vs10xx::patch_process_file ( const char *file_name,
   memset ( &patch_file, 0, sizeof( patch_file ));
 
   /* open file */
-  SDFile fp = card0.open (file_name, FILE_READ);
+  File fp = card0.open (file_name);
   if (! fp)
 	  return false;
 
@@ -537,7 +545,7 @@ bool Vs10xx::patch_process_file ( const char *file_name,
   return res;
 }
 
-static vs_patch_nir_t
+static vs_patch_result_t
 patch_rom_data_next_instr( pvs_patch_t patch, pvs_sci_instr_t instr )
 {
   vs_patch_data_t *data = (vs_patch_data_t *)patch->user_data;
@@ -545,14 +553,14 @@ patch_rom_data_next_instr( pvs_patch_t patch, pvs_sci_instr_t instr )
   uint16_t count = pgm_read_word_far ( &data->count );
 
   if ( patch->user_val >= count )
-	return VS_PNIR_EOP;
+	  return VS_PRES_EOP;
 
   src = &data->instr[ patch->user_val++ ];
 
   instr->reg = pgm_read_byte_far ( &src->reg );
   instr->data = pgm_read_word_far ( &src->data );
 
-  return VS_PNIR_OK;
+  return VS_PRES_OK;
 }
 
 bool Vs10xx::patch_process_rom ( vs_patch_rom_t *rom, 
@@ -572,18 +580,18 @@ bool Vs10xx::patch_process_rom ( vs_patch_rom_t *rom,
   memset ( &patch.act, 0, sizeof( patch.act ));
 
   if (! patch.user_data )
-	return false;
+	  return false;
 
   if ( init_func ) {
-	res = (*init_func) ( &patch, state );
+	  res = (*init_func) ( &patch, state );
   }
 
   if ( res ) {
-	res = /*(*handler_func)*/ patch_apply ( &patch, state );
+	  res = /*(*handler_func)*/ patch_apply ( &patch, state );
   }
 
   if ( end_func ) {
-	(*end_func) ( &patch, state );
+	  (*end_func) ( &patch, state );
   }
 
   return res;

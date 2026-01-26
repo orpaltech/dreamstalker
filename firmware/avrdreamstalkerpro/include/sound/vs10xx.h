@@ -32,19 +32,19 @@
 
 	/* SCI Registers */
 #define SCI_REG_MODE		0x00
-#define	 SM_DIFF		0			// Differential: 0 - normal in-phase audio, 1 - left channel inverted
+#define	 SM_DIFF		  0			// Differential: 0 - normal in-phase audio, 1 - left channel inverted
 #define	 SM_SETTOZERO	1			// Set to zero: 0 - right, 1 - wrong
-#define	 SM_RESET		2			// Soft reset: 1 - yes
+#define	 SM_RESET		  2			// Soft reset: 1 - yes
 /* NOTE: Bit 3 has device-specific meaning. Please, look into an appropriate device header file. */
 /* NOTE: Bit 4 has device-specific meaning. Please, look into an appropriate device header file. */
 #define  SM_TESTS 		5			// Allow SDI tests: 1 - allowed
 #define  SM_STREAM		6			// Stream mode: 1 - yes
 /* NOTE: Bit 7 has device-specific meaning. Please, look into an appropriate device header file. */
-#define  SM_DACT		8			// DCLK active edge: 0 - rising, 1 - falling
+#define  SM_DACT		  8			// DCLK active edge: 0 - rising, 1 - falling
 #define  SM_SDIORD		9			// SDI bit order: 0 - MSb first
-#define  SM_SDISHARE	10			// Share SPI chip select: 1 - yes
-#define  SM_SDINEW		11			// VS1002 native SPI modes: 1 - yes
-#define  SM_ADPCM		12			// ADPCM recording: 1 - active, 0 - disabled
+#define  SM_SDISHARE	10		// Share SPI chip select: 1 - yes
+#define  SM_SDINEW		11		// VS1002 native SPI modes: 1 - yes
+#define  SM_ADPCM		  12		// ADPCM recording: 1 - active, 0 - disabled
 /* NOTE: Bit 13 has device-specific meaning. Please, look into an appropriate device header file. */
 
 
@@ -52,23 +52,23 @@
 #define	 SS_APDOWN2		3
 #define	 SS_VER(reg)	(((reg) >> 4) & 0xF)
 
-#define SCI_REG_BASS		0x02
-#define SCI_REG_CLOCKF		0x03
+#define SCI_REG_BASS		    0x02
+#define SCI_REG_CLOCKF		  0x03
 #define SCI_REG_DECODETIME	0x04
-#define SCI_REG_AUDATA		0x05
-#define SCI_REG_WRAM		0x06
-#define SCI_REG_WRAMADDR	0x07
-#define SCI_REG_RECDATA		0x08
-#define SCI_REG_RECFILL		0x09
-#define SCI_REG_AIADDR		0x0A
-#define SCI_REG_VOL			0x0B
-#define SCI_REG_AICTRL0		0x0C
-#define SCI_REG_AICTRL1		0x0D
-#define SCI_REG_AICTRL2		0x0E
-#define SCI_REG_AICTRL3		0x0F
+#define SCI_REG_AUDATA		  0x05
+#define SCI_REG_WRAM		    0x06
+#define SCI_REG_WRAMADDR	  0x07
+#define SCI_REG_RECDATA		  0x08
+#define SCI_REG_RECFILL		  0x09
+#define SCI_REG_AIADDR		  0x0A
+#define SCI_REG_VOL			    0x0B
+#define SCI_REG_AICTRL0		  0x0C
+#define SCI_REG_AICTRL1		  0x0D
+#define SCI_REG_AICTRL2		  0x0E
+#define SCI_REG_AICTRL3		  0x0F
 
 #define AICTRL1_GAIN(gain)	((1024UL * (gain)) & 0xFFFF)
-#define AICTRL1_AGC			0
+#define AICTRL1_AGC			    0
 
 
 namespace VLSI {
@@ -98,13 +98,13 @@ typedef struct s_vs_patch_activation {
 	uint8_t	num_instr;
 } vs_patch_activation_t, *pvs_patch_activation_t;
 
-typedef enum e_vs_patch_nir {
-	VS_PNIR_ERR = 0,
-	VS_PNIR_OK = 1,
-	VS_PNIR_SKIP = 2,
-	VS_PNIR_EOP = 3,
-} vs_patch_nir_t;
-typedef vs_patch_nir_t (*pfnvs_patch_next_instr)(pvs_patch_t, pvs_sci_instr_t);
+typedef enum e_vs_patch_result {
+	VS_PRES_ERR = 0,
+	VS_PRES_OK = 1,
+	VS_PRES_SKIP = 2,
+	VS_PRES_EOP = 3,
+} vs_patch_result_t;
+typedef vs_patch_result_t (*pfnvs_patch_next_instr)(pvs_patch_t, pvs_sci_instr_t);
 
 struct s_vs_patch {
 	void		*user_data;
@@ -149,6 +149,7 @@ public:
   bool	adpcm_record_start ( uint16_t sample_rate, uint8_t gain, bool highpass_filter );
   void	adpcm_record_stop ( void );
   bool  adpcm_read_block( uint8_t *buff );
+  bool  adpcm_has_block ( void ) const;
 
   bool	process_patches ( void );
 
@@ -194,19 +195,19 @@ protected:
 protected:
 
   static bool patch_process_file (const char *patch_file, 
-							pvs_patch_state_t state,
-							/*pfnvs_patch_handler handler_func,*/
-							pfnvs_patch_init init_func, 
-							pfnvs_patch_end end_func);
+                                pvs_patch_state_t state,
+                                /*pfnvs_patch_handler handler_func,*/
+                                pfnvs_patch_init init_func, 
+                                pfnvs_patch_end end_func);
 
   static bool patch_process_rom (vs_patch_rom_t *rom, 
-  							uint8_t patch_position, 
-							pvs_patch_state_t state,
-							/*pfnvs_patch_handler handler_func,*/
-							pfnvs_patch_init init_func, 
-							pfnvs_patch_end end_func);
+  							                uint8_t patch_position, 
+                                pvs_patch_state_t state,
+                                /*pfnvs_patch_handler handler_func,*/
+                                pfnvs_patch_init init_func, 
+                                pfnvs_patch_end end_func);
 private:
-  static bool patch_apply ( vs_patch_t *patch, vs_patch_state_t *state );
+  static bool patch_apply (vs_patch_t *patch, vs_patch_state_t *state);
 };
 
 /*-----------------------------------------------------------------------*/

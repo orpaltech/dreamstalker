@@ -18,11 +18,20 @@ public:
     explicit QRemDDataFileSourceThread(const QString& dataFileName, QObject *parent = nullptr);
     ~QRemDDataFileSourceThread();
 
+    enum class DataFileType { None, SampleHex, SampleBin, Epochs };
+
 signals:
     void dataSamplesReady(const QByteArray& samples);
+    void logHeaderParsed(quint8 profileId);
 
 private:
-    QFile *m_dataFile;
+    quint16 readSampleHex();
+    quint16 readSampleBin();
+
+private:
+    DataFileType    m_fileType;
+    QFile           *m_dataFile;
+    int             m_profileId;
 };
 
 /****************************************************/
@@ -35,15 +44,16 @@ public:
     ~QRemDDataFileSource();
 
 // QRemDDataSource
-    virtual bool start(QIODevice *destDevice);
+    virtual bool start(QIODevice *outputDevice);
     virtual void stop();
 
 public slots:
     void handleDataSamples(const QByteArray& samples);
+    void handleLogHeaderParsed(quint8 profileId);
 
 private:
     QRemDDataFileSourceThread *m_workerThread;
-    QIODevice *m_destDevice;
+    QIODevice *m_outputDevice;
 };
 
 #endif // REMDDATAFILESOURCE_H

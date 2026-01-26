@@ -2,7 +2,7 @@
  * This file is part of the AVR Dreamstalker software
  * (https://github.com/orpaltech/dreamstalker).
  *
- * Copyright (c) 2013-2025	ORPAL Technologies, Inc.
+ * Copyright (c) 2013-2026	ORPAL Technologies, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,8 +31,8 @@
 #include "ds_rtclock.h"
 #include "ds_config.h"
 #include "ds_util.h"
-#include "sound/ds_tonegen.h"
 #include "sound/pwm_notes.h"
+#include "sound/ds_tonegen.h"
 
 using namespace DS;
 
@@ -116,17 +116,18 @@ ISR(TIMER2_COMP_vect) // interrupt
 ISR(TIMER4_COMPA_vect) // interrupt
 #endif
 {
-  tonegen.handle_isr();
+  Tonegen::get()->handle_isr();
 }
 
 /*-----------------------------------------------------------------------*/
 
 char Tonegen::melody_get_char (void)
 {
-  if ( melody.storage_mode == TGS_FLASH )
+  if ( melody.storage_mode == TGS_FLASH ) {
     return pgm_read_byte_far ( melody.buffer );
-  else
+  } else {
 	return *melody.buffer;	// direct access
+  }
 }
 
 /*-----------------------------------------------------------------------*/
@@ -203,21 +204,41 @@ void tone_off (void)
   OCR1A = 0;
 }
 
+static 
+void tone_set_volume(uint8_t volume)
+{
+  if (volume == 0) {
+    tone_off();
+    return;
+  }
+  if (volume > 9)
+  	volume = 9;
+
+  // Calculate weight: 2^1 = 2, 2^9 = 512
+  // Bit shifting (1 << volume) is much faster on ATmega than a power function
+  uint16_t weight = (1 << volume); 
+
+  uint32_t max_physical = ICR1 / 2;
+  
+  // Use 32-bit math for the multiplication to prevent overflow before division
+  OCR1A = (uint16_t)((max_physical * weight) / 512);
+}
+
 static
-void tone_on (uint8_t note, uint8_t octave)
+void tone_on (uint8_t note, uint8_t octave, uint8_t volume)
 {
   if( PAUSE == note ) {
 	/* pause, no sound */
 	return;
   }
 
-  /* generate tone */
-  OCR1A = Maths::pow_u16 ( 2, config.get_volume_level () );
-
   /* set frequency */
   /* Fpwm = Fcpu/(2*Prescaler*TOP) */
   /* TOP = Fcpu/(2*Prescaler*Fpwm) */
   ICR1 = pgm_read_word_far ( notes + ( octave - 2 ) * 12 + note );
+
+  /* generate tone */
+  tone_set_volume (volume);
 }
 
 static
@@ -230,12 +251,18 @@ uint16_t whole_duration_ms (uint16_t bpm)
 Tonegen tonegen;
 
 /*-----------------------------------------------------------------------*/
+Tonegen *Tonegen::get()
+{
+  return &tonegen;
+}
+
+/*-----------------------------------------------------------------------*/
 void Tonegen::handle_isr()
 {
 	tonegen.irq_handler();
 }
 
-void Tonegen::beep (uint16_t millisec, uint8_t note, uint8_t octave)
+void Tonegen::beep (uint32_t millisec, uint8_t note, uint8_t octave, uint8_t volume)
 {
   if (is_playing ())
 	return;
@@ -245,7 +272,10 @@ void Tonegen::beep (uint16_t millisec, uint8_t note, uint8_t octave)
 
   melody_on ();
 
-  tone_on (note, octave);
+  tone_on (note, octave, volume);
+
+  // Initialize variable for fade effects
+  tone_icr_base = ICR1;
 }
 
 bool Tonegen::play_melody (tonegen_piece_t piece, uint8_t repeat_count)
@@ -374,7 +404,8 @@ bool Tonegen::is_playing (void)
   bool playing;
 
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-	playing = melody.count > 0;
+
+	playing = melody.count != 0;
   }
   return playing;
 }
@@ -382,14 +413,63 @@ bool Tonegen::is_playing (void)
 void Tonegen::stop (void)
 {
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+
 	stop_unsafe ();
   }
 }
 
+void Tonegen::set_intensity (uint16_t intensity, uint16_t max_intensity)
+{
+  if (intensity == 0) {
+    tone_off();
+    return;
+  }
+
+  uint32_t progress = ((uint32_t)intensity * 1024) / max_intensity;
+  uint8_t volume = config.get_sound_hints_volume();
+  
+  // 1. STABLE BASE PITCH
+  // We stay on the root note to avoid the "bomber" effect
+  uint16_t base_icr = tone_icr_base;
+
+  // 2. VIBRATO MATH (The Shimmer)
+  // We use a simple triangle wave oscillation
+  static int8_t vib_step = 0;
+  static bool vib_dir = true;
+    
+  // Update vibrato direction
+  if (vib_dir) vib_step++; 
+  else vib_step--;
+  if (vib_step >= 5) vib_dir = false; 
+  else if (vib_step <= -5) vib_dir = true;
+
+  // Scale vibrato depth by brightness (shimmer more when brighter)
+  // At max brightness, it wobbles by +/- 5 units of ICR
+  int16_t current_vibrato = (vib_step * (int16_t)progress) / 1024;
+    
+  ICR1 = base_icr + current_vibrato;
+
+  // 3. ULTRA-QUIET VOLUME (Cubic)
+  uint16_t floor = tone_icr_base / 1000; 
+  uint16_t ceiling = (tone_icr_base * volume) / 600; 
+
+  uint32_t curve = (progress * progress) >> 10;
+  curve = (curve * progress) >> 10;
+  uint32_t target_vol = floor + ((curve * (ceiling - floor)) >> 10);
+
+  // 4. SMOOTH VOLUME RAMP
+  if (OCR1A < target_vol)      OCR1A++;
+  else if (OCR1A > target_vol) OCR1A--;
+
+  if (OCR1A >= (ICR1 / 2))
+  	OCR1A = (ICR1 / 2) - 1;
+
+}
+
 void Tonegen::init (void)
 {
-  pinMode ( PIN_SOUND, OUTPUT );	/* output */
-  digitalWrite ( PIN_SOUND, LOW );	/* set low */
+  Pins::set_out ( PIN_SOUND );	/* output */
+  Pins::drive_low ( PIN_SOUND );
 
 #ifdef __AVR_ATmega128__
   /* Disable Timer/Counter 1 interrupts */
@@ -508,7 +588,7 @@ void Tonegen::irq_handler (void)
 	if (melody_get_char () == ',' || melody_get_char () == '|')
 	  melody.buffer++;
 
-	tone_on(note, octave);
+	tone_on(note, octave, config.get_volume_level ());
   }
 
   if (++melody.ticks >= melody.duration) {
@@ -525,9 +605,9 @@ void Tonegen::irq_handler (void)
 
 void Tonegen::stop_unsafe (void)
 {
-  if (melody.count > 0) {
+  if (melody.count != 0) {
 	/*
-	 * Tonegen is playing melody 
+	 * Tonegen is playing 
 	 */
 	tone_off ();
 	melody_off ();

@@ -22,7 +22,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-
+#include <time.h>
 
 /*-----------------------------------------------------------------------*/
 namespace DS {
@@ -36,7 +36,10 @@ typedef enum e_rtc_oper_mode {
 typedef enum e_rtc_setup_mode {
 	RTC_SETUP_NONE	= 0,
 	RTC_SETUP_HOUR,
-	RTC_SETUP_MINUTE
+	RTC_SETUP_MINUTE,
+  RTC_SETUP_YEAR,
+  RTC_SETUP_MONTH,
+  RTC_SETUP_MDAY
 } rtc_setup_mode_t;
 
 /*-----------------------------------------------------------------------*/
@@ -57,11 +60,14 @@ public:
   /* Show/hide clock on display */
   void show (void);
   void hide (void);
-  bool is_visible (void);
+  void show_unsafe (void);
+  void hide_unsafe (void);
+  bool is_visible (void) const;
 
   void set_setup (rtc_setup_mode_t mode);
-  bool is_setup (void);
-  rtc_setup_mode_t get_setup (void);
+  rtc_setup_mode_t get_setup (void) const;
+  rtc_setup_mode_t next_setup (void);
+  bool is_setup (void) const;
   /* decrement if sign < 0, otherwise increment */
   void setup_inc (int sign);
 
@@ -82,12 +88,20 @@ public:
 
   void wait (uint32_t num_ticks);
 
+  void backup_current_time (void);
+
+public:
+  /* Must be called in the main application loop */
+  void process_task (void);
+
 public:
   static uint32_t msec_to_ticks (uint32_t ms);
 
   /* RTC interrupt interval, in microseconds */
   static uint32_t isr_period_us (void);
   static uint32_t isr_period_ms (void);
+
+  static void fat_datetime(uint16_t *date, uint16_t *time);
 
   /* Intended for use in ISR. Do not call it directly! */
   static void handle_isr (void);
@@ -98,15 +112,15 @@ private:
   void flag_set (uint16_t flag);
   void flag_unset (uint16_t flag); 
   void flag_toggle (uint16_t flag);
-  bool flag_is_set (uint16_t flag);
+  bool flag_is_set (uint16_t flag) const;
 
-  void display (int hour, int minute, uint8_t flags);
+  void display (unsigned hour, unsigned minute, uint8_t flags);
+  void display_year (struct tm *ptm);
+  void display_month (struct tm *ptm);
+  void display_mday (struct tm *ptm);
 
 private:
   typedef struct s_rtc_context {
-    uint8_t hour : 5;
-    uint8_t minute : 6;
-    uint8_t second : 6;
     /* Internal tick counters */
     uint16_t ticks_second;
     uint8_t ticks_setup;
@@ -123,11 +137,13 @@ private:
     /* Global operation mode */
     uint8_t op_mode : 2;
     /* Clock setup mode */
-    uint8_t setup_mode : 2;
+    uint8_t setup_mode : 3;
     uint8_t ticks_display : 6;
   } rtc_context_t;
 
   volatile rtc_context_t rtc;
+
+  unsigned long backup_stamp;
 };
 
 /*-----------------------------------------------------------------------*/

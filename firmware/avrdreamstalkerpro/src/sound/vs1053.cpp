@@ -121,36 +121,72 @@ bool Vs1053::vs_playback_start ( void )
 
 void Vs1053::vs_playback_stop ( void )
 {
+  // Read the endFillByte from VS1053 WRAM
+  // The address 0x1e06 is the official location for the fill byte
+  sci_write ( SCI_REG_WRAMADDR, 0x1e06 );
+  uint16_t fill_val = sci_read ( SCI_REG_WRAM ) & 0xFF;
+  uint8_t fill_byte = (uint8_t)fill_val;
+
+  // Send 2052 bytes of endFillByte to SDI
+  // This pushes the "real" audio out of the internal DAC FIFO
+  uint8_t buffer[SDI_BLOCK_LEN];
+  memset ( buffer, fill_byte, SDI_BLOCK_LEN);
+    
+  for (uint16_t i = 0; i < 65; i++) { // 65 * 32 = 2080 bytes
+    sdi_write(buffer);
+  }
+
+  // Set SM_CANCEL bit
+  sci_add ( SCI_REG_MODE, _BV(SM_CANCEL));
+
+  // Send fill bytes while SM_CANCEL is still high
+  // The chip clears SM_CANCEL when it has successfully aborted
+  uint8_t timeout = 0;
+  while (sci_is_set (SCI_REG_MODE, _BV(SM_CANCEL)) && timeout < 50) {
+    sdi_write(buffer);
+    _delay_ms(1);
+    timeout++;
+  }
+
+  // If it didn't cancel, do a soft reset
+  if (timeout >= 50) {
+    soft_reset ( 0, 0 );
+  }
 }
 
 bool Vs1053::vs_adpcm_rec_start ( uint16_t sample_rate, uint8_t gain, bool highpass_filter )
 {
+  // Configure Clock (Multiplier 4.5x)
   set_clockf ( SC_MULT_4P5, SC_ADD_0 );
 
   sci_write ( SCI_REG_AICTRL0, sample_rate );
 
-  /* Set linear recording gain control, 1024 is equal to gain 1, 512 - gain 0.5, etc.
-   *	The maximum value 65535, i.e.0xFFFF, is equal to gain 64.
-   *	Write 0 to use automatic gain control (AGC)
-   */
-  sci_write ( SCI_REG_AICTRL1, AICTRL1_GAIN(gain) );
+  // 3. Gain & AGC Protection
+  if ( gain == 0 ) {
+    // Use Automatic Gain Control (AGC)
+    sci_write ( SCI_REG_AICTRL1, AICTRL1_AGC );
 
-  /* SCI_AICTRL2 controls the maximum AGC gain. This can be used to limit the amplification of
-   *	noise when there is no signal. 
-   *	If SCI_AICTRL2 is 0, the maximum gain is initialized to 65535 (64), i.e. whole range is used.
-   */
-  if (gain == 0) {
-	sci_write ( SCI_REG_AICTRL2, AICTRL1_GAIN(4) );	/* if GAIN = 0, define max auto gain */
+    /* Set Maximum AGC Gain Ceiling (AICTRL2)
+     * 0 = 64x (too loud, causes initial distortion/hiss)
+     * 1024 = 1x
+     * 4096 = 4x (Recommended: clear voice, low distortion)
+     */
+    sci_write ( SCI_REG_AICTRL2, AICTRL1_GAIN(4) ); 
+
   } else {
-	sci_write ( SCI_REG_AICTRL2, 0 );
+    /* Set linear recording gain control, 1024 is equal to gain 1, 512 - gain 0.5, etc.
+     *	The maximum value 65535, i.e.0xFFFF, is equal to gain 64.
+     *	Write 0 to use automatic gain control (AGC)
+     */
+    sci_write ( SCI_REG_AICTRL1, AICTRL1_GAIN(gain) );
+    sci_write ( SCI_REG_AICTRL2, 0 ); // Ignored
   }
 
-  /* SCI_AICTRL3 flags */
+  // Format selection
   sci_write ( SCI_REG_AICTRL3, AICTRL3_IMA_ADPCM | AICTRL3_LEFT_CH );
 
-  /* NOTE: DO NOT set the software reset bit. The patch below will do it. */
-  //sci_add ( SCI_REG_MODE, _BV(SM_ADPCM) );
-  soft_reset ( _BV(SM_ADPCM), 0 );
+  // NOTE: DO NOT set the software reset bit. The patch below will do it
+  soft_reset ( _BV(SM_ADPCM), _BV(SM_LINE1) );
 
   /* This patch rewrites the SRC interrupt vector and restarts the firmware, so the patch 
    *	must be loaded after the encoding parameters have been set in AICTRL0.. AICTRL3, 
@@ -169,17 +205,15 @@ void Vs1053::vs_adpcm_rec_stop ( void )
 
 void Vs1053::set_clockf ( uint16_t mult, uint16_t add )
 {
-  uint16_t val;
+  uint16_t val = 0;
 
   if (VS_XTAL_FREQ >= 24000000) {
-	sci_add ( SCI_REG_MODE, _BV(SM_CLK_RANGE));
+	  sci_add ( SCI_REG_MODE, _BV(SM_CLK_RANGE));
   }
 
   /* Set freq in case if NOT the default XTAL is used */
   if (VS_XTAL_FREQ != VS1053_XTAL_FREQ)
- 	val |= SC_FREQ(VS_XTAL_FREQ);
-  else 
-	val = 0;
+ 	  val |= SC_FREQ(VS_XTAL_FREQ);
 
   val |= mult;
   val |= add;

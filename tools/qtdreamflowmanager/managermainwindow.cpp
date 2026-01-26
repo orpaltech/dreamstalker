@@ -1,16 +1,18 @@
-#include "managermainwindow.h"
-#include "ui_managermainwindow.h"
-#include "commsettingsdialog.h"
-#include "capturesettingsdialog.h"
-#include "remddatawidget.h"
-#include "remddatafilesource.h"
-#include "remddataserialsource.h"
-
 #include <QLabel>
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QStandardPaths>
 #include <QHostInfo>
+#include <QToolButton>
+
+#include "managermainwindow.h"
+#include "ui_managermainwindow.h"
+#include "commsettingsdialog.h"
+#include "capturesettingsdialog.h"
+#include "remdepochswidget.h"
+#include "remdsampleswidget.h"
+#include "remddatafilesource.h"
+#include "remddataserialsource.h"
 
 
 /****************************************************/
@@ -18,7 +20,7 @@
 QManagerMainWindow::QManagerMainWindow(QWidget *parent)
     : QMainWindow(parent)
     , m_ui(new Ui::ManagerMainWindow)
-    , m_dataWidget(nullptr)
+    , m_activeWidget(nullptr)
     , m_commSettings(new QCommSettingsDialog(this))
     , m_captureSettings(new QCaptureSettingsDialog(this))
     , m_serialPort(new QSerialPort(this))
@@ -26,6 +28,15 @@ QManagerMainWindow::QManagerMainWindow(QWidget *parent)
     , m_status(new QLabel)
 {
     m_ui->setupUi(this);
+
+    QMenu *popupMenu = new QMenu(this);
+    popupMenu->addAction(m_ui->dropdownVisualSamplesFromFile);
+    popupMenu->addAction(m_ui->dropdownVisualEpochsFromFile);
+    QToolButton *btn = qobject_cast<QToolButton*>(m_ui->toolBar->widgetForAction(m_ui->dropdownVisualFromFile));
+    if (btn) {
+        btn->setMenu(popupMenu);
+        btn->setPopupMode(QToolButton::InstantPopup);
+    }
 
     m_ui->actionCaptureStart->setEnabled(true);
     m_ui->actionCaptureStop->setEnabled(false);
@@ -41,7 +52,7 @@ QManagerMainWindow::QManagerMainWindow(QWidget *parent)
 QManagerMainWindow::~QManagerMainWindow()
 {
     /* NOTE: avoid autodelete because signal/slot call fails */
-    deleteDataWidget();
+    deleteActiveWidget();
 
     delete m_ui;
 }
@@ -51,77 +62,97 @@ void QManagerMainWindow::onDataSourceStopped(int error, const QString& message)
     if (error != 0)
         QMessageBox::critical(this, tr("Critical Error"), message);
 
-    m_ui->actionVisualLoadFromDevice->setChecked(false);
+    m_ui->actionVisualSamplesFromDevice->setChecked(false);
 
     closeSerialPort();
 }
 
-void QManagerMainWindow::deleteDataWidget()
+void QManagerMainWindow::deleteActiveWidget()
 {
-    if (m_dataWidget) {
-        m_ui->verticalLayout->removeWidget(m_dataWidget);
-        delete m_dataWidget;
-        m_dataWidget = nullptr;
+    if (m_activeWidget) {
+        m_ui->verticalLayout->removeWidget(m_activeWidget);
+        delete m_activeWidget;
+        m_activeWidget = nullptr;
     }
 }
 
-void QManagerMainWindow::createDataWidget(QRemDDataSource *dataSource)
+void QManagerMainWindow::createSamplesWidget(QRemDDataSource *dataSource)
 {
-    QRemDDataWidget *dataWidget;
-    dataWidget = new QRemDDataWidget(dataSource);
-    if (m_dataWidget) {
-        m_ui->verticalLayout->replaceWidget(m_dataWidget, dataWidget);
-        delete m_dataWidget;
-    } else {
-        m_ui->verticalLayout->addWidget(dataWidget);
-    }
-    m_dataWidget = dataWidget;
+    deleteActiveWidget();
+
+    m_activeWidget = new QRemDSamplesWidget(dataSource);
+    m_ui->verticalLayout->addWidget(m_activeWidget);
     m_ui->actionVisualToggleChart->setChecked(true);
-    m_dataWidget->show();
+    m_activeWidget->show();
 }
 
-void QManagerMainWindow::loadDataFromFile()
+void QManagerMainWindow::createEpochsWidget(QRemDDataSource *dataSource)
 {
-    const QCaptureSettingsDialog::Settings c = m_captureSettings->settings();
+    deleteActiveWidget();
 
-    QString dataFileName = QFileDialog::getOpenFileName(this,
-                                                        tr("Select REMD Data File"),
-                                                        c.captureDirectory,
-                                                        tr("REMD Data Files (*.remd)"));
+    m_activeWidget = new QRemDEpochsWidget(dataSource);
+    m_ui->verticalLayout->addWidget(m_activeWidget);
+    m_ui->actionVisualToggleChart->setChecked(true);
+    m_activeWidget->show();
+}
+
+void QManagerMainWindow::loadSamplesFromFile()
+{
+    const QCaptureSettingsDialog::Settings cs = m_captureSettings->settings();
+    QString dataFileName;
+
+    dataFileName = QFileDialog::getOpenFileName(this, tr("Select REMD Sample File"),
+                                                cs.captureDirectory,
+                                                tr("REMD Sample Files (*.hex *.HEX);;REMD Bin Files (*.bin *.BIN)"));
     if (dataFileName.isEmpty())
         return;
 
     QRemDDataSource *dataSource = new QRemDDataFileSource(dataFileName);
-    createDataWidget(dataSource);
+    createSamplesWidget(dataSource);
 }
 
-void QManagerMainWindow::loadDataFromDevice()
+void QManagerMainWindow::loadEpochsFromFile()
 {
-    if (m_ui->actionVisualLoadFromDevice->isChecked()) {
+    const QCaptureSettingsDialog::Settings cs = m_captureSettings->settings();
+    QString dataFileName;
+
+    dataFileName = QFileDialog::getOpenFileName(this, tr("Select REMD Epoch File"),
+                                                cs.captureDirectory,
+                                                tr("REMD Epoch Files (*.dat *.DAT)"));
+    if (dataFileName.isEmpty())
+        return;
+
+    QRemDDataSource *dataSource = new QRemDDataFileSource(dataFileName);
+    createEpochsWidget(dataSource);
+}
+
+void QManagerMainWindow::loadSamplesFromSerial()
+{
+    if (m_ui->actionVisualSamplesFromDevice->isChecked()) {
         if (!openSerialPort()) {
-            m_ui->actionVisualLoadFromDevice->setChecked(false);
+            m_ui->actionVisualSamplesFromDevice->setChecked(false);
             return;
         }
 
         QRemDDataSource *dataSource = new QRemDDataSerialSource(m_serialPort);
-        createDataWidget(dataSource);
+        createSamplesWidget(dataSource);
 
         connect(dataSource, &QRemDDataSource::dataSourceStopped, this, &QManagerMainWindow::onDataSourceStopped,
                 (Qt::ConnectionType)(Qt::DirectConnection | Qt::SingleShotConnection));
     } else {
-        deleteDataWidget();
+        deleteActiveWidget();
     }
 }
 
-void QManagerMainWindow::toggleDataChart()
+void QManagerMainWindow::toggleActiveWidget()
 {
-    if (!m_dataWidget)
+    if (m_activeWidget == nullptr)
         return;
 
     if (m_ui->actionVisualToggleChart->isChecked())
-        m_dataWidget->show();
+        m_activeWidget->show();
     else
-        m_dataWidget->hide();
+        m_activeWidget->hide();
 }
 
 bool QManagerMainWindow::openSerialPort()
@@ -230,9 +261,9 @@ void QManagerMainWindow::onSerialError(QSerialPort::SerialPortError error)
 
 void QManagerMainWindow::about()
 {
-    QMessageBox::about(this, tr("About Dreamstalker Manager"),
-                       tr("The <b>Dreamstalker Manager</b> application allows for "
-                          "controlling and managing Dreamstalker devices."));
+    QMessageBox::about(this, tr("About DreamFlow Device Manager"),
+                       tr("The <b>DreamFlow Device Manager</b> application allows for "
+                          "controlling and managing DreamFlow-family devices."));
 }
 
 void QManagerMainWindow::initActionsConnections()
@@ -242,9 +273,12 @@ void QManagerMainWindow::initActionsConnections()
     connect(m_ui->actionQuit, &QAction::triggered, this, &QManagerMainWindow::close);
     connect(m_ui->actionCommSettings, &QAction::triggered, m_commSettings, &QCommSettingsDialog::show);
     connect(m_ui->actionCaptureSettings, &QAction::triggered, m_captureSettings, &QCaptureSettingsDialog::show);
-    connect(m_ui->actionVisualToggleChart, &QAction::triggered, this, &QManagerMainWindow::toggleDataChart);
-    connect(m_ui->actionVisualLoadFromFile, &QAction::triggered, this, &QManagerMainWindow::loadDataFromFile);
-    connect(m_ui->actionVisualLoadFromDevice, &QAction::triggered, this, &QManagerMainWindow::loadDataFromDevice);
+    connect(m_ui->actionVisualToggleChart, &QAction::triggered, this, &QManagerMainWindow::toggleActiveWidget);
+    connect(m_ui->actionVisualSamplesFromFile, &QAction::triggered, this, &QManagerMainWindow::loadSamplesFromFile);
+    connect(m_ui->dropdownVisualSamplesFromFile, &QAction::triggered, this, &QManagerMainWindow::loadSamplesFromFile);
+    connect(m_ui->actionVisualEpochsFromFile, &QAction::triggered, this, &QManagerMainWindow::loadEpochsFromFile);
+    connect(m_ui->dropdownVisualEpochsFromFile, &QAction::triggered, this, &QManagerMainWindow::loadEpochsFromFile);
+    connect(m_ui->actionVisualSamplesFromDevice, &QAction::triggered, this, &QManagerMainWindow::loadSamplesFromSerial);
     connect(m_ui->actionAbout, &QAction::triggered, this, &QManagerMainWindow::about);
 }
 

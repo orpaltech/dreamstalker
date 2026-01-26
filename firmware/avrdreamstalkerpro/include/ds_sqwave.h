@@ -38,7 +38,6 @@ typedef enum e_sqw_transition {
 
 /*-----------------------------------------------------------------------*/
 typedef void (*SQWaveCB_Transition_t)(void *context, uint8_t slot, sqw_transition_t trans);
-typedef void (*SQWaveCB_Complete_t)(void *context, uint8_t slot);
 
 
 /*-----------------------------------------------------------------------*/
@@ -56,7 +55,7 @@ public:
   bool	is_active (uint8_t slot);
 
   /* Only for use in RTC ISR. Do not call it directly! */
-  static void handle_isr (void);
+  static void handle_rtc (void);
 
 private:
   typedef struct s_sqw_context {
@@ -66,7 +65,6 @@ private:
     uint8_t duty_cycle : 7;
     uint8_t active : 1;
     SQWaveCB_Transition_t pcb_transition;
-    SQWaveCB_Complete_t pcb_complete;
     void *context;
   } sqw_context_t;
 

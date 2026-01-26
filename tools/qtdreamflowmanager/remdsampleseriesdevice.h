@@ -1,5 +1,5 @@
-#ifndef REMDDATASERIESDEVICE_H
-#define REMDDATASERIESDEVICE_H
+#ifndef REMDSAMPLESERIESDEVICE_H
+#define REMDSAMPLESERIESDEVICE_H
 
 #include <QIODevice>
 #include <QList>
@@ -12,22 +12,22 @@ QT_FORWARD_DECLARE_CLASS(QXYSeries)
 
 /****************************************************/
 
-class QRemDDataSeriesDevice : public QIODevice
+class QRemDSampleSeriesDevice : public QIODevice
 {
     Q_OBJECT
 public:
-    explicit QRemDDataSeriesDevice(QXYSeries *series, QObject *parent = nullptr);
-    ~QRemDDataSeriesDevice();
+    explicit QRemDSampleSeriesDevice(QXYSeries *series, QObject *parent = nullptr);
+    ~QRemDSampleSeriesDevice();
 
     static constexpr int sampleCount = DATA_PKT_SIZE;
 
 protected:
-    virtual qint64 readData(char *data, qint64 maxlen);
-    virtual qint64 writeData(const char *data, qint64 len);
+    qint64 readData(char *data, qint64 maxlen) override;
+    qint64 writeData(const char *data, qint64 len) override;
 
 private:
     QXYSeries *m_series;
     QList<QPointF> m_buffer;
 };
 
-#endif // REMDDATASERIESDEVICE_H
+#endif // REMDSAMPLESERIESDEVICE_H

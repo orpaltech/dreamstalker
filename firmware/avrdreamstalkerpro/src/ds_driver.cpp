@@ -33,7 +33,7 @@
 #include "ds_appmenu.h"
 #include "ds_sqwave.h"
 #include "ds_vibro.h"
-#include "ds_leds.h"
+#include "ds_remhints.h"
 
 
 using namespace DS;
@@ -46,11 +46,11 @@ using namespace avr_core;
  */
 #define KEY_EXIT_SLEEP  KEY_POWER
 
-
 /*-----------------------------------------------------------------------*/
-static void key_tone ( void )
+static void key_tone (void)
 {
-  tonegen.beep ( 80, 3, 6 );
+  uint16_t duration = 80;
+  Tonegen::get()->beep ( duration, 3, 6, config.get_volume_level ());
 }
 
 
@@ -72,11 +72,13 @@ void Driver::wakeup_timer_callback (void *context)
   pdrv->on_wakeup_timer ();
 }
 
-void Driver::remd_callback(void *context, remd_event_type_t event)
+void Driver::remd_callback (void *context, remd_event_type_t event, uint16_t arg)
 {
   Driver *pdrv = static_cast<Driver *>(context);
 
-  pdrv->on_remd_event( event );
+  if ( event == REMD_STABLE_REM ) {
+    pdrv->on_remd_stable_rem( arg );
+  }
 }
 
 /*-----------------------------------------------------------------------*/
@@ -162,8 +164,13 @@ void Driver::process (void)
 
 bool Driver::begin (void)
 {
-  delay(600); /* Let power stabilize */
+  delay(500); /* Let power stabilize */
 
+  // Disable SD at very beginning
+  Pins::set_out(SS);
+  Pins::drive_high(SS);
+
+  // Initialize all subsystems
   RTClock::get()->init();
   Display::get()->init();
   Keyboard::get()->init ();
@@ -206,7 +213,7 @@ bool Driver::start (void)
    *            Most of the other components will NOT work 
    *            without it.
    */
-  RTClock::get()->start ( RTC_OPM_NORMAL );   /* Start real-time clock.*/ 
+  RTClock::get()->start( RTC_OPM_NORMAL );   /* Start real-time clock.*/ 
 
 
   disp->enable ();
@@ -214,7 +221,10 @@ bool Driver::start (void)
 
 
   /* SD-card initialization */
-  while (! card0.begin ()) {
+  SdFile::dateTimeCallback(RTClock::fat_datetime);
+  SdSpiConfig sd_spi(SS, SHARED_SPI, SD_SCK_MHZ(4));
+
+  while (! card0.begin (sd_spi)) {
 
     /* handle error */
     disp->message (__disp_msg_no_sd__, 1);
@@ -228,6 +238,7 @@ bool Driver::start (void)
 
    /* SD-card found */
   disp->message (__disp_msg_sd_0__, 1000);
+  
 
   do {
     if ( ! AudioCodec::get()->begin () ) {
@@ -268,17 +279,6 @@ bool Driver::start (void)
   } while ( false );
 
   Keyboard::get()->clear_events ();
-
-#if TEST_REMD
-  // create a new file
-  //const char *filename = "RECORDS/REMDSAMP.HEX";
-  const char *filename = "RECORDS/REMDSAMP.BIN";
-  if (card0.exists(filename))
-    card0.remove(filename);
-  remd_fp = card0.open (filename, FILE_WRITE);
-  if (! remd_fp)
-	  return false;
-#endif
 
   return success;
 }
@@ -347,6 +347,18 @@ void Driver::process (void)
     case ( KEY_CHECK ): {
       key_tone ();
 
+      // Temporarily use this button to stop REM detector
+      //stop_lucid_dream ();
+      String filepath;
+      Files::make_next_file_path(filepath, RECORDS_PATH, "MYREC", "WAV", 3);
+      
+      auto codec = AudioCodec::get();
+      if (codec->get_state() == AudioCodec::STATE_IDLE)
+        codec->capture (filepath.c_str());
+      else 
+        codec->stop ();
+
+
       /*if (tonegen.is_playing () )
         tonegen.stop ();
 
@@ -364,14 +376,6 @@ void Driver::process (void)
 
       }*/
 
-      /*if ( REMDetect::get()->is_running () ) {
-        REMDetect::get()->stop();
-
-      } else {
-        REMDetect::get()->start();
-
-      }*/
-
       break;
     }
 
@@ -380,32 +384,9 @@ void Driver::process (void)
   /*
    * Process different tasks
    */
+  RTClock::get()->process_task ();
+  REMDetect::get()->process_task ();
   AudioCodec::get()->process_task ();
-
-#if TEST_REMD
-  auto premd = REMDetect::get();
-  if (premd->file_buf_ready) {
-    if ( remd_fp ) {
-      // copy buffer and release it
-      memcpy( remd_buf, (const void *)premd->file_buf, 512 );
-      /*remd_buf[0] = '\0';
-      int index = 0;
-      while (index < 256) {
-        //sprintf(remd_hex, "%04X", premd->file_buf[index++]);
-        //Strings::hex_str (premd->file_buf[index++], remd_hex, 4);
-        String hex = Strings::hex_str (premd->file_buf[index++]);
-        strcat(remd_buf, hex.c_str() );
-      }*/
-    }
-    premd->file_buf_ready = false;
-
-    if ( remd_fp ) {
-      // write to SD card
-      //remd_fp.write(remd_buf);
-      remd_fp.write((const uint8_t*)remd_buf, 512);
-    }
-  }
-#endif
 
 }
 #endif
@@ -429,20 +410,58 @@ void Driver::on_alarm_clock (void)
 
 }
 
-void Driver::on_remd_event (remd_event_type_t event)
+void Driver::on_remd_stable_rem (uint16_t intensity)
 {
+  auto rtck = RTClock::get();
+
   // TODO: do actions on REM detected
   // серию вспышек и звуков во время сновидения
 
-  //Serial.println("EPOCH_RESULT: REM");
-  
-  //REMDetect::get()->stop_unsafe ();
+  // Trigger both eyes with a dream-inducing fade
+#if REMD_USE_CONFIG_BRIGHTNESS
+  intensity = Config::level_to_percent (config.get_light_hints_brightness ());
+#endif
+
+  REMHints::get()->start (intensity);
+  /*
+  // Parameters: LED, Limit (Intensity), Start, Inc, Period, Duty, Jitter, Count
+  uint32_t period = 5000;
+  uint8_t count = config.get_light_hints_duration ();
+  uint16_t jitter = 0;
+  uint8_t duty_cycle = Config::level_to_percent (config.get_hints_duty_cycle ());
+
+  Leds::get()->sync_with_tonegen (true, LED1);
+
+  Leds::get()->fade_rhythmic(LED1, intensity, 5, 2, period, duty_cycle, jitter, count);
+  Leds::get()->fade_rhythmic(LED2, intensity, 5, 2, period, duty_cycle, jitter, count);
+
+  Tonegen::get()->beep(period * count, 5, 4, 1);*/
+
+  // The "Gentle Probe"
+  // Ceiling: 20%, Start: 5%, Increment: 5%
+  // Period: 3.5s, Duty: 70%, Jitter: 4s, Pulses: 5
+  //Leds::get()->fade_rhythmic(LED1, 20, 5, 5, 3500, 70, 4000, 5);
+  //Leds::get()->fade_rhythmic(LED2, 20, 5, 5, 3500, 70, 4000, 5);
+
+  // The "Non-Rhythmic Breath"
+  // Ceiling: 15%, Start: 6%, Increment: 3%
+  // Period: 4s, Duty: 80%, Jitter: 10s, Pulses: 4
+  //Leds::get()->fade_rhythmic(LED1, 15, 6, 3, 4000, 80, 10000, 4);
+  //Leds::get()->fade_rhythmic(LED2, 15, 6, 3, 4000, 80, 10000, 4);
+
+  // The "Single-Step Morning"
+  // Ceiling: 12%, Start: 8%, Increment: 2%
+  // Period: 3s, Duty: 60%, Jitter: 5s, Pulses: 3
+  //Leds::get()->fade_rhythmic(LED1, 12, 8, 2, 3000, 60, 5000, 3);
+  //Leds::get()->fade_rhythmic(LED2, 12, 8, 2, 3000, 60, 5000, 3);
+
 
   /* Сheck if alarm clock is enabled */
   if (config.get_alarm_clock_enabled ()) {
     
-    RTClock::get()->alarm_clock_set (alarm_clock_callback, this);
+    rtck->alarm_clock_set (alarm_clock_callback, this);
   }
+
 }
 
 void Driver::wakeup_timer_toggle (void)
@@ -494,14 +513,8 @@ static volatile int8_t evt_id = -1;
 #define REMD_TIMEOUT_MIN  180UL
 static void stop_remd (void *context)
 {
-  Driver *prd = static_cast<Driver *>(context);
   REMDetect::get()->stop_unsafe ();
   evt_id = -1;
-
-  if (prd->remd_fp) {
-    prd->remd_fp.flush();
-    prd->remd_fp.close();
-  }
 }
 #endif
 
@@ -517,14 +530,27 @@ void Driver::handle_isr (void)
 
 void Driver::start_lucid_dream (void)
 {
-  if ( !REMDetect::get()->start_unsafe (
-                  remd_callback, this) ) {
+  auto remd = REMDetect::get();
+
+  if ( !remd->start_unsafe (remd_callback, this)) {
     return;
   }
 
 #if TEST_REMD
   /* Stop after REMD_TIMEOUT_MIN */
   evt_id = tmr.after(REMD_TIMEOUT_MIN * 60'000UL, stop_remd, this );
+#endif
+}
+
+void Driver::stop_lucid_dream (void)
+{
+  auto remd = REMDetect::get();
+
+  remd->stop();
+
+#if TEST_REMD
+  tmr.stop(evt_id);
+  evt_id = -1;
 #endif
 }
 

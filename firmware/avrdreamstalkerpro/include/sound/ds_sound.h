@@ -45,8 +45,8 @@ public:
   bool is_speaker_on() const;
 
   /* Enable/disable system microphone */
-  void mic_on (void);
-  void mic_off (void);
+  void microphone_on (void);
+  void microphone_off (void);
 
   /* Only for use in RTC ISR. Do not call it directly! */
   static void handle_isr (void);
