@@ -102,40 +102,16 @@ public:
       uint8_t duty_cycle		/* percent, normally 5-95 */
       );
 
-  /*void fade(led_id_t led, 
-      uint8_t max_brightness, // percent, 1-100
-      uint16_t ramp_ms,       // milliseconds
-      uint16_t min_wait_ms, 
-      uint16_t max_wait_ms,   // milliseconds
-      uint8_t count
-      );
-
-  void fade_rhythmic(led_id_t led, 
-      uint8_t  limit_br,      // User's Menu Setting (The Ceiling), percent, 0-100
-      uint8_t  start_br,      // Where the first pulse begins, percent, 0-100
-      uint8_t  increment_br,  // How much to grow per pulse
-      uint16_t period_ms, 
-      uint8_t  duty_cycle, 
-      uint16_t jitter_ms,     // Max extra random delay 
-      uint8_t  count
-      );*/
-
   bool is_led_busy(led_id_t led) const;
 
   void set_raw_ocr(led_id_t led, uint16_t ocr);
   void set_raw_ocr_top(led_id_t led);
-
-  /* Only for use in RTC ISR. Do not call it directly! */
-  //static void handle_rtc (void);
 
 protected:
   void on_sqw_transition(uint8_t slot, sqw_transition_t trans);
 
 private:
   static void sqw_transition_callback(void *context, uint8_t slot, sqw_transition_t trans);
-
-  //void update_faders();
-  //LedFader faders[NUM_LEDS]; // One internal fader per LED slot
 };
 
 /*-----------------------------------------------------------------------*/

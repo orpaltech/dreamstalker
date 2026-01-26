@@ -2,7 +2,7 @@
  * This file is part of the AVR Dreamstalker software
  * (https://github.com/orpaltech/dreamstalker).
  *
- * Copyright (c) 2013-2025	ORPAL Technologies, Inc.
+ * Copyright (c) 2013-2026	ORPAL Technologies, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -167,13 +167,6 @@ void led_pwm_set_ocr (led_id_t led, uint16_t ocr)
 }
 
 /*-----------------------------------------------------------------------*/
-/*void Leds::handle_rtc (void)
-{
-  get()->update_faders();
-}*/
-
-
-/*-----------------------------------------------------------------------*/
 void Leds::sqw_transition_callback(void *context, uint8_t slot, sqw_transition_t trans)
 {
   Leds *pls = static_cast<Leds *>(context);
@@ -201,9 +194,8 @@ void Leds::stop (led_id_t led)
   if (! is_led_busy (led))	// skip if not lit
 	  return;
   
-  // 1. Stop the engines
+  // Stop the engines
   SQWave::get()->stop(led);
-//  faders[led].stop();
 
   uint8_t pin = led_to_pin(led);
 
@@ -227,16 +219,8 @@ bool Leds::is_led_busy(led_id_t led) const
   // Check if SQWave is using this slot
   bool sqw_busy = SQWave::get()->is_active(led);
   
-  // Check if the Fader is using this slot
-  //bool fader_busy = faders[led].is_active(); 
-  
-  return sqw_busy;// || fader_busy;
+  return sqw_busy;
 }
-
-/*void Leds::sync_with_tonegen(bool sync, led_id_t led)
-{
-  led_sync = sync ? led : NO_LED;
-}*/
 
 void Leds::pulse (led_id_t led, uint8_t brightness, uint16_t duration_ms, uint16_t period_ms, uint8_t duty_cycle)
 {
@@ -354,8 +338,6 @@ bool Leds::init (void)
   // Select lowest possible flicker-less frequency
   TMR3_SET_N(64);
 
-  // No sync with tone generator by default
-  //led_sync = NO_LED;
   return true;
 }
 
@@ -434,76 +416,6 @@ void Leds::set_raw_ocr_top(led_id_t led)
 {
   set_raw_ocr (led, LEDS_TMR3_OCR_TOP);
 }
-
-/*void Leds::update_faders()
-{
-  for (uint8_t i = 0; i < NUM_LEDS; i++) {
-    if (faders[i].is_active ()) {
-      led_id_t led = (led_id_t)i;
-
-      // Get the current brightness value from the fader logic
-      uint16_t ocr_val = faders[i].update();
-
-      set_raw_ocr (led, ocr_val);
-    }
-  }
-}*/
-
-/*void Leds::update_faders()
-{
-  for (uint8_t i = 0; i < NUM_LEDS; i++) {
-    if (faders[i].is_active()) {
-      led_id_t led = (led_id_t)i;
-      uint8_t pin = led_to_pin(led);
-      
-      // Get the current brightness value from the fader logic
-      uint16_t ocr_val = faders[i].update();
-
-      // If LED1 is pulsing, tell Tonegen to mirror it
-      if (led == led_sync && Tonegen::get()->is_playing()) {
-
-        uint16_t intensity = faders[i].get_current_ocr(); // Get the raw increasing value
-        Tonegen::get()->set_led_intensity(intensity, faders[i].get_max_ocr());
-      }
-
-      // Only engage hardware if there is brightness to show
-      if (ocr_val < LEDS_TMR3_OCR_TOP) {
-        
-        // If the hardware isn't connected yet, this is the first "glowing" frame
-        if (!led_pwm_is_on(led)) {
-          
-          // Connect the Timer unit to the pin
-          led_pwm_on(led);
-          
-          // Switch from Input (Pull-up) to Output
-          // Because of your fade() change, PORT is already 1, so no flash!
-          Pins::set_out(pin);
-
-          // Sync timer to ensure we start at the beginning of a cycle
-          TCNT3 = LEDS_TMR3_OCR_TOP;
-        }
-
-        // Apply the new brightness to the register
-        led_pwm_set_ocr(led, ocr_val);
-
-      } else {
-        // OCR is 0: Keep the pin in High-Z/Pull-up to hide the PWM "1-tick" glitch
-        // This is important for "dark" frames in the middle of a sequence
-        if (led_pwm_is_on(led)) {
-          Pins::set_in_pullup(pin);
-          led_pwm_off(led);
-        }
-      }
-
-      // CLEANUP: If the fader just finished its last count
-      if (!faders[i].is_active()) {
-        led_pwm_off(led);
-        //Pins::set_in_highz(pin); // Final state is High-Z to save power
-        Pins::set_in_pullup(pin);
-      }
-    }
-  }
-}*/
 
 LedFader::LedFader()
   : state {IDLE}

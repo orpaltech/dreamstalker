@@ -291,9 +291,7 @@ void Config::save_to_storage (void)
   cfg.signature = DSCONF_SIGNATURE;
 
 #if ( CONF_STG == STG_EEPROM )
-  eeprom_update_block (&cfg, 
-						&eeprom_cfg, 
-						sizeof (cfg));
+  eeprom_update_block (&cfg, &eeprom_cfg, sizeof (cfg));
 
 #elif ( CONF_STG == STG_FILE )
   // TODO: implement save to file

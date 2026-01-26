@@ -1,52 +1,241 @@
-(module LEDC3216X130N-TH (layer F.Cu) (tedit 5E5F91B5)
-  (descr KP-3216)
-  (tags LED)
-  (attr smd)
-  (fp_text reference Q** (at -1.05 -2.74) (layer F.SilkS)
-    (effects (font (size 1.27 1.27) (thickness 0.254)))
-  )
-  (fp_text value LEDC3216X130N-TH (at 0 2.8) (layer F.SilkS) hide
-    (effects (font (size 1.27 1.27) (thickness 0.254)))
-  )
-  (fp_line (start -2.525 -1.65) (end 2.525 -1.65) (layer Dwgs.User) (width 0.05))
-  (fp_line (start 2.525 -1.65) (end 2.525 1.65) (layer Dwgs.User) (width 0.05))
-  (fp_line (start 2.525 1.65) (end -2.525 1.65) (layer Dwgs.User) (width 0.05))
-  (fp_line (start -2.525 1.65) (end -2.525 -1.65) (layer Dwgs.User) (width 0.05))
-  (fp_line (start -1.6 -0.8) (end 1.6 -0.8) (layer Dwgs.User) (width 0.1))
-  (fp_line (start 1.6 -0.8) (end 1.6 0.8) (layer Dwgs.User) (width 0.1))
-  (fp_line (start 1.6 0.8) (end -1.6 0.8) (layer Dwgs.User) (width 0.1))
-  (fp_line (start -1.6 0.8) (end -1.6 -0.8) (layer Dwgs.User) (width 0.1))
-  (fp_line (start -1.6 -0.267) (end -1.067 -0.8) (layer Dwgs.User) (width 0.1))
-  (fp_text user T (at 1.5 -2.63 -90 unlocked) (layer F.SilkS)
-    (effects (font (size 1 2) (thickness 0.18)))
-  )
-  (pad 3 thru_hole circle (at 0 0) (size 3.2 3.2) (drill 2.56) (layers B.Cu B.Mask)
-    (clearance 0.0001) (zone_connect 0))
-  (pad 2 smd custom (at 1.88 0) (size 0.7 1.8) (layers F.Cu F.Paste F.Mask)
-    (zone_connect 0)
-    (options (clearance outline) (anchor rect))
-    (primitives
-      (gr_poly (pts
-         (xy 0.48 -0.9) (xy -0.7 -0.9) (xy -0.66 -0.84) (xy -0.62 -0.78) (xy -0.56 -0.67)
-         (xy -0.49 -0.51) (xy -0.45 -0.37) (xy -0.42 -0.23) (xy -0.41 -0.12) (xy -0.4 0.01)
-         (xy -0.41 0.14) (xy -0.42 0.22) (xy -0.44 0.33) (xy -0.47 0.44) (xy -0.5 0.53)
-         (xy -0.53 0.6) (xy -0.55 0.65) (xy -0.58 0.71) (xy -0.62 0.78) (xy -0.65 0.83)
-         (xy -0.7 0.9) (xy 0.48 0.9)) (width 0.01))
-    ))
-  (pad 1 smd custom (at -1.88 0) (size 0.7 1.8) (layers F.Cu F.Paste F.Mask)
-    (zone_connect 0)
-    (options (clearance outline) (anchor rect))
-    (primitives
-      (gr_poly (pts
-         (xy -0.48 0.9) (xy 0.7 0.9) (xy 0.66 0.84) (xy 0.62 0.78) (xy 0.56 0.67)
-         (xy 0.49 0.51) (xy 0.45 0.37) (xy 0.42 0.23) (xy 0.41 0.12) (xy 0.4 -0.01)
-         (xy 0.41 -0.14) (xy 0.42 -0.22) (xy 0.44 -0.33) (xy 0.47 -0.44) (xy 0.5 -0.53)
-         (xy 0.53 -0.6) (xy 0.55 -0.65) (xy 0.58 -0.71) (xy 0.62 -0.78) (xy 0.65 -0.83)
-         (xy 0.7 -0.9) (xy -0.48 -0.9)) (width 0.01))
-    ))
-  (model /home/sergey/Projects2/kicad/Dreamstalker/Dreamstalker-Footprints.3dshapes/LED_1206.stp
-    (offset (xyz 0 0 0.48))
-    (scale (xyz 1 1 1))
-    (rotate (xyz 90 0 90))
-  )
+(footprint "LEDC3216X130N-TH"
+	(version 20241229)
+	(generator "pcbnew")
+	(generator_version "9.0")
+	(layer "F.Cu")
+	(descr "KP-3216")
+	(tags "LED")
+	(property "Reference" "Q**"
+		(at -1.05 -2.74 0)
+		(layer "F.SilkS")
+		(uuid "01647813-ec9e-4071-9ce8-cdb1f5285de3")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.254)
+			)
+		)
+	)
+	(property "Value" "LEDC3216X130N-TH"
+		(at 0 2.8 0)
+		(layer "F.SilkS")
+		(hide yes)
+		(uuid "316f5e0f-2965-49d3-8293-ae9b10956554")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.254)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "979cabec-3a98-4493-bbb6-5a909c5dbd26")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "d58b0038-2d69-4823-9979-5d7adf06fc2f")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr smd)
+	(fp_line
+		(start -2.525 -1.65)
+		(end 2.525 -1.65)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "Dwgs.User")
+		(uuid "d6198716-70db-4385-a946-3ab8a1159eb1")
+	)
+	(fp_line
+		(start -2.525 1.65)
+		(end -2.525 -1.65)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "Dwgs.User")
+		(uuid "7548be88-356a-41fc-a4e0-91f6176ad21a")
+	)
+	(fp_line
+		(start -1.6 -0.8)
+		(end 1.6 -0.8)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "Dwgs.User")
+		(uuid "024e8ca8-6577-4b23-95a4-2cf11582a140")
+	)
+	(fp_line
+		(start -1.6 -0.267)
+		(end -1.067 -0.8)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "Dwgs.User")
+		(uuid "653cdceb-6c68-44f4-a43c-d9eb5d47af4b")
+	)
+	(fp_line
+		(start -1.6 0.8)
+		(end -1.6 -0.8)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "Dwgs.User")
+		(uuid "43546fab-d77f-4f8d-969d-b6b943658ca5")
+	)
+	(fp_line
+		(start 1.6 -0.8)
+		(end 1.6 0.8)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "Dwgs.User")
+		(uuid "f24a6259-ca48-45dc-94a7-7231f4fc0394")
+	)
+	(fp_line
+		(start 1.6 0.8)
+		(end -1.6 0.8)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "Dwgs.User")
+		(uuid "13f83124-a17e-48b8-a1b4-1c05a24a1e7e")
+	)
+	(fp_line
+		(start 2.525 -1.65)
+		(end 2.525 1.65)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "Dwgs.User")
+		(uuid "10ebb9b0-e292-4354-8bd0-3e27907b886e")
+	)
+	(fp_line
+		(start 2.525 1.65)
+		(end -2.525 1.65)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "Dwgs.User")
+		(uuid "22187da7-9a3d-4eda-a10d-01af03edc36e")
+	)
+	(fp_text user "T"
+		(at 1.5 -2.63 270)
+		(unlocked yes)
+		(layer "F.SilkS")
+		(uuid "e419c296-5c0f-40f6-ab25-44a717908a39")
+		(effects
+			(font
+				(size 1 2)
+				(thickness 0.18)
+			)
+		)
+	)
+	(pad "1" smd custom
+		(at -1.88 0)
+		(size 0.7 1.8)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(zone_connect 0)
+		(options
+			(clearance outline)
+			(anchor rect)
+		)
+		(primitives
+			(gr_poly
+				(pts
+					(xy -0.48 0.9) (xy 0.7 0.9) (xy 0.66 0.84) (xy 0.62 0.78) (xy 0.56 0.67) (xy 0.49 0.51) (xy 0.45 0.37)
+					(xy 0.42 0.23) (xy 0.41 0.12) (xy 0.4 -0.01) (xy 0.41 -0.14) (xy 0.42 -0.22) (xy 0.44 -0.33) (xy 0.47 -0.44)
+					(xy 0.5 -0.53) (xy 0.53 -0.6) (xy 0.55 -0.65) (xy 0.58 -0.71) (xy 0.62 -0.78) (xy 0.65 -0.83) (xy 0.7 -0.9)
+					(xy -0.48 -0.9)
+				)
+				(width 0.01)
+				(fill yes)
+			)
+		)
+		(uuid "98e2bc05-fde6-4b77-bdb4-e16b8a4e2e4f")
+	)
+	(pad "2" smd custom
+		(at 1.88 0)
+		(size 0.7 1.8)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(zone_connect 0)
+		(options
+			(clearance outline)
+			(anchor rect)
+		)
+		(primitives
+			(gr_poly
+				(pts
+					(xy 0.48 -0.9) (xy -0.7 -0.9) (xy -0.66 -0.84) (xy -0.62 -0.78) (xy -0.56 -0.67) (xy -0.49 -0.51)
+					(xy -0.45 -0.37) (xy -0.42 -0.23) (xy -0.41 -0.12) (xy -0.4 0.01) (xy -0.41 0.14) (xy -0.42 0.22)
+					(xy -0.44 0.33) (xy -0.47 0.44) (xy -0.5 0.53) (xy -0.53 0.6) (xy -0.55 0.65) (xy -0.58 0.71) (xy -0.62 0.78)
+					(xy -0.65 0.83) (xy -0.7 0.9) (xy 0.48 0.9)
+				)
+				(width 0.01)
+				(fill yes)
+			)
+		)
+		(uuid "c3a41fb4-d40e-4d87-9d86-17804f2f09dc")
+	)
+	(pad "3" thru_hole circle
+		(at 0 0)
+		(size 2.58 2.58)
+		(drill 2.56)
+		(layers "*.Cu" "B.Mask")
+		(remove_unused_layers no)
+		(clearance 0.0001)
+		(zone_connect 0)
+		(uuid "94c01700-7433-4f11-b824-8a13cc06cc20")
+		(padstack
+			(mode front_inner_back)
+			(layer "Inner"
+				(shape circle)
+				(size 2.58 2.58)
+				(clearance 0.0001)
+				(zone_connect 0)
+			)
+			(layer "B.Cu"
+				(shape circle)
+				(size 3.2 3.2)
+				(clearance 0.0001)
+				(zone_connect 0)
+			)
+		)
+	)
+	(embedded_fonts no)
+	(model "/home/sergey/Projects2/kicad/Dreamstalker/Dreamstalker-Footprints.3dshapes/LED_1206.stp"
+		(offset
+			(xyz 0 0 0.48)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 90 0 90)
+		)
+	)
 )

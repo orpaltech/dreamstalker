@@ -96,10 +96,10 @@ void REMHints::start(uint8_t intensity_limit)
 
   // Start the Master Fader
   // Start at 5% brightness, increment by 5%, up to the intensity_level
-  fader.start(5, 5, intensity_limit, ramp_ms, min_wait_ms, max_wait_ms, master_count);
+  fader.start ( 5, 5, intensity_limit, ramp_ms, min_wait_ms, max_wait_ms, master_count );
 
   if (sound_count > 0) {
-    Tonegen::get()->beep(period_ms * master_count, 5, 4, 0);
+    Tonegen::get()->beep ( period_ms * master_count, 5, 4, 0 );
   }
 }
 
