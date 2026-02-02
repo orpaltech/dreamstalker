@@ -2,7 +2,7 @@
  * This file is part of the AVR Dreamstalker software
  * (https://github.com/orpaltech/dreamstalker).
  *
- * Copyright (c) 2013-2025	ORPAL Technologies, Inc.
+ * Copyright (c) 2013-2026	ORPAL Technologies, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -75,42 +75,35 @@ using namespace avr_core;
 /*-----------------------------------------------------------------------*/
 ISR(ADC_vect)
 {
-  A2DConv::handle_adc ();
+  A2DConvert::handle_adc ();
 }
 
 /*-----------------------------------------------------------------------*/
-void A2DConv::handle_rtc (void)
+void A2DConvert::handle_sysclk (void) /* called every 1ms*/
 {
-  get()->rtc_handler();
+  get()->irq_handler();
 }
 
-void A2DConv::handle_adc (void)
+void A2DConvert::handle_adc (void)
 {
   get()->adc_handler();
 }
 
 /*-----------------------------------------------------------------------*/
-static A2DConv a2d;
-
-/*-----------------------------------------------------------------------*/
-A2DConv *A2DConv::get()
+A2DConvert *A2DConvert::get()
 {
+  static A2DConvert a2d;
   return &a2d;
 }
 
 /*-----------------------------------------------------------------------*/
-void A2DConv::rtc_handler (void)
+void A2DConvert::irq_handler (void)
 {
   int i = 0;
 
-  /** Check if ADC enabled 
-   */
-  if (! (ADCSRA & _BV(ADEN)))
+  if (! (ADCSRA & _BV(ADEN))) // Check if ADC enabled 
     return;
 
-  /* Check if conversion complete */
-  //if (ADCSRA & _BV(ADSC))
-  //  return;
 
   /* Next channel for convert */
   i = get_next_running_index ();
@@ -126,7 +119,7 @@ void A2DConv::rtc_handler (void)
   convert_one ( i );
 }
 
-void A2DConv::adc_handler (void)
+void A2DConvert::adc_handler (void)
 {
   uint16_t sample;
   volatile adc_channel_t *pch;
@@ -144,7 +137,7 @@ void A2DConv::adc_handler (void)
   if (pch->flags & SF_LEFT_ADJUST)
     sample >>= 6;
   /* ADC has 10 meaningful bits */
-  sample &= 0x3FF;
+  sample &= ADC_MAX_VALUE;
 
   if (pch->flags & SF_RUNNING) {
 
@@ -173,14 +166,14 @@ void A2DConv::adc_handler (void)
   ADCSRA &= ~_BV(ADIE);
 }
 
-uint8_t A2DConv::get_channel ( uint8_t i )
+uint8_t A2DConvert::get_channel ( uint8_t i )
 {
   // The compiler will only read the first byte of .flags 
   // because the mask 0x1F makes the second byte irrelevant.
   return (uint8_t)(adc[i].channel & ADC_CHAN_MASK);
 }
 
-int8_t A2DConv::get_index( uint8_t chan )
+int8_t A2DConvert::get_index( uint8_t chan )
 {
   uint8_t i;
 
@@ -191,7 +184,7 @@ int8_t A2DConv::get_index( uint8_t chan )
   return -1;
 }
 
-int8_t A2DConv::get_next_running_index ( void )
+int8_t A2DConvert::get_next_running_index ( void )
 {
   uint8_t index = chan_index;
 
@@ -209,7 +202,7 @@ int8_t A2DConv::get_next_running_index ( void )
   return -1;
 }
 
-void A2DConv::convert_one ( int8_t i )
+void A2DConvert::convert_one ( int8_t i )
 {
   uint8_t adc_ref, left_adjust = 0;
   /* Setup ADC multiplexer for conversion */
@@ -229,7 +222,7 @@ void A2DConv::convert_one ( int8_t i )
 }
 
 /*-----------------------------------------------------------------------*/
-bool A2DConv::enable (void)
+bool A2DConvert::enable (void)
 {
   /* NOTE: ADC is in single-convert mode */
 
@@ -254,7 +247,7 @@ bool A2DConv::enable (void)
   return true;
 }
 
-void A2DConv::warm_up (void) 
+void A2DConvert::warm_up (void) 
 {
   /* Warm up the ADC analog circuitry */
   start ( 2, 3, NULL );
@@ -262,7 +255,7 @@ void A2DConv::warm_up (void)
   _delay_ms ( 10 );
 }
 
-void A2DConv::disable (void)
+void A2DConvert::disable (void)
 {
   stop ( 0 );
   stop ( 2 );
@@ -276,12 +269,12 @@ void A2DConv::disable (void)
   ADCSRA &= ~(_BV(ADIE) | _BV(ADEN));
 }
 
-uint32_t A2DConv::get_adc_rate (void)
+uint32_t A2DConvert::get_adc_rate (void)
 {
   return ( F_CPU / ADC_DIV );	/* ADC clock rate */
 }
 
-bool A2DConv::setup_channel (uint8_t chan, uint16_t flags)
+bool A2DConvert::setup_channel (uint8_t chan, uint16_t flags)
 {
   volatile adc_channel_t *pch;
   int i;
@@ -305,7 +298,7 @@ bool A2DConv::setup_channel (uint8_t chan, uint16_t flags)
   return true;
 }
 
-bool A2DConv::start (uint8_t chan, uint16_t num_samples, A2DSampleCB_t pfcb, void *context)
+bool A2DConvert::start (uint8_t chan, uint16_t num_samples, A2DSampleCB_t pfcb, void *context)
 {
   bool res;
 
@@ -316,7 +309,7 @@ bool A2DConv::start (uint8_t chan, uint16_t num_samples, A2DSampleCB_t pfcb, voi
   return res;
 }
 
-bool A2DConv::start_unsafe (uint8_t chan, uint16_t num_samples, A2DSampleCB_t pfcb, void *context)
+bool A2DConvert::start_unsafe (uint8_t chan, uint16_t num_samples, A2DSampleCB_t pfcb, void *context)
 {
   volatile adc_channel_t *pch;
   int i;
@@ -344,7 +337,7 @@ bool A2DConv::start_unsafe (uint8_t chan, uint16_t num_samples, A2DSampleCB_t pf
   return true;
 }
 
-void A2DConv::enable_channel (uint8_t chan, bool enable)
+void A2DConvert::enable_channel (uint8_t chan, bool enable)
 {
   int i;
 
@@ -358,7 +351,7 @@ void A2DConv::enable_channel (uint8_t chan, bool enable)
     adc[i].flags &= ~SF_ENABLED;
 }
 
-bool A2DConv::is_enabled ( uint8_t chan )
+bool A2DConvert::is_enabled ( uint8_t chan )
 {
   int i;
   bool enabled;
@@ -371,7 +364,7 @@ bool A2DConv::is_enabled ( uint8_t chan )
   return enabled;
 }
 
-bool A2DConv::is_running ( uint8_t chan )
+bool A2DConvert::is_running ( uint8_t chan )
 {
   int i;
   bool running;
@@ -387,7 +380,7 @@ bool A2DConv::is_running ( uint8_t chan )
   return running;
 }
 
-void A2DConv::stop (uint8_t chan) 
+void A2DConvert::stop (uint8_t chan) 
 {
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
 
@@ -395,7 +388,7 @@ void A2DConv::stop (uint8_t chan)
   }
 }
 
-void A2DConv::stop_unsafe ( uint8_t chan )
+void A2DConvert::stop_unsafe ( uint8_t chan )
 {
   int i;
 	

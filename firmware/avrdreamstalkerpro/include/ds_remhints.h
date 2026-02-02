@@ -33,8 +33,8 @@ public:
   void start(uint8_t intensity_limit);
   void update();
 
-  /* Only for use in RTC ISR. Do not call it directly! */
-  static void handle_rtc (void);
+  /* Only for use in system clock ISR. Do not call it directly! */
+  static void handle_sysclk (void);
 
 private:
   static uint16_t level_to_hints_period (uint8_t lvl);

@@ -28,6 +28,7 @@
 #include "sound/ds_sound.h"
 #include "sound/ds_tonegen.h"
 #include "ds_config.h"
+#include "ds_sysclock.h"
 #include "ds_util.h"
 
 using namespace DS;
@@ -35,39 +36,26 @@ using namespace DS;
 /*-----------------------------------------------------------------------*/
 /* Peripheral controls (Platform dependent) */
 
-
-//#define DD_SILENT		_BV(DDC2)		// silent
-//#define DD_MLEFT		_BV(DDG1)
-//#define DD_HPTS			_BV(DDE2)
-//#define DD_SNDOFF		_BV(DDE5)		// sound off
-//#define DD_MICP			_BV(DDE6)		// mic on/off
-
-//#define PF_SILENT		_BV(PC2)
-//#define PF_MLEFT		_BV(PG1)
-//#define PF_HPTS			_BV(PE2)
-//#define PF_SNDOFF		_BV(PE5)
-//#define PF_MICP			_BV(PE6)
-#define PIN_MLEFT     PIN_PG1
-
 #define PIN_SILENT		PIN_PC2
 
 #define PIN_HPTS		  PIN_PE2
 #define PIN_SND_OFF		PIN_PE5
 #define PIN_MIC_PWR		PIN_PE6
 
+#define PIN_MGBUF     PIN_PG0
+#define PIN_MLEFT     PIN_PG1
+
 
 /*-----------------------------------------------------------------------*/
-void Sound::handle_isr (void)	// runs every 1 sec
+void Sound::handle_sysclk (void)	/* runs every 1 sec */
 {
 	get()->irq_handler ();
 }
 
 /*-----------------------------------------------------------------------*/
-static Sound snd;
-
-/*-----------------------------------------------------------------------*/
 Sound *Sound::get()
 {
+  static Sound snd;
 	return &snd;
 }
 
@@ -85,9 +73,9 @@ void Sound::irq_handler (void)
       speaker_off( );
   } else {
 
-	// on loudspeaker (if enabled by config)
-	if ( config.get_loud_speaker_enabled () && ! is_speaker_on () )
-		speaker_on( );
+	  // on loudspeaker (if enabled by config)
+	  if ( config.get_loud_speaker_enabled () && ! is_speaker_on () )
+		  speaker_on( );
   }
 }
 
@@ -95,14 +83,14 @@ void Sound::speaker_on (void)
 {
   Pins::drive_low ( PIN_SND_OFF );
 
-	delay ( 10 );
+	SysClock::get()->wait ( 10 );
 }
 
 void Sound::speaker_off (void)
 {
   Pins::drive_high ( PIN_SND_OFF );
 
-  delay ( 10 );
+  SysClock::get()->wait ( 10 );
 }
 
 bool Sound::is_speaker_on() const
@@ -110,38 +98,56 @@ bool Sound::is_speaker_on() const
 	return Pins::is_out_low ( PIN_SND_OFF );
 }
 
+void Sound::set_silent (bool silent)
+{
+  if ( silent ) {
+
+    Pins::set_out( PIN_SILENT );
+    Pins::drive_low( PIN_SILENT );
+  } else {
+
+    Pins::set_in_highz( PIN_SILENT );
+  }
+
+  SysClock::get()->wait ( 10 );
+}
+
 void Sound::microphone_on (void)
 {
   Pins::drive_high ( PIN_MIC_PWR );
 
-  delay ( 100 );
+  SysClock::get()->wait ( 100 );
 }
 
 void Sound::microphone_off (void)
 {
   Pins::drive_low ( PIN_MIC_PWR );
 
-  delay ( 10 );
+  SysClock::get()->wait ( 10 );
 }
 
 bool Sound::init ( void )
 {
-  /* Set control pins to output */
+  /* Switch speaker/microphone pins to output */
   Pins::set_out( PIN_MIC_PWR );
   Pins::set_out( PIN_SND_OFF );
 
-  /* Set headphones tip sensing pin to input */
+  /* Switch headphone tip sensing pin to input */
   Pins::set_in_pullup( PIN_HPTS );
 
-  /* set silent pin to input */
+  /* Switch silent pin to input */
   Pins::set_in_highz( PIN_SILENT );
 
-	/* TODO: Left channel M-pin - what is it for ???? */
+	/* TODO: Left channel control pin - what is it for ???? */
   Pins::set_in_highz( PIN_MLEFT);
 	//DDRG &= ~DD_MLEFT;		/* set input */
 	//DDRG |= DD_MLEFT;		/* set output */
 	//PORTG &= ~PF_MLEFT;		/* high z / drive low */
 	//PORTG |= PF_MLEFT;		/* pull up */
+
+  /* TODO: GBUF line control pin - what is it for ???? */
+  //Pins::set_in_pullup( PIN_MGBUF );  /* set for input & pullup */
+  Pins::set_in_highz( PIN_MGBUF );     /* set for input & high-Z */
 
   speaker_off ();
 

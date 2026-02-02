@@ -55,61 +55,65 @@
 
 #define WAKEUP_TIMER_DELAY_DEFAULT	((3 * 60) + 30)     /* 3h 30min */
 
-#define ALARM_CLOCK_DELAY	60
+#define ALARM_CLOCK_DELAY_SEC 60
 
 /*-----------------------------------------------------------------------*/
-#define REMD_PROFILE_CUSTOM         0
+typedef enum e_remd_profile {
 
-/* The "Snooze Filter": Engineered for maximum certainty. It ignores 
- *  light sleep "flickers" and postural shifts by requiring a high-velocity 
- *  threshold and a long 90-second (3-epoch) sustained plateau. 
- *  Best used when you are prone to waking up from the lights or 
- *  when sleep quality is the priority.
- * Use Case: Deep Night / Light Sleepers
- */
-#define REMD_PROFILE_CONSERVATIVE   1
+  REMD_PROFILE_CUSTOM             = 0,
 
-/* The "Early Hour Bridge": Specifically tuned for the final 2 hours 
- *  of sleep where REM is frequent but sleep is fragmented.
- *  It sets the move threshold just above common "snooze jitters" 
- *  (12 moves) and requires a 60-second (2-epoch) commitment. 
- *  It is less "deaf" than Conservative but much harder to accidentally 
- *  trigger than Balanced.
- * Use Case: 5AM - 8AM / Fragmented Sleep
- */
-#define REMD_PROFILE_MORNING_SNOOZE 2
+  /* The "Snooze Filter": Engineered for maximum certainty. It ignores 
+   *  light sleep "flickers" and postural shifts by requiring a high-velocity 
+   *  threshold and a long 90-second (3-epoch) sustained plateau. 
+   *  Best used when you are prone to waking up from the lights or 
+   *  when sleep quality is the priority.
+   * Use Case: Deep Night / Light Sleepers
+   */
+  REMD_PROFILE_CONSERVATIVE,
 
-/* The "Daily Driver": The standard baseline for a full night's sleep.
- *  It uses a moderate velocity wall and a 10-move threshold to catch 
- *  standard REM cycles. It provides a good balance between catching 
- *  dreams early and filtering out minor nocturnal movements.
- * Use Case: Standard Overnight
- */
-#define REMD_PROFILE_BALANCED       3
+  /* The "Daily Driver": The standard baseline for a full night's sleep.
+   *  It uses a moderate velocity wall and a 10-move threshold to catch 
+   *  standard REM cycles. It provides a good balance between catching 
+   *  dreams early and filtering out minor nocturnal movements.
+   * Use Case: Standard Overnight
+   */
+  REMD_PROFILE_BALANCED,
 
-/* The "Dream Hunter": High-sensitivity, instant-trigger mode. 
- *  It ignores the need for persistence (1-epoch) and lowers the 
- *  velocity wall significantly. Best used for afternoon naps or 
- *  by heavy sleepers who have difficulty remembering dreams and 
- *  want a signal the moment any movement is detected.
- * Use Case: Naps / Heavy Sleepers
- */
-#define REMD_PROFILE_AGGRESSIVE     4
+  /* The "Early Hour Bridge": Specifically tuned for the final 2 hours 
+   *  of sleep where REM is frequent but sleep is fragmented.
+   *  It sets the move threshold just above common "snooze jitters" 
+   *  (12 moves) and requires a 60-second (2-epoch) commitment. 
+   *  It is less "deaf" than Conservative but much harder to accidentally 
+   *  trigger than Balanced.
+   * Use Case: 5AM - 8AM / Fragmented Sleep
+   */
+  REMD_PROFILE_MORNING_SNOOZE,
 
-/* The "Leave Me Alone": This is for when you are exhausted 
- *  but your mind is racing.
- */
-#define REMD_PROFILE_STRESS_SHIELD  5
+  /* The "Dream Hunter": High-sensitivity, instant-trigger mode. 
+   *  It ignores the need for persistence (1-epoch) and lowers the 
+   *  velocity wall significantly. Best used for afternoon naps or 
+   *  by heavy sleepers who have difficulty remembering dreams and 
+   *  want a signal the moment any movement is detected.
+   * Use Case: Naps / Heavy Sleepers
+   */
+  REMD_PROFILE_AGGRESSIVE,
 
-/* The "Grey Zone" Morning: For that 5 AM to 8 AM window where you
- *  previously saw "Instant Triggers."
- */
-#define REMD_PROFILE_STRESS_SNOOZE  6
+  /* The "Leave Me Alone": This is for when you are exhausted 
+   *  but your mind is racing.
+   */
+  REMD_PROFILE_STRESS_SHIELD,
 
-/* The "Safe" Discovery: For when you feel a bit more centered but 
- *  still notice "micro-jitters" in your logs.
- */
-#define REMD_PROFILE_STRESS_BALANCE 7
+  /* The "Grey Zone" Morning: For that 5 AM to 8 AM window where you
+   *  previously saw "Instant Triggers."
+   */
+  REMD_PROFILE_STRESS_SNOOZE,
+
+  /* The "Safe" Discovery: For when you feel a bit more centered but 
+   *  still notice "micro-jitters" in your logs.
+   */
+  REMD_PROFILE_STRESS_BALANCE
+
+} remd_profile_t;
 
 /*-----------------------------------------------------------------------*/
 #define DSCONF_DECLARE_PROPERTY(name, type) \
@@ -308,16 +312,24 @@ public:
    */
   DSCONF_DECLARE_PROPERTY_WITH_INVALID(remd_profile, uint8_t)
 
-  /* Sensitivity
-   *  This multiplier defines how much "energy" an eye movement needs over the background noise floor to be counted.
-   *  or How many times is a "movement" above noise
+  /* Sensitivity (The "Goldilocks" Window)
+   *  This parameter defines the "Ceiling" or maximum allowed power for a 
+   *  movement. It is the primary filter for removing blinks and finger twitches.
    * Range: 1 to 9
    * 
-   *  1   Strict: Filters out almost everything but the sharpest eyes.
+   * Logic: Ceiling = (Sensitivity * 5) + 20
    * 
-   *  5   Balanced: Your previous default
+   * * 1   Strict (Ceiling: 25): 
+   * Only the most subtle, quiet eye rolls are accepted. 
+   * Ignores even slightly fast eye movements.
    * 
-   *  9   Ultra Sensitive: Triggers on tiny twitches
+   * * 5   Balanced (Ceiling: 45): 
+   * The "Sweet Spot" found in your tests. Accepts standard 
+   * closed-eye REM rolls but effectively kills finger spikes.
+   * 
+   * * 9   Ultra Sensitive (Ceiling: 65): 
+   * Allows more vigorous or "snappy" eye movements to be 
+   * counted, but may occasionally let a fast blink through.
    */
   DSCONF_DECLARE_PROPERTY(remd_sensitivity, uint8_t)
 
@@ -364,60 +376,71 @@ public:
   DSCONF_DECLARE_PROPERTY(remd_cooldown_epochs, uint8_t)
 
   /* REM Detector Required Minimum Move Duration
-   * Saccade Width
-   * Range: 5 to 80 (milliseconds)
-   *
-   * A REM "event" is typically a saccade. These are the fastest movements 
-   * the human body can produce.
+   * Bucket Span (Integrated Time)
+   * Range: 2 to 20 (Buckets)
+   * Note: Each bucket represents 50ms of integrated sensor data.
    * 
-   * Duration	        Classification        Interpretation
+   * Duration         Interpretation
    * --------------------------------------------------------------------------
-   *  < 5ms           Electronic Noise      Likely a "spike" from the sensor, 
-   *                                        power supply ripple, 
-   *                                        or muscle micro-tremor (EMG).
-   *  10ms – 40ms     The "Sweet Spot"      Typical duration of a quick REM
-   *                                        saccade. This is where most 
-   *                                        eye-tracking logic lives.
-   *  40ms – 150ms    Deliberate Movement   Could be a very large eye sweep 
-   *                                        or the start of a head position 
-   *                                        shift.
-   *  > 200ms         Gross Body Movement   Usually indicates the user is 
-   *                                        rolling over or adjusting in bed.
+   * 1-2 Buckets      Micro-Jitter / Blinks
+   * (50-100ms)       Usually too fast for a physiological REM roll. 
+   *                  Often filtered out as noise or artifacts.
+   *
+   * 3-8 Buckets      The REM "Sweet Spot"
+   * (150-400ms)      Typical duration of a closed-eye REM saccade.
+   *                  This provides the best balance for dream detection.
+   *
+   * 9-15 Buckets     Slow Eye Drifts
+   * (450-750ms)      Very deliberate, slow rolls. Common in deep REM,
+   *                  but may also catch slow head-sinking movements.
+   *
+   * > 20 Buckets     Gross Body Movement
+   * (> 1000ms)       The signal has stayed active for a full second. 
+   *                  Likely a mask adjustment or turning in bed.
    */
   DSCONF_DECLARE_PROPERTY(remd_min_move_duration, uint8_t)
 
   /* REM Detector Minimum Required Moves Per Epoch
-   *  This is the threshold number of movements within a epoch, above which 
-   *  the epoch is considered REM.
-   * Range: 3 to 25 (movements)
-   *
-   * Setting            Value         Behavior
+   *  (The "REM Burst" Threshold)
+   *  This is the number of validated eye rolls (saccades) within a 30-second
+   *  window required to classify that period as REM sleep.
+   * Range: 3 to 20 (validated moves)
+   * 
+   * Setting              Value         Behavior
    * --------------------------------------------------------------------------
-   *  Very Sensitive    3–5           Will catch almost every REM cycle, 
-   *                                  but prone to false triggers from body 
-   *                                  rolls or light sleep.
-   *  Normal            8–12          The "Goldilocks" zone for most users. 
-   *                                  Requires a clear burst of activity.
-   *  Conservative      15–25         Only triggers during intense,
-   *                                  high-activity dreaming. Very low chance
-   *                                  of waking you up in NREM.
+   * Aggressive           3–6           Triggers on the very first signs of 
+   * (Snooze Mode)                      dreaming. High chance of lucidity, but 
+   *                                    might flash during light sleep transitions.
+   * 
+   * Balanced             8–12          The "Standard" REM signature. Requires 
+   * (Normal)                           a clear burst of sustained eye activity
+   *                                    common in mid-night REM cycles.
+   * 
+   * Conservative         15+           High-intensity REM only. Use this if 
+   * (Stress Shield)                    you are a light sleeper who is easily 
+   *                                    woken by the LEDs.
    */
   DSCONF_DECLARE_PROPERTY(remd_min_epoch_moves, uint8_t)
 
-  /* REM Detector Restlessness Logic
-   * The goal of the remd_restlessness_factor is to distinguish between 
-   * REM (focused eye movement) and being awake (general body restlessness).
-   * The value must be varied based on how "trusting" the profile is. The 
-   * configuration stores the property's values as (Value x 10).
+  /* REM Detector Restlessness Factor (Stability Gate)
+   *  Distinguishes between REM (quiet body, moving eyes) and being 
+   *  awake/restless (shaking mask, head movements).
+   * This factor defines the maximum "Average Jitter" allowed per 50ms 
+   * bucket over a 30-second window.
+   * Range: 5 to 50
    * 
-   * Setting            Value         Behavior
+   * Setting              Value         Behavior
    * --------------------------------------------------------------------------
-   * High Sensitivity   1.5           Wipes the REM epochs counter at the 
-   *                                  first sign of being awake.
-   * Standard           2.0
+   * High Sensitivity     10 - 15       Strict: Requires the user to be 
+   * (Conservative)                     perfectly still. Best for avoiding 
+   *                                    false triggers while falling asleep.
    * 
-   * Low Sensitivity    2.5           Allows more tossing and turning before 
-   *                                  wiping the REM epochs counter.
+   * Standard             20 - 25       Balanced: Allows natural breathing 
+   * (Balanced)                         shifts or minor mask settling without 
+   *                                    invalidating the epoch.
+   * Low Sensitivity      30 - 45       Forgiving: Allows significant tossing 
+   * (Aggressive)                       and turning. Useful for morning REM 
+   *                                    where sleep is naturally more "active."
    */
   DSCONF_DECLARE_PROPERTY(remd_restlessness_factor, uint8_t)
 

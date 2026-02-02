@@ -30,9 +30,11 @@
 #include "sound/vs1002.h"
 #include "sound/vs1003.h"
 #include "sound/vs1053.h"
+#include "ds_sysclock.h"
 #include "ds_util.h"
 
 using namespace VLSI;
+using namespace DS;
 
 /*-----------------------------------------------------------------------*/
 #define VS_PIN_XCS		PIN_PB6		/* SCI select line	*/
@@ -62,13 +64,13 @@ static SPISettings sci_settings, sdi_settings;
 bool Vs10xx::init ( void )
 {
   /* MCU data direction setup */
-  DS::Pins::set_in_highz( VS_PIN_DREQ );
-  DS::Pins::set_out( VS_PIN_XRST );
-  DS::Pins::set_out( VS_PIN_XCS );
-  DS::Pins::set_out( VS_PIN_XDCS );
+  Pins::set_in_highz( VS_PIN_DREQ );
+  Pins::set_out( VS_PIN_XRST );
+  Pins::set_out( VS_PIN_XCS );
+  Pins::set_out( VS_PIN_XDCS );
   // Ensure Chip Select pins aren't pulled low
-  DS::Pins::drive_high( VS_PIN_XCS );
-  DS::Pins::drive_high( VS_PIN_XDCS );
+  Pins::drive_high( VS_PIN_XCS );
+  Pins::drive_high( VS_PIN_XDCS );
 
   SPI.begin();
   
@@ -218,10 +220,10 @@ uint8_t Vs10xx::read_hw_spec ( void )
 
 void Vs10xx::hard_reset ( void )
 {
-	DS::Pins::drive_low( VS_PIN_XRST );   /* force reset line low */
-	delay( 10 );
-	DS::Pins::drive_high( VS_PIN_XRST );  /* restore reset line */
-	delay( 100 );
+	Pins::drive_low( VS_PIN_XRST );   /* force reset line low */
+	SysClock::get()->wait( 10 );
+	Pins::drive_high( VS_PIN_XRST );  /* restore reset line */
+	SysClock::get()->wait( 100 );
 
 	SPI.beginTransaction ( sci_settings );
 	sci_select ();
@@ -358,15 +360,15 @@ bool Vs10xx::adpcm_record_start( uint16_t sample_rate, uint8_t gain, bool highpa
 {
   resume ();		/* Exit power-saving mode */
 
-  bool res = vs_adpcm_rec_start ( sample_rate, gain, highpass_filter );
-  if ( !res ) {
+  bool success = vs_adpcm_rec_start ( sample_rate, gain, highpass_filter );
+  if ( !success ) {
 	  /* Something went wrong.
 	   * Return to power-saving mode
 	   */
 	  suspend ();
   }
 
-  return res;
+  return success;
 }
 
 void Vs10xx::adpcm_record_stop ( void )
@@ -440,11 +442,11 @@ bool Vs10xx::patch_apply( vs_patch_t *patch, vs_patch_state_t *state )
   vs_patch_result_t nir;
   uint8_t index = 0;
 
-  while ( ( nir = (*patch->next_instr) ( patch, &instr ) ) != VS_PRES_EOP ) {
-	if ( nir == VS_PRES_ERR )	/* error */
+  while ( ( nir = (*patch->next_instr) ( patch, &instr ) ) != VS_PR_EOP ) {
+	if ( nir == VS_PR_ERR )	/* error */
 	  return false;
 
-	if ( nir == VS_PRES_OK )
+	if ( nir == VS_PR_OK )
 	  sci_write ( instr.reg, instr.data );
   }
 
@@ -489,21 +491,21 @@ patch_file_next_instr( vs_patch_t *patch, vs_sci_instr_t *instr )
 
 	  if( line.length( ) != 0 ) {
 	    if( line.startsWith( "#" ))
-		    return VS_PRES_SKIP;	/* comment line */
+		    return VS_PR_SKIP;	/* comment line */
 
 	    if (! patch_file_parse_line ( line.c_str(), instr ))
-		    return VS_PRES_ERR;
+		    return VS_PR_ERR;
 	  }
 	  else if ( pfd->fp->available( ) == 0 )
 	    pfd->flags |= VS_EOF;
 	  else
-	    return VS_PRES_ERR; /* error occurred */
+	    return VS_PR_ERR; /* error occurred */
   }
 
   if ( pfd->flags & VS_EOF )
-	  return VS_PRES_EOP;
+	  return VS_PR_EOP;
 
-  return VS_PRES_OK;
+  return VS_PR_OK;
 }
 
 bool Vs10xx::patch_process_file ( const char *file_name, 
@@ -553,14 +555,14 @@ patch_rom_data_next_instr( pvs_patch_t patch, pvs_sci_instr_t instr )
   uint16_t count = pgm_read_word_far ( &data->count );
 
   if ( patch->user_val >= count )
-	  return VS_PRES_EOP;
+	  return VS_PR_EOP;
 
   src = &data->instr[ patch->user_val++ ];
 
   instr->reg = pgm_read_byte_far ( &src->reg );
   instr->data = pgm_read_word_far ( &src->data );
 
-  return VS_PRES_OK;
+  return VS_PR_OK;
 }
 
 bool Vs10xx::patch_process_rom ( vs_patch_rom_t *rom, 

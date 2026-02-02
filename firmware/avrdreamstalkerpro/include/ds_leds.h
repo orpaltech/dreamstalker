@@ -92,17 +92,29 @@ public:
       uint8_t brightness,		/* percent, 1-100*/
       uint16_t duration_ms	/* milliseconds*/
       );
-
   void stop (led_id_t led);
-
   void pulse (led_id_t led,
       uint8_t brightness,		/* percent, 1-100*/
       uint16_t duration_ms,	/* milliseconds*/
       uint16_t period_ms,		/* milliseconds*/
       uint8_t duty_cycle		/* percent, normally 5-95 */
       );
+  bool is_led_busy (led_id_t led) const;
 
-  bool is_led_busy(led_id_t led) const;
+  /* Unsafe operations (must be called from ISR)*/
+  void on_unsafe (led_id_t led,
+      uint8_t brightness,		/* percent, 1-100*/
+      uint16_t duration_ms	/* milliseconds*/
+      );
+  void stop_unsafe (led_id_t led);
+  void pulse_unsafe (led_id_t led,
+      uint8_t brightness,		/* percent, 1-100*/
+      uint16_t duration_ms,	/* milliseconds*/
+      uint16_t period_ms,		/* milliseconds*/
+      uint8_t duty_cycle		/* percent, normally 5-95 */
+      );
+
+  bool is_led_busy_unsafe (led_id_t led) const;
 
   void set_raw_ocr(led_id_t led, uint16_t ocr);
   void set_raw_ocr_top(led_id_t led);

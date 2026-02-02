@@ -92,9 +92,9 @@ bool Files::make_next_file_path(String &file_path,
   char prefix[9]; // Max 8 chars + null
 
   if (num_digits < 2) num_digits = 2;
-  else if (num_digits > 4) num_digits = 4;
+  else if (num_digits > 5) num_digits = 5;
 
-  // 1. Calculate numerical limit (e.g., 4 digits -> 9999)
+  // 1. Calculate numerical limit (e.g., 5 digits -> 99999)
   uint32_t limit = 1;
   for(int i = 0; i < num_digits; i++) limit *= 10;
   limit -= 1;

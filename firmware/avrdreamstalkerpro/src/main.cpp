@@ -32,40 +32,25 @@ File shared_fp;
 /*-----------------------------------------------------------------------*/
 void setup()
 {
+  auto drv = DS::Driver::get();
+
   // put your setup code here, to run once
 
-  driver.begin ();
+  drv->begin ();
 
-  if (! driver.start () )
+  if (! drv->start () )
   {
-    /* Handle the critical error */
-    driver.reboot_on_key ();
+    // Handle the critical error
+    drv->reboot_on_key ();
   }
-
-  // open a new file, write and close it:
-
-  //Serial.println("Creating example.txt...");
-
-  /*shared_fp = SD.open ( "example.txt", FILE_WRITE );
-
-  // if the file opened okay, write to it:
-  if ( shared_fp ) {
-    //Serial.print("Writing to test.txt...");
-    shared_fp.println("testing 1, 2, 3.");
-    // close the file:
-    shared_fp.close();
-    //Serial.println("done.");
-  } else {
-    // if the file didn't open, print an error:
-    //Serial.println("error opening test.txt");
-  }
-*/
 }
 
 /*-----------------------------------------------------------------------*/
 void loop()
 {
-  driver.process ();
+  auto drv = DS::Driver::get();
+
+  drv->process ();
 
   /* End of app loop */
   _NOP ();

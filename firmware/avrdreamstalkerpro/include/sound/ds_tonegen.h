@@ -2,7 +2,7 @@
  * This file is part of the AVR Dreamstalker software
  * (https://github.com/orpaltech/dreamstalker).
  *
- * Copyright (c) 2013-2025	ORPAL Technologies, Inc.
+ * Copyright (c) 2020-2026	ORPAL Technologies, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,15 +27,27 @@ namespace DS {
 /*-----------------------------------------------------------------------*/
 typedef enum e_tonegen_piece {
   TGP_NONE = 0,
+  /*
+   * Classical
+   */
   TGP_MOONLIGHT_SONATA,
-  TGP_FUR_ELISE,
-  TGP_INDIANA_JONES,
-  TGP_ODE_TO_JOY,
-  TGP_MISSION_IMPOSSIBLE,
+  TGP_BEETHOVEN_FUR_ELISE,
+  TGP_BEETHOVEN_ODE_TO_JOY,
+  TGP_KLEINE_NACHTMUSIK,
+
+  /*
+   * Popular Songs
+   */
+  TGP_JINGLE_BELLS,
   TGP_HAPPY_BIRTHDAY,
   TGP_AMAZING_GRACE,
-  TGP_KLEINE_NACHTMUSIK,
-  TGP_JINGLE_BELLS,
+
+  /*
+   * Movie Soundtracks
+   */
+  TGP_INDIANA_JONES,
+  TGP_MISSION_IMPOSSIBLE,
+
 } tonegen_piece_t;
 
 /*-----------------------------------------------------------------------*/
@@ -45,20 +57,23 @@ public:
   static Tonegen *get();
 public:
   void init (void);
+  void end (void) {}
 
   void beep (uint32_t millisec, uint8_t note, uint8_t octave, uint8_t volume);
-
   /**
    * piece        : melody to play
    * repeat_count : 0 - unlimited
    */
   bool play_melody (tonegen_piece_t piece, uint8_t repeat_count);
-  bool is_playing (void);
+  bool is_playing (void) const;
   void stop (void);
 
   void set_intensity(uint16_t intensity, uint16_t max_intensity);
 
   /* Unsafe operations (must be called from ISR)*/
+  void beep_unsafe (uint32_t millisec, uint8_t note, uint8_t octave, uint8_t volume);
+  bool play_melody_unsafe (tonegen_piece_t piece, uint8_t repeat_count);
+  bool is_playing_unsafe (void) const;
   void stop_unsafe (void);
 
   /* Intended for use in RTC ISR only. Do not call it directly! */

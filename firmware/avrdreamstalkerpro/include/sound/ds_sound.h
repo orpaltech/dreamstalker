@@ -48,8 +48,10 @@ public:
   void microphone_on (void);
   void microphone_off (void);
 
-  /* Only for use in RTC ISR. Do not call it directly! */
-  static void handle_isr (void);
+  void set_silent (bool silent = true);
+
+  /* Only for use in system clock ISR. Do not call it directly! */
+  static void handle_sysclk (void);
 
 private:
   void irq_handler (void);

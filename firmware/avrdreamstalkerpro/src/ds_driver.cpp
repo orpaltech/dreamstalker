@@ -28,10 +28,11 @@
 #include "sound/ds_sound.h"
 #include "sound/ds_codec.h"
 #include "ds_remdetect.h"
-#include "ds_pwrman.h"
+#include "ds_battery.h"
 #include "input/ds_keybrd.h"
 #include "ds_appmenu.h"
 #include "ds_sqwave.h"
+#include "ds_sysclock.h"
 #include "ds_vibro.h"
 #include "ds_remhints.h"
 
@@ -47,37 +48,57 @@ using namespace avr_core;
 #define KEY_EXIT_SLEEP  KEY_POWER
 
 /*-----------------------------------------------------------------------*/
-static void key_tone (void)
+static void key_tone (bool wait = false)
 {
   uint16_t duration = 80;
   Tonegen::get()->beep ( duration, 3, 6, config.get_volume_level ());
+  if ( wait ) {
+    SysClock::get()->wait (duration);
+  }
 }
 
 
 /*-----------------------------------------------------------------------*/
-Driver driver;
+Driver *Driver::get()
+{
+  static Driver drv;
+  return &drv;
+}
 
 /*-----------------------------------------------------------------------*/
 void Driver::alarm_clock_callback (void *context)
 {
-  Driver *pdrv = static_cast<Driver *>(context);
+  Driver *pdrv = reinterpret_cast<Driver *>(context);
 
   pdrv->on_alarm_clock ();
 }
 
 void Driver::wakeup_timer_callback (void *context)
 {
-  Driver *pdrv = static_cast<Driver *>(context);
+  Driver *pdrv = reinterpret_cast<Driver *>(context);
 
   pdrv->on_wakeup_timer ();
 }
 
 void Driver::remd_callback (void *context, remd_event_type_t event, uint16_t arg)
 {
-  Driver *pdrv = static_cast<Driver *>(context);
+  Driver *pdrv = reinterpret_cast<Driver *>(context);
 
-  if ( event == REMD_STABLE_REM ) {
-    pdrv->on_remd_stable_rem( arg );
+  if ( pdrv->is_remd_check () ) {
+
+    // REMD testing mode 
+
+    if ( event == REMD_EVENT_MOVE ) {
+      Tonegen::get()->beep(50, 4, 7, config.get_volume_level ());
+    }
+
+  } else {
+
+    // REMD lucid dreaming mode
+
+    if ( event == REMD_EVENT_REM ) {
+      pdrv->on_remd_stable_rem( arg );
+    }
   }
 }
 
@@ -88,12 +109,19 @@ bool Driver::begin (void)
 {
   delay(600); /* Let power stabilize */
 
+  set_mode ( OPM_NONE );
+
   RTClock::get()->init();
-  //Keyboard::get()->init ();
-  SQWave::get()->init();
-  Vibro::get()->init();
+  SysClock::get()->init();
+  Display::get()->init();
+  Keyboard::get()->init ();
+  AppMenu::get()->init();
+  SquareWave::get()->init();
   Leds::get()->init();
+  VibroMotor::get()->init();
   Sound::get()->init ();
+  REMDetect::get()->init();
+  BatteryMonitor::get()->init();
 
   return true;
 }
@@ -105,6 +133,8 @@ void Driver::end (void)
 
 bool Driver::start (void)
 {
+  set_mode ( OPM_NORMAL );    /* Start in normal mode */
+
   interrupts();   /* Enable interrupts globally */
 
   /* Disable hold-repeat keyboard feature by default */
@@ -114,13 +144,14 @@ bool Driver::start (void)
    *            Most of the other components will NOT work 
    *            without it.
    */
-  RTClock::get()->start ( RTC_OPM_NORMAL );   /* Start real-time clock.*/ 
+  RTClock::get()->start ();   /* Start real-time clock.*/ 
 
+  SysClock::get()->start ();
 
-  //delay(1000);
+  delay(1000);
 
   /////////
-  Vibro::get()->start(5, 500);
+  VibroMotor::get()->start(6, 1000);
   delay(1000);
   /////////
 
@@ -132,17 +163,13 @@ bool Driver::start (void)
     /////////
   }*/
 
+
+  Leds::get()->on(DS::LED1, 50, 0);
+  Leds::get()->on(DS::LED2, 80, 0);
+
   Sound::get()->start();
 
-  //Vibro::get()->start(5, 500);
-
-  //Leds::get()->on(DS::LED1, 70, 0);
-  //Leds::get()->on(DS::LED2, 70, 0);
-
-  tonegen.play_melody(TGP_FUR_ELISE, 0);
-
-  //Leds::get()->pulse(DS::LED1, 50, 0, 1000, 50);
-  //Leds::get()->pulse(DS::LED2, 50, 0, 500, 70);
+  //Tonegen::get()->play_melody(TGP_FUR_ELISE, 1);
 
 
   return true;
@@ -152,11 +179,17 @@ void Driver::stop (void)
 {
   noInterrupts();
 
+  set_mode ( OPM_NONE );
+
   // TODO: implement, if needed
 }
 
 void Driver::process (void)
 {
+
+  delay (1000);
+
+  key_tone ();
 
 }
 
@@ -166,24 +199,30 @@ bool Driver::begin (void)
 {
   delay(500); /* Let power stabilize */
 
+  // Set member variables
+  remd_check = false;
+
+  set_mode ( OPM_NONE );
+
   // Disable SD at very beginning
   Pins::set_out(SS);
   Pins::drive_high(SS);
 
   // Initialize all subsystems
   RTClock::get()->init();
+  SysClock::get()->init();
   Display::get()->init();
   Keyboard::get()->init ();
-  PowerMan::get()->init();
   AppMenu::get()->init();
-  SQWave::get()->init();
-  Vibro::get()->init();
+  SquareWave::get()->init();
+  VibroMotor::get()->init();
   Leds::get()->init();
   Sound::get()->init ();
   REMDetect::get()->init();
+  BatteryMonitor::get()->init();
   
 
-#if ( TEST_REMD || TEST_BATTMON )
+#if ((REMD_LOG == REMD_LOG_SERIAL) || BATTMON_TEST)
   Serial.begin( UART0_BITRATE );
   while (!Serial) {
     _NOP(); // wait for serial port to connect
@@ -204,17 +243,20 @@ bool Driver::start (void)
   char msg[ 5 ];
   auto disp = Display::get();
 
+  set_mode ( OPM_NORMAL );    /* Start in normal mode */
+
   interrupts();   /* Enable interrupts globally */
 
   /* Disable hold-repeat keyboard feature by default */
   Keyboard::get()->hold_repeat_disable ();
 
-  /* IMPORTANT: Real-Time clock is the core component (!)
+  RTClock::get()->start();   /* Start real-time clock.*/ 
+
+  /* IMPORTANT: System clock is the core component (!)
    *            Most of the other components will NOT work 
    *            without it.
    */
-  RTClock::get()->start( RTC_OPM_NORMAL );   /* Start real-time clock.*/ 
-
+  SysClock::get()->start ();
 
   disp->enable ();
   disp->version ('P', fw_version(), 1000);
@@ -230,7 +272,7 @@ bool Driver::start (void)
     disp->message (__disp_msg_no_sd__, 1);
 
     /* let user insert SD-card and press ON/OFF */
-    Keyboard::get()->wait_for_key_press (KEY_POWER);
+    Keyboard::get()->wait_for_key_press ( KEY_POWER );
 
     /* try SD-card again...*/
     disp->message (__disp_msg_all_dots__, 500);
@@ -251,8 +293,8 @@ bool Driver::start (void)
     }
 
     /* Display codec version */
-    snprintf (msg, 5, __disp_msg_codec_spec__, VS_HW_SPEC);
-    disp->message (msg, 1000);
+    snprintf ( msg, 5, __disp_msg_codec_spec__, VS_HW_SPEC );
+    disp->message ( msg, 1000 );
 
 
     if ( ! config.begin () ) {
@@ -270,9 +312,9 @@ bool Driver::start (void)
 
     RTClock::get()->show ();
 
-    A2DConv::get()->enable ();
-    A2DConv::get()->warm_up ();
-    PowerMan::get()->start();
+    A2DConvert::get()->enable ();
+    A2DConvert::get()->warm_up ();
+    BatteryMonitor::get()->start();
 
     Sound::get()->start();
 
@@ -286,6 +328,8 @@ bool Driver::start (void)
 void Driver::stop (void)
 {
   noInterrupts();
+
+  set_mode ( OPM_NONE );
 
   // TODO: implement, if needed
 }
@@ -307,11 +351,11 @@ void Driver::process (void)
 
       if ( ret & MENU_EXIT ) {
 
-        /* exit from menu, show the clock again */
+        // Exit from menu, show the clock again
         RTClock::get()->show ();
       }
 
-      /* event has been processed by menu */
+      // Event has been processed by menu 
       key_event = KEY_NONE;
     }
   }
@@ -348,33 +392,53 @@ void Driver::process (void)
       key_tone ();
 
       // Temporarily use this button to stop REM detector
-      //stop_lucid_dream ();
+      stop_lucid_dream ();
+      
+#if REMD_TEST
+      
+      if ( is_lucid_dreaming () ) {
+
+        stop_lucid_dream ();
+      } else {
+
+        start_lucid_dream ();
+      }
+
+#elif RECORD_TEST
       String filepath;
-      Files::make_next_file_path(filepath, RECORDS_PATH, "MYREC", "WAV", 3);
+      Files::make_next_file_path(filepath, RECORDS_PATH, "REC", "WAV", 5);
       
       auto codec = AudioCodec::get();
-      if (codec->get_state() == AudioCodec::STATE_IDLE)
+      if (codec->get_state() == AudioCodec::STATE_NONE) {
+
+        key_tone (true);
+
         codec->capture (filepath.c_str());
-      else 
+      } else {
+
         codec->stop ();
 
+        key_tone ();
+      }
 
-      /*if (tonegen.is_playing () )
-        tonegen.stop ();
+#elif TONEGEN_TEST
+      if (Tonegen::get()->is_playing () )
+        Tonegen::get()->stop ();
 
       else {
-        delay (200);
-        tonegen.play_melody(DS::TGP_FUR_ELISE, 0);
-        
-      }*/
+        delay (100);
+        Tonegen::get()->play_melody(DS::TGP_KLEINE_NACHTMUSIK, 1);
+      }
 
-      /*if ( vibro.is_running () ) {
+#elif VIBRO_TEST
+      if ( vibro.is_running () ) {
         vibro.stop();
 
       } else {
         vibro.start(4, 0);
 
-      }*/
+      }
+#endif
 
       break;
     }
@@ -400,6 +464,31 @@ void Driver::reboot_on_key (void)
   soft_reset ();
 }
 
+void Driver::remd_start_check (void)
+{
+  auto remd = REMDetect::get();
+
+  if ( remd_check )
+    return;
+
+  if ( !remd->start (remd_callback, this)) {
+    return;
+  }
+
+  remd_check = true;
+}
+
+void Driver::remd_stop_check (void)
+{
+  auto remd = REMDetect::get();
+
+  if (! remd_check )
+    return;
+
+  remd->stop ();
+  remd_check = false;
+}
+
 void Driver::on_wakeup_timer (void)
 {
   start_lucid_dream ();
@@ -412,7 +501,7 @@ void Driver::on_alarm_clock (void)
 
 void Driver::on_remd_stable_rem (uint16_t intensity)
 {
-  auto rtck = RTClock::get();
+  auto clk = RTClock::get();
 
   // TODO: do actions on REM detected
   // серию вспышек и звуков во время сновидения
@@ -459,38 +548,38 @@ void Driver::on_remd_stable_rem (uint16_t intensity)
   /* Сheck if alarm clock is enabled */
   if (config.get_alarm_clock_enabled ()) {
     
-    rtck->alarm_clock_set (alarm_clock_callback, this);
+    clk->alarm_clock_set (alarm_clock_callback, this);
   }
 
 }
 
 void Driver::wakeup_timer_toggle (void)
 {
-  auto rtck = RTClock::get();
+  auto clk = RTClock::get();
 
-  if (rtck->wakeup_timer_is_set ()) {
+  if (clk->wakeup_timer_is_set ()) {
 
-    rtck->wakeup_timer_cancel ();
+    clk->wakeup_timer_cancel ();
 
   } else {
 
-    rtck->wakeup_timer_set (wakeup_timer_callback, this);
+    clk->wakeup_timer_set (wakeup_timer_callback, this);
   }
 }
 
 void Driver::wakeup_timer_quick_set (keybrd_event_t key_event)
 {
-  auto rtck = RTClock::get();
+  auto clk = RTClock::get();
   auto disp = Display::get();
 
   /* Wake-Up timer */
-  if ( rtck->wakeup_timer_is_set ()) {
+  if ( clk->wakeup_timer_is_set ()) {
 
-    rtck->wakeup_timer_cancel ();
+    clk->wakeup_timer_cancel ();
     return;
   }
 
-  rtck->hide();
+  clk->hide();
   disp->message ( __disp_msg_set__, 500 );
 
   if ( key_event & KEY_MINUS ) {
@@ -501,30 +590,33 @@ void Driver::wakeup_timer_quick_set (keybrd_event_t key_event)
     config.set_wakeup_timer_delay ( WAKEUP_TIMER_DELAY_DEFAULT );
     disp->time ( 0, WAKEUP_TIMER_DELAY_DEFAULT );
   }
-  disp->wait_cycles ( 800 );
+  SysClock::get()->wait ( 800 );
 
-  rtck->wakeup_timer_set (wakeup_timer_callback, this);
-  rtck->show();
+  clk->wakeup_timer_set (wakeup_timer_callback, this);
+  clk->show();
 }
 
-#if TEST_REMD
-static Timer tmr;
-static volatile int8_t evt_id = -1;
-#define REMD_TIMEOUT_MIN  180UL
-static void stop_remd (void *context)
-{
-  REMDetect::get()->stop_unsafe ();
-  evt_id = -1;
-}
+#if REMD_TEST
+static volatile int16_t remd_test_ticks = -1;
+#define REMD_TEST_SECONDS  60UL
 #endif
 
-void Driver::handle_isr (void)
+void Driver::handle_sysclk (void)
 {
-#if TEST_REMD
-  if (evt_id < 0)
+#if REMD_TEST
+  if (remd_test_ticks < 0)
     return;
 
-  tmr.update();
+  remd_test_ticks = (remd_test_ticks + 1) % REMD_TEST_SECONDS;
+  if (remd_test_ticks == 0)
+  {
+    // timer went off
+    remd_test_ticks = -1;
+
+    REMDetect::get()->stop_unsafe ();
+
+    Tonegen::get()->beep_unsafe(50, 4, 7, config.get_volume_level ());
+  }
 #endif
 }
 
@@ -536,9 +628,9 @@ void Driver::start_lucid_dream (void)
     return;
   }
 
-#if TEST_REMD
-  /* Stop after REMD_TIMEOUT_MIN */
-  evt_id = tmr.after(REMD_TIMEOUT_MIN * 60'000UL, stop_remd, this );
+#if REMD_TEST
+  /* Set time, stop after REMD_TEST_SECONDS */
+  remd_test_ticks = 0;
 #endif
 }
 
@@ -546,38 +638,39 @@ void Driver::stop_lucid_dream (void)
 {
   auto remd = REMDetect::get();
 
+  if ( !remd->is_running ())
+    return;
+
   remd->stop();
 
-#if TEST_REMD
-  tmr.stop(evt_id);
-  evt_id = -1;
+#if REMD_TEST
+  remd_test_ticks = -1;
 #endif
+}
+
+bool Driver::is_lucid_dreaming (void) const
+{
+  return REMDetect::get()->is_running ();
 }
 
 void Driver::power_off (void)
 {
-  auto rtck = RTClock::get();
   auto disp = Display::get();
 
-  rtck->hide ();
+  RTClock::get()->hide ();
   disp->message (__disp_msg_off__, 500);
+  disp->disable ();
 
   AudioCodec::get()->stop ();
-
+  BatteryMonitor::get()->stop ();
   REMDetect::get()->stop();
-  PowerMan::get()->stop ();
-  A2DConv::get()->disable ();	/* disable ADC to save power */
+  A2DConvert::get()->disable ();	/* disable ADC to save power */
 
   Sound::get()->stop();
 
-  disp->disable ();
+  SysClock::get()->stop (); /* Stop system clock as we don't need to process keyboard */
 
-  /* Restart RTC in power-save mode and 
-   * keep current time for the user 
-   */
-  rtck->stop();
-  rtck->start ( RTC_OPM_PWRSAVE );
-
+  set_mode( OPM_PWRSAVE );  /* Set power-save mode */
 
   /*
    * Go to sleep...
@@ -596,18 +689,17 @@ void Driver::power_off (void)
 
   } while (! (Keyboard::get()->get_irq_keys() & KEY_EXIT_SLEEP));
 
-  /* Wait for next tick and restart RTC in normal mode */
-  rtck->wait_for_next_tick ();
-  rtck->stop ();
-  rtck->start ( RTC_OPM_NORMAL );
+  set_mode( OPM_NORMAL );   /* Set normal power mode */
+
+  SysClock::get()->start ();  /* Start the system clock first */
 
   disp->enable ();
   disp->message (__disp_msg_on__, 500);
 
-  rtck->show ();
+  RTClock::get()->show ();
 
-  A2DConv::get()->enable ();
-  PowerMan::get()->start ();
+  A2DConvert::get()->enable ();
+  BatteryMonitor::get()->start ();
 
   Sound::get()->start();
 

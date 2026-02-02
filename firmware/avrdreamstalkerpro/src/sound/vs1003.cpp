@@ -26,10 +26,12 @@
 
 #include "sound/vs10xx_mcu.h"
 #include "sound/vs1003.h"
+#include "ds_sysclock.h"
 #include "ds_util.h"
 
 
 using namespace VLSI;
+using namespace DS;
 
 /*-----------------------------------------------------------------------*/
 	/* SCI Registers */
@@ -155,11 +157,10 @@ void Vs1003::vs_playback_stop (void)
 /**
  * Starts the IMA ADPCM recording engine on the VS1003.
  * * NOTE ON STABILITY:
- * This function includes critical timing delays. 
- * 1. After set_clockf(), the VS1003 PLL needs time to lock at 4x speed.
- * 2. Before soft_reset(), a 500ms delay is required to allow the 
- * Analog Bias and ADC stages to stabilize. Without this, the first 
- * few seconds of audio are dropped/silent as the DSP fails to sync.
+ * This function includes critical timing delays: Before soft_reset(), 
+ * a 500ms delay is required to allow the Analog Bias and ADC stages 
+ * to stabilize. Without this, the first few seconds of audio are 
+ * dropped/silent as the DSP fails to sync.
  */
 bool Vs1003::vs_adpcm_rec_start ( uint16_t sample_rate, uint8_t gain, bool highpass_filter )
 {
@@ -203,7 +204,7 @@ bool Vs1003::vs_adpcm_rec_start ( uint16_t sample_rate, uint8_t gain, bool highp
 
   // Allow the PLL to lock and Analog Bias to stabilize.
   // This prevents the "First 1/3 data loss" issue seen in recordings.
-  delay ( 500 ); 
+  SysClock::get()->wait( 500 ); 
 
   /* By adding SM ADPCM flag during the software reset
    * the user will activate IMA ADPCM recording mode.

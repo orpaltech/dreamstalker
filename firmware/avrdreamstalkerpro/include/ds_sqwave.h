@@ -37,25 +37,35 @@ typedef enum e_sqw_transition {
 } sqw_transition_t;
 
 /*-----------------------------------------------------------------------*/
-typedef void (*SQWaveCB_Transition_t)(void *context, uint8_t slot, sqw_transition_t trans);
+typedef void (*SquareWaveCB_t)(void *context, uint8_t slot, sqw_transition_t trans);
 
 
 /*-----------------------------------------------------------------------*/
-class SQWave {
+class SquareWave {
 public:
-  static SQWave *get();
+  static SquareWave *get();
 public:
-  bool	init (void);
+  bool init (void);
+  void end (void) {}
 
-  void	start (uint8_t slot, uint16_t duration_ms, uint16_t period_ms, 
+  void start (uint8_t slot, uint16_t duration_ms, uint16_t period_ms, 
               uint8_t duty_cycle, /* in percent */
-              SQWaveCB_Transition_t ptcb, void *context);
-  void	stop(uint8_t slot);
+              SquareWaveCB_t ptcb,
+              void *context);
+  void stop (uint8_t slot);
 
-  bool	is_active (uint8_t slot);
+  bool is_active (uint8_t slot) const;
 
-  /* Only for use in RTC ISR. Do not call it directly! */
-  static void handle_rtc (void);
+  /* Unsafe operations (must be called from ISR)*/
+  void start_unsafe (uint8_t slot, uint16_t duration_ms, uint16_t period_ms, 
+                    uint8_t duty_cycle, /* in percent */
+                    SquareWaveCB_t ptcb,
+                    void *context);
+  void stop_unsafe (uint8_t slot);
+  bool is_active_unsafe (uint8_t slot) const;
+
+  /* Only for use in system clock ISR. Do not call it directly! */
+  static void handle_sysclk (void);
 
 private:
   typedef struct s_sqw_context {
@@ -64,7 +74,7 @@ private:
     uint16_t period;
     uint8_t duty_cycle : 7;
     uint8_t active : 1;
-    SQWaveCB_Transition_t pcb_transition;
+    SquareWaveCB_t ptcb;
     void *context;
   } sqw_context_t;
 

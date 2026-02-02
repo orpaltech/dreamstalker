@@ -49,7 +49,7 @@ REMHints *REMHints::get()
 }
 
 /*-----------------------------------------------------------------------*/
-void REMHints::handle_rtc (void)
+void REMHints::handle_sysclk (void) /* called every 1ms*/
 {
   get()->update();
 }

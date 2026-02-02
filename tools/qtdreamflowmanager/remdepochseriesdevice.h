@@ -14,7 +14,9 @@ class QRemDEpochSeriesDevice : public QIODevice
     Q_OBJECT
 public:
     explicit QRemDEpochSeriesDevice(QXYSeries *rest, QXYSeries *vel,
-                                    QXYSeries *moves, QXYSeries *trig, QObject *parent = nullptr);
+                                    QXYSeries *moves, QXYSeries *trig,
+                                    QXYSeries *bucket, QXYSeries *ceiling,
+                                    QObject *parent = nullptr);
     ~QRemDEpochSeriesDevice() = default;
 
 signals:
@@ -27,7 +29,8 @@ protected:
 
 private:
     QXYSeries *m_restlessness, *m_velocity, *m_moves, *m_triggers;
-    double m_minX;
+    QXYSeries *m_bucket, *m_ceiling;
+    double m_minX, m_maxX;
     double m_maxYTop, m_maxYBottom;
 };
 

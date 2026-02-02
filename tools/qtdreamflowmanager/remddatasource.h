@@ -12,13 +12,14 @@
 /****************************************************/
 
 typedef struct __attribute__((packed)) s_remd_epoch_stats {
-    uint16_t magic;           // Fixed value: 0xAA55
-    uint16_t epoch_index;     // 0, 1, 2...
-    uint16_t move_count;      // Total saccades in 30s
-    uint16_t avg_noise;       // Noise floor (for quality check)
-    uint16_t restlessness;    // The brute force average
-    uint16_t peak_velocity;   // Highest velocity seen in epoch
-    uint8_t  trigger_status;  // 1 if LEDs fired, 0 otherwise
+    uint16_t magic;           // 0xAA55
+    uint16_t epoch_index;     // Time/Index
+    uint16_t move_count;      // Saccades counted
+    uint16_t gate_ceiling;    // The Blink Filter height (from sensitivity)
+    uint16_t restlessness;    // The variability (shakiness)
+    uint16_t epoch_peak_delta;// The strongest single move seen
+    uint8_t  bucket_state;    // Current level of the Leaky Bucket (Integrator)
+    uint8_t  trigger_status;  // LED intensity (0, 15, 20, 30)
 } remd_epoch_stats_t;
 
 /****************************************************/

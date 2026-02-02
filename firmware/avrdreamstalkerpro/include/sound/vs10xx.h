@@ -99,10 +99,10 @@ typedef struct s_vs_patch_activation {
 } vs_patch_activation_t, *pvs_patch_activation_t;
 
 typedef enum e_vs_patch_result {
-	VS_PRES_ERR = 0,
-	VS_PRES_OK = 1,
-	VS_PRES_SKIP = 2,
-	VS_PRES_EOP = 3,
+	VS_PR_ERR = 0,
+	VS_PR_OK = 1,
+	VS_PR_SKIP = 2,
+	VS_PR_EOP = 3,
 } vs_patch_result_t;
 typedef vs_patch_result_t (*pfnvs_patch_next_instr)(pvs_patch_t, pvs_sci_instr_t);
 
@@ -124,6 +124,7 @@ class Vs10xx {
 public:
   // Initialize the VLSI library
   bool	init ( void );
+  void  end (void) {}
 
   void	hard_reset ( void );
   void	soft_reset ( uint16_t mask_add, uint16_t mask_remove );

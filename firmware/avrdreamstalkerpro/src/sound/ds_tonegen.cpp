@@ -42,10 +42,10 @@ using namespace DS;
 #define PIN_SOUND	PIN_PB5		/* PWM sound pin */
 
 /*-----------------------------------------------------------------------*/
-typedef enum e_tonegen_storage {
+typedef enum e_tonegen_stg {
   TGS_RAM = 0,
-  TGS_FLASH
-} tonegen_storage_t;
+  TGS_PGM
+} tonegen_stg_t;
 
 /*-----------------------------------------------------------------------*/
 PROGMEM const uint16_t notes[] = {
@@ -105,7 +105,7 @@ PROGMEM const char jingle_bells[] = "d=4,o=4,b=240:e,e,2e|e,e,2e|e,g,c,d|2e,2p|f
 
 
 /*-----------------------------------------------------------------------*/
-#define TICK_PERIOD_MS 10	/* The interrupt period, ms */
+#define TICK_PERIOD_MS	10	/* The interrupt period, ms */
 
 
 /*-----------------------------------------------------------------------*/
@@ -123,9 +123,11 @@ ISR(TIMER4_COMPA_vect) // interrupt
 
 char Tonegen::melody_get_char (void)
 {
-  if ( melody.storage_mode == TGS_FLASH ) {
+  if ( melody.storage_mode == TGS_PGM ) {
+
     return pgm_read_byte_far ( melody.buffer );
   } else {
+
 	return *melody.buffer;	// direct access
   }
 }
@@ -136,15 +138,17 @@ char Tonegen::melody_get_char (void)
 static
 void melody_on (void)
 {
-  TCNT2 = 0;
+  // Set CTC Mode (Clear Timer on Compare Match)
+  TCCR2 = _BV(WGM21);
 
-  /* CTC mode, clock F_CPU/1024 = 7812.5 */
-  TCCR2 = (_BV(WGM21) | T2_N_1024);
+  TMR2_SET_N(1024);	// Set Prescaler 1024, F_CPU/1024 = 7812.5
 
   /* Generate 10ms interrupts.
-   * Max Error: (1 / 7812.5 * (OCR2+1)) − 0.01 = 0.000016 (s) 
+   * Calculation: 8,000,000 / 1024 / 100 = 78.125 ~= 78
    */
-  OCR2 = 77;
+  OCR2 = 78;
+
+  TCNT2 = 0;	// Clear counter
 
   TIFR &= ~(_BV(OCF2) | _BV(TOV2)); /* Reset interrupt flags */
   TIMSK |= _BV(OCIE2);				/* Enable CTC interrupt */
@@ -153,10 +157,10 @@ void melody_on (void)
 static
 void melody_off()
 {
+  TMR2_OFF();
+
   /* Disable Timer/Counter 2 interrupts */
   TIMSK &= ~(_BV(OCIE2) | _BV(TOIE2));
-
-  TMR2_OFF();
 }
 
 /*-----------------------------------------------------------------------*/
@@ -165,35 +169,31 @@ void melody_off()
 static
 void melody_on (void)
 {
-  TCNT4 = 0;
-
-  /* CTC mode, clock F_CPU/64 = 125000 */
+  // Set CTC Mode (Clear Timer on Compare Match)
   TCCR4A = _BV(WGM42);
-  TCCR4B = (_BV(WGM42) | T4_N_64);
+  TCCR4B = _BV(WGM42);
+
+  TMR4_SET_N(64);	// Set Prescaler 64, F_CPU/64 = 125000
 
   /* Generate 10ms interrupts.
-   * Max Error: (1 / 125000 * (OCR4A+1)) − 0.01 = 0 (s) 
+   * Calculation: 8,000,000 / 64 / 100 = 1250
    */
-  OCR4A	= 1249;
+  OCR4A	= 1250;
 
-  TIFR4	 = 0;			/* Reset interrupt flags */
-  TIMSK4 = _BV(OCIE4A);	/* Enable CTC interrupt */
+  TCNT4 = 0;	// Clear counter
+
+  TIFR4	 = 0;				/* Reset interrupt flags */
+  TIMSK4 = _BV(OCIE4A);		/* Enable CTC interrupt */
 }
 
 static
 void melody_off()
 {
+  TMR4_OFF();
+
   /* Disable Timer/Counter 4 interrupts */
   TIMSK4 = 0;
-
-  TMR4_OFF();
 }
-
-/*-----------------------------------------------------------------------*/
-#else
-/*-----------------------------------------------------------------------*/
-  #error "Unsupported MCU"
-
 /*-----------------------------------------------------------------------*/
 #endif
 /*-----------------------------------------------------------------------*/
@@ -248,57 +248,73 @@ uint16_t whole_duration_ms (uint16_t bpm)
 }
 
 /*-----------------------------------------------------------------------*/
-Tonegen tonegen;
-
-/*-----------------------------------------------------------------------*/
 Tonegen *Tonegen::get()
 {
-  return &tonegen;
+  static Tonegen tgen;
+  return &tgen;
 }
 
 /*-----------------------------------------------------------------------*/
 void Tonegen::handle_isr()
 {
-	tonegen.irq_handler();
+  get()->irq_handler();
 }
 
 void Tonegen::beep (uint32_t millisec, uint8_t note, uint8_t octave, uint8_t volume)
 {
-  if (is_playing ())
-	return;
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
 
-  melody.count = -1;
-  melody.ticks = (millisec) / TICK_PERIOD_MS;
-
-  melody_on ();
-
-  tone_on (note, octave, volume);
-
-  // Initialize variable for fade effects
-  tone_icr_base = ICR1;
+	beep_unsafe (millisec, note, octave, volume);
+  }
 }
 
 bool Tonegen::play_melody (tonegen_piece_t piece, uint8_t repeat_count)
 {
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+
+	return play_melody_unsafe (piece, repeat_count);
+  }
+}
+
+bool Tonegen::is_playing (void) const
+{
+  bool playing;
+
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+
+	playing = is_playing_unsafe ();
+  }
+  return playing;
+}
+
+void Tonegen::stop (void)
+{
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+
+	stop_unsafe ();
+  }
+}
+
+bool Tonegen::play_melody_unsafe (tonegen_piece_t piece, uint8_t repeat_count)
+{
+  if (is_playing_unsafe ())
+	return false;
+
   switch (piece) {
 	case TGP_MOONLIGHT_SONATA:
 	  melody.buffer = moonlight_sonata;
 	  break;
 
-	case TGP_FUR_ELISE:
+	case TGP_BEETHOVEN_FUR_ELISE:
 	  melody.buffer = fur_elise;
 	  break;
 
-	case TGP_INDIANA_JONES:
-	  melody.buffer = indiana_jones;
-	  break;
-
-	case TGP_ODE_TO_JOY:
+	case TGP_BEETHOVEN_ODE_TO_JOY:
 	  melody.buffer = ode_to_joy;
 	  break;
 
-	case TGP_MISSION_IMPOSSIBLE:
-	  melody.buffer = mission_impossible;
+	case TGP_KLEINE_NACHTMUSIK:
+	  melody.buffer = kleine_nachtmusik;
 	  break;
 
 	case TGP_HAPPY_BIRTHDAY:
@@ -309,18 +325,23 @@ bool Tonegen::play_melody (tonegen_piece_t piece, uint8_t repeat_count)
 	  melody.buffer = amazing_grace;
 	  break;
 
-	case TGP_KLEINE_NACHTMUSIK:
-	  melody.buffer = kleine_nachtmusik;
-	  break;
-
 	case TGP_JINGLE_BELLS:
 	  melody.buffer = jingle_bells;
 	  break;
+
+	case TGP_INDIANA_JONES:
+	  melody.buffer = indiana_jones;
+	  break;
+
+	case TGP_MISSION_IMPOSSIBLE:
+	  melody.buffer = mission_impossible;
+	  break;
+
 	default:
 	 return false;
   }
 
-  melody.storage_mode = TGS_FLASH;	// melody is stored in progmem
+  melody.storage_mode = TGS_PGM;	// melody is stored in progmem
 
   melody.count = repeat_count == 0 ? INT16_MAX : repeat_count;
   melody.ticks = 0;
@@ -399,23 +420,9 @@ bool Tonegen::play_melody (tonegen_piece_t piece, uint8_t repeat_count)
   return true;
 }
 
-bool Tonegen::is_playing (void)
+bool Tonegen::is_playing_unsafe (void) const
 {
-  bool playing;
-
-  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-
-	playing = melody.count != 0;
-  }
-  return playing;
-}
-
-void Tonegen::stop (void)
-{
-  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-
-	stop_unsafe ();
-  }
+  return melody.count != 0;
 }
 
 void Tonegen::set_intensity (uint16_t intensity, uint16_t max_intensity)
@@ -461,9 +468,9 @@ void Tonegen::set_intensity (uint16_t intensity, uint16_t max_intensity)
   if (OCR1A < target_vol)      OCR1A++;
   else if (OCR1A > target_vol) OCR1A--;
 
-  if (OCR1A >= (ICR1 / 2))
+  if (OCR1A >= (ICR1 / 2)) {
   	OCR1A = (ICR1 / 2) - 1;
-
+  }
 }
 
 void Tonegen::init (void)
@@ -471,25 +478,28 @@ void Tonegen::init (void)
   Pins::set_out ( PIN_SOUND );	/* output */
   Pins::drive_low ( PIN_SOUND );
 
-#ifdef __AVR_ATmega128__
-  /* Disable Timer/Counter 1 interrupts */
-  TIMSK &= ~(_BV(OCIE1A) | _BV(TOIE1) | _BV(TICIE1));
-
-#elif __AVR_ATmega1281__
-  /* Disable Timer/Counter 1 interrupts */
-  TIMSK1	= 0;
-
-#endif
-
-  TCNT1 = 0;
-
   /* Clear OC1A on compare match (set output to low level).*/
   /* PWM, Phase and Frequency	Correct, TOP in ICR1 */
-  /* Set prescaler 1, i.e. clock F_CPU/1 */
   TCCR1A = _BV(COM1A1);
-  TCCR1B = _BV(WGM13) | T1_N_1;
+  TCCR1B = _BV(WGM13);
+
+  TMR1_SET_N(1);	// Set Prescaler 1, i.e. clock F_CPU
+
+  TCNT1 = 0;	// Clear counter
+
+  /* Disable interrupts */
+#ifdef __AVR_ATmega128__
+
+  TIMSK &= ~(_BV(OCIE1A) | _BV(TOIE1) | _BV(TICIE1));
+#elif __AVR_ATmega1281__
+
+  TIMSK1 = 0;
+#endif
 
   melody_off();
+
+  // Clear variables
+  melody.count = 0;
 }
 
 void Tonegen::irq_handler (void)
@@ -501,7 +511,7 @@ void Tonegen::irq_handler (void)
 	if (--melody.ticks == 0) {
 	  tone_off ();
 	  melody_off ();
-	  melody.count=0;
+	  melody.count = 0;
 	}
 	return;
   }
@@ -603,6 +613,22 @@ void Tonegen::irq_handler (void)
   }
 }
 
+void Tonegen::beep_unsafe (uint32_t millisec, uint8_t note, uint8_t octave, uint8_t volume)
+{
+  if (is_playing_unsafe ())
+	return;
+
+  melody.count = -1;
+  melody.ticks = (millisec) / TICK_PERIOD_MS;
+
+  melody_on ();
+
+  tone_on (note, octave, volume);
+
+  // Initialize variable for fade effects
+  tone_icr_base = ICR1;
+}
+
 void Tonegen::stop_unsafe (void)
 {
   if (melody.count != 0) {
@@ -611,7 +637,6 @@ void Tonegen::stop_unsafe (void)
 	 */
 	tone_off ();
 	melody_off ();
-
 	melody.count = 0;
   }
 }

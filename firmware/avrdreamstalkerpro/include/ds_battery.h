@@ -2,7 +2,7 @@
  * This file is part of the AVR Dreamstalker software
  * (https://github.com/orpaltech/dreamstalker).
  *
- * Copyright (c) 2013-2025	ORPAL Technologies, Inc.
+ * Copyright (c) 2013-2026	ORPAL Technologies, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,48 +17,53 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _DS_VIBRO_DEFINED
-#define _DS_VIBRO_DEFINED
+#ifndef _DS_BATTMON_DEFINED
+#define _DS_BATTMON_DEFINED
 
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "ds_sqwave.h"
+#include "core/adc_avr.h"
 
 /*-----------------------------------------------------------------------*/
-#define SQW_VIBRO  2
+#define BATTERY_FULL	100U
+#define BATTERY_LOW 	85U
+#define BATTERY_EMPTY   70U
 
-
+/*-----------------------------------------------------------------------*/
 namespace DS {
+
 /*-----------------------------------------------------------------------*/
-class VibroMotor {
+class BatteryMonitor {
 public:
-  static VibroMotor *get();
+  static BatteryMonitor *get();
 public:
   bool init (void);
-  void end (void) {}
 
-  bool start (uint8_t	level,	    /* 0-9 */
-            uint16_t duration_ms  /* milliseconds*/
-			      );
+  void start (void);
   void stop (void);
-  bool is_running (void) const;
+  bool is_running (void) const { return running;}
 
-  /* Unsafe operations (must be called from ISR)*/
-  bool start_unsafe (uint8_t	level,	    /* 0-9 */
-                    uint16_t duration_ms  /* milliseconds*/
-			              );
-  void stop_unsafe (void);
-  bool is_running_unsafe (void) const;
+  uint8_t battery_level (void);
+
+  /* Intended for use from system clock ISR only. Do not call it directly! */
+  static void handle_sysclk (void);
 
 protected:
-  void on_sqw_transition(uint8_t slot, sqw_transition_t trans);
+  virtual void on_adc_sample(uint16_t sample);
 
 private:
-  static void sqw_transition_callback(void *context, uint8_t slot, sqw_transition_t trans);
+  static void adc_sample_callback(void *context, uint16_t sample);
+  
+  void irq_handler (void);
+  void run_monitor (void);
+
+  volatile uint16_t batt_level;
+  uint8_t timer_ticks;		/* minute ticks*/
+  bool running;
 };
 
 /*-----------------------------------------------------------------------*/
-};	// DS
+};  //DS
 
-#endif // _DS_VIBRO_DEFINED
+#endif  //_DS_BATTMON_DEFINED

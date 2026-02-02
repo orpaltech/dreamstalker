@@ -2,7 +2,7 @@
  * This file is part of the AVR Dreamstalker software
  * (https://github.com/orpaltech/dreamstalker).
  *
- * Copyright (c) 2013-2025	ORPAL Technologies, Inc.
+ * Copyright (c) 2013-2026	ORPAL Technologies, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,53 +17,55 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _DS_PWRMAN_DEFINED
-#define _DS_PWRMAN_DEFINED
+#ifndef _DS_SYSCLOCK_DEFINED
+#define _DS_SYSCLOCK_DEFINED
 
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "core/adc_avr.h"
-
-/*-----------------------------------------------------------------------*/
-#define BATTERY_FULL	100U
-#define BATTERY_LOW 	85U
-#define BATTERY_EMPTY   70U
+/* System clock interval, in millisec */
+#define CLK_PERIOD_MSEC   1UL
 
 /*-----------------------------------------------------------------------*/
 namespace DS {
 
 /*-----------------------------------------------------------------------*/
-class PowerMan {
+class SysClock {
 public:
-  static PowerMan *get();
+  static SysClock *get();
 public:
   bool init (void);
+  void end (void) {}
 
   void start (void);
   void stop (void);
-  bool is_running (void);
 
-  uint8_t battery_level (void);
+  void wait (uint16_t ms);
 
-  /* Intended for use in RTC ISR only. Do not call it directly! */
+public:
+  static constexpr uint32_t msec_to_ticks (uint32_t ms) { return ( ms / CLK_PERIOD_MSEC ); }
+  static constexpr uint32_t ticks_to_msec (uint32_t ticks) { return ticks * CLK_PERIOD_MSEC; }
+
+  /* RTC interrupt interval, in microseconds */
+  static constexpr uint32_t clk_period_us (void) { return ( clk_period_ms () * 1000 ); }
+  static constexpr uint32_t clk_period_ms (void) { return CLK_PERIOD_MSEC; }
+
+  /* Intended for use in ISR. Do not call it directly! */
   static void handle_isr (void);
 
-protected:
-  virtual void on_a2d_sample(uint16_t sample);
+private:
+  void irq_handler (void);
 
 private:
-  static void a2d_sample_callback(void *context, uint16_t sample);
-  
-  void irq_handler (void);
-  void run_monitor (void);
+  typedef struct s_sysclk_context {
+    /* Internal tick counters */
+    uint16_t ticks_second;
+    uint8_t ticks_setup;
+  } sysclk_context_t;
 
-  volatile uint16_t batt_level;
-  uint8_t timer_ticks;		/* minute ticks*/
-  bool battmon_status;
+  volatile sysclk_context_t clk;
 };
 
-/*-----------------------------------------------------------------------*/
-};  //DS
+};  // DS
 
-#endif  //_DS_PWRMAN_DEFINED
+#endif  // _DS_SYSCLOCK_DEFINED

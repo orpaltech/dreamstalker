@@ -46,7 +46,7 @@
 #define	T1_N_1024	(_BV(CS12) | _BV(CS10))
 
 #define TMR1_SET_N(N)	TCCR1B = ((TCCR1B & ~(_BV(CS12)|_BV(CS11)|_BV(CS10))) | T1_N_ ## N )
-
+#define TMR1_OFF()      TMR1_SET_N(0)
 
 #if defined (__AVR_ATmega128__)
 
@@ -103,6 +103,21 @@
 #define TMR2_OFF()		TMR2_SET_N(0)
 
 #elif defined (__AVR_ATmega1281__)
+
+/* ------------------------------------------------------------------------- */
+/* TIMER/COUNTER 0                                                           */
+/* ------------------------------------------------------------------------- */
+
+#define T0_N_0          0
+#define T0_N_1          _BV(CS00)
+#define T0_N_8          _BV(CS01)
+#define T0_N_64         (_BV(CS01) | _BV(CS00))
+#define T0_N_256        _BV(CS02)
+#define T0_N_1024       (_BV(CS02) | _BV(CS00))
+
+/* Note: On ATmega1281, CS bits are in TCCR0B */
+#define TMR0_SET_N(N)   TCCR0B = ((TCCR0B & ~(_BV(CS02) | _BV(CS01) | _BV(CS00))) | T0_N_ ## N )
+#define TMR0_OFF()      TMR0_SET_N(0)
 
 /* ------------------------------------------------------------------------- */
 /* TIMER/COUNTER 2													         */

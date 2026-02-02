@@ -61,7 +61,7 @@ public:
   void wait_for_key_press ( keybrd_event_t key );
 
   /* NOTE: only for use in RTC ISR. Do not call it directly! */
-  static bool handle_isr ( void );
+  static bool handle_sysclk ( void );
   static void handle_key_isr ( keybrd_event_t key );
 
 private:

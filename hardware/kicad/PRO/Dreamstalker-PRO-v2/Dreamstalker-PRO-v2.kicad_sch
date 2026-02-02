@@ -11115,7 +11115,7 @@
 	)
 	(wire
 		(pts
-			(xy 280.67 231.14) (xy 283.21 231.14)
+			(xy 279.4 231.14) (xy 283.21 231.14)
 		)
 		(stroke
 			(width 0)
@@ -11765,7 +11765,7 @@
 	)
 	(wire
 		(pts
-			(xy 280.67 212.09) (xy 280.67 223.52)
+			(xy 279.4 212.09) (xy 279.4 223.52)
 		)
 		(stroke
 			(width 0)
@@ -12485,7 +12485,7 @@
 	)
 	(wire
 		(pts
-			(xy 280.67 212.09) (xy 292.1 212.09)
+			(xy 279.4 212.09) (xy 292.1 212.09)
 		)
 		(stroke
 			(width 0)
@@ -13545,7 +13545,7 @@
 	)
 	(wire
 		(pts
-			(xy 280.67 228.6) (xy 280.67 231.14)
+			(xy 279.4 228.6) (xy 279.4 231.14)
 		)
 		(stroke
 			(width 0)
@@ -25952,7 +25952,7 @@
 				)
 			)
 		)
-		(property "Value" "15K"
+		(property "Value" "33K"
 			(at 259.334 170.434 0)
 			(effects
 				(font
@@ -26432,7 +26432,7 @@
 				)
 			)
 		)
-		(property "Value" "30K"
+		(property "Value" "75K"
 			(at 259.588 161.036 0)
 			(effects
 				(font
@@ -28483,7 +28483,7 @@
 	(symbol
 		(lib_name "R_Small_1")
 		(lib_id "Dreamstalker-Components:R_Small")
-		(at 280.67 226.06 0)
+		(at 279.4 226.06 0)
 		(mirror y)
 		(unit 1)
 		(exclude_from_sim no)
@@ -28492,7 +28492,7 @@
 		(dnp no)
 		(uuid "d3290b04-5d3f-425f-9451-25b49eaffa45")
 		(property "Reference" "R39"
-			(at 277.114 224.79 0)
+			(at 275.844 224.79 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -28500,7 +28500,7 @@
 			)
 		)
 		(property "Value" "10K"
-			(at 277.114 227.076 0)
+			(at 275.844 227.076 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -28508,7 +28508,7 @@
 			)
 		)
 		(property "Footprint" "Dreamstalker-Footprints:R_0603_1608Metric"
-			(at 280.67 226.06 0)
+			(at 279.4 226.06 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -28517,7 +28517,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 280.67 226.06 0)
+			(at 279.4 226.06 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -28526,7 +28526,7 @@
 			)
 		)
 		(property "Description" "Resistor, small symbol"
-			(at 280.67 226.06 0)
+			(at 279.4 226.06 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -28634,7 +28634,7 @@
 				)
 			)
 		)
-		(property "Value" "470"
+		(property "Value" "560"
 			(at 333.756 224.79 90)
 			(effects
 				(font

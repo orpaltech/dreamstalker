@@ -39,7 +39,7 @@ using namespace DS;
 
 /*-----------------------------------------------------------------------*/
 
-PROGMEM const uint8_t __vol_to_reg [] = {
+PROGMEM const uint8_t uVolumeToVS [] = {
 	VS_VOL_MIN, 
 	VS_VOL_1, 
 	VS_VOL_2,
@@ -70,7 +70,7 @@ bool AudioCodec::write_wav_header (AudioCodec *c, uint32_t num_blocks)
 
   auto pack32 = [&](uint32_t val) { memcpy(&b[idx], &val, 4); idx += 4; };
   auto pack16 = [&](uint16_t val) { memcpy(&b[idx], &val, 2); idx += 2; };
-  auto packStr = [&](const char* s) { memcpy(&b[idx], s, 4); idx += 4; };
+  auto packStr = [&](const char *s) { memcpy(&b[idx], s, 4); idx += 4; };
 
   /* Riff ChunkID */
   packStr("RIFF");
@@ -127,13 +127,12 @@ bool AudioCodec::begin (void)
   if (! vs.init ())
 	  return false;
 
-  state = STATE_IDLE;	/* Set initial state */
+  state = STATE_NONE;	// Set initial state
   return true;
 }
 
 void AudioCodec::end (void)
 {
-
 }
 
 bool AudioCodec::apply_patches (void)
@@ -151,20 +150,18 @@ void AudioCodec::set_volume (uint8_t left_chan, uint8_t right_chan)
   if (left_chan > 9)	left_chan = 9;
   if (right_chan > 9)	right_chan = 9;
 
-  left_chan = pgm_read_byte_far (&__vol_to_reg[ left_chan ]);
-  right_chan = pgm_read_byte_far (&__vol_to_reg[ right_chan ]);
+  left_chan = pgm_read_byte_far (&uVolumeToVS[ left_chan ]);
+  right_chan = pgm_read_byte_far (&uVolumeToVS[ right_chan ]);
 
   vs.set_volume (left_chan, right_chan);
 }
 
 bool AudioCodec::playback (const char *file_name)
 {
-  uint8_t vol;
+  if (get_state () != STATE_NONE)
+    return false;
 
-  if (get_state() != STATE_IDLE)
-	return false;
-
-  /* open the file */
+  // Open the file
   fp = card0.open (file_name);
   if (! fp)
 	  return false;
@@ -174,14 +171,14 @@ bool AudioCodec::playback (const char *file_name)
 	  return false;
   }
 
-  /* Read volume level from config */
-  vol = config.get_volume_level ();
-  set_volume (vol, vol);
+  // Read volume level from config 
+  uint8_t vol = config.get_volume_level ();
+  set_volume ( vol, vol );
 
-  /* Reset number of VS blocks processed */
+  // Reset number of VS blocks processed 
   count_blocks = 0;
 
-  /* Update status flag*/
+  // Update status flag
   state = STATE_PLAYBACK;
 
   return true;
@@ -189,11 +186,13 @@ bool AudioCodec::playback (const char *file_name)
 
 bool AudioCodec::capture (const char *file_name)
 {
-  if (get_state () != STATE_IDLE) return false;
+  if (get_state () != STATE_NONE) return false;
 
   auto handle_error = [&]() {
     fp.close ();
   	card0.remove (file_name);
+    Sound::get()->microphone_off ();
+    Sound::get()->set_silent (false);
   };
 
   // Create a new file
@@ -201,19 +200,19 @@ bool AudioCodec::capture (const char *file_name)
   if (! fp)
 	  return false;
 
+  Sound::get()->set_silent ();
+  Sound::get()->microphone_on ();
+
   // Write initial file header, will be updated after */
   if (! write_wav_header ( this, 0 )) {
     handle_error ();
     return false;
   }
 
-  Sound::get()->microphone_on ();
-
-  bool started =  vs.adpcm_record_start (ADPCM_SAMPLE_RATE, 
-                    config.get_record_gain_level (),
-                    ADPCM_USE_HP_FILTER);
-  if (!started) {
-	  Sound::get()->microphone_off ();
+  bool success =  vs.adpcm_record_start ( ADPCM_SAMPLE_RATE,
+                                        config.get_record_gain_level (), 
+                                        ADPCM_USE_HP_FILTER);
+  if (!success) {
   	handle_error ();
     return false;
   }
@@ -223,26 +222,30 @@ bool AudioCodec::capture (const char *file_name)
 
   // Update status flag
   state = STATE_CAPTURE;
+
   return true;
 }
 
 void AudioCodec::end_playback (AudioCodec *c, bool on_error)
 {
-  /* Update status flag*/
-  c->state = STATE_IDLE;
-
   c->vs.playback_stop ();
 
-  if (on_error) {
+  c->fp.close();
 
+  if (on_error) {
+    // TODO: output error message or whatever
   }
 
-  c->fp.close();
+  // Update status flag
+  c->state = STATE_NONE;
 }
 
 void AudioCodec::end_capture (AudioCodec *c, bool on_error)
 {
   c->vs.adpcm_record_stop ();
+
+  // Exit silent mode
+  Sound::get()->set_silent (false);
 
   Sound::get()->microphone_off ();
 
@@ -259,7 +262,7 @@ void AudioCodec::end_capture (AudioCodec *c, bool on_error)
 
       c->fp.write(write_ptr, remaining_blocks * buff_block_size);
     }
-    
+
     c->fp.flush();
 
     // Update wav header with the TOTAL number of blocks recorded
@@ -270,7 +273,7 @@ void AudioCodec::end_capture (AudioCodec *c, bool on_error)
   c->fp.close();
 
   // Update status flag
-  c->state = STATE_IDLE;
+  c->state = STATE_NONE;
 }
 
 void AudioCodec::process_playback (AudioCodec *c)
@@ -301,8 +304,7 @@ void AudioCodec::process_playback (AudioCodec *c)
 
 /**
  * Drains the VS FIFO and writes to SD in 512-byte aligned pages.
- * * CRITICAL LOGIC:
- * We use a 'while' loop to empty the VS1003 completely in every cycle.
+ * We use a 'while' loop to empty the VS completely in every cycle.
  * This prevents "Internal Overflow" which causes 2/3 data loss if the 
  * SD card has a latency spike during a write operation.
  */
@@ -345,15 +347,13 @@ void AudioCodec::process_capture (AudioCodec *c)
 void AudioCodec::stop (void)
 {
   switch (get_state ()) {
-	  case STATE_PLAYBACK: {
-	    end_playback ( this, false );
+	  case STATE_PLAYBACK:
+      end_playback ( this, false );
 	    break;
-	  }
 
-	  case STATE_CAPTURE: {
-	    end_capture ( this, false );
+	  case STATE_CAPTURE:
+      end_capture ( this, false );
 	    break;
-	  }
 
 	  default:
 	    break;
@@ -364,11 +364,11 @@ void AudioCodec::process_task (void)
 {
   switch (get_state ()) {
 	  case STATE_PLAYBACK:
-	    process_playback (this);
+      process_playback ( this );
 	    break;
 
 	  case STATE_CAPTURE:
-	    process_capture (this);
+      process_capture ( this );
 	    break;
 
 	  default:

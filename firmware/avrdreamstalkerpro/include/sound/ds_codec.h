@@ -2,7 +2,7 @@
  * This file is part of the AVR Dreamstalker software
  * (https://github.com/orpaltech/dreamstalker).
  *
- * Copyright (c) 2013-2025	ORPAL Technologies, Inc.
+ * Copyright (c) 2013-2026	ORPAL Technologies, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,21 +24,21 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "ds_util.h"
-#include "sound/ds_tonegen.h"
 #include "vs10xx_mcu.h"
+#include "sound/ds_tonegen.h"
+#include "ds_util.h"
 
 #if ( VS_HW_SPEC == VS_HWS_1002 )
   #include "vs1002.h"
-  #define VsCodec VLSI::Vs1002
+  using VsCodec = VLSI::Vs1002;
 
 #elif ( VS_HW_SPEC == VS_HWS_1003 )
   #include "vs1003.h"
-  #define VsCodec VLSI::Vs1003
+  using VsCodec  = VLSI::Vs1003;
 
 #elif ( VS_HW_SPEC == VS_HWS_1053 )
   #include "vs1053.h"
-  #define VsCodec VLSI::Vs1053
+  using VsCodec = VLSI::Vs1053;
 
 #endif
 
@@ -59,7 +59,7 @@ public:
   static AudioCodec *get();
 
   enum State {
-	  STATE_IDLE      = 0,
+	  STATE_NONE      = 0,
 	  STATE_PLAYBACK	= 1,
 	  STATE_CAPTURE	  = 2
   };
@@ -68,9 +68,11 @@ public:
   void end (void);
 
   bool apply_patches (void);
+
   bool playback (const char *file_name);
   bool capture (const char *file_name);
   void stop (void);
+
   State get_state (void) const;
   /* Set codec volume: 0-9 */
   void set_volume (uint8_t left_chan, uint8_t right_chan);
@@ -94,7 +96,7 @@ private:
   static constexpr uint16_t blocks_per_page = page_size / buff_block_size;  // How many blocks fit into one SD page?
 
   static_assert(buff_num_blocks >= 2 && buff_size == buff_block_size * buff_num_blocks, 
-              "Codec buffer must hold  at least 2 blocks. Codec buffer must strictly hold (block_size * num_blocks) bytes.");
+              "Codec buffer must hold at least 2 ADPCM blocks. Codec buffer size strictly equals (block_size * num_blocks) bytes.");
 
 private:
 	File		  fp;

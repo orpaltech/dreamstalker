@@ -33,7 +33,7 @@ using namespace DS;
 /* IMPORTANT: signature must be updated on every change 
  *			made to the configuration layout !!!
  */
-#define DSCONF_SIGNATURE	0x8006
+#define DSCONF_SIGNATURE	0x8007
 
 
 /*-----------------------------------------------------------------------*/
@@ -54,13 +54,13 @@ using namespace DS;
 #define REMD_COOLDOWN_EPOCHS_MAX        120
 #define REMD_COOLDOWN_EPOCHS_DEFAULT    30
 
-#define REMD_MIN_MOVE_DURATION_MIN      5
-#define REMD_MIN_MOVE_DURATION_MAX      80
-#define REMD_MIN_MOVE_DURATION_DEFAULT  10
+#define REMD_MIN_MOVE_DURATION_MIN      1
+#define REMD_MIN_MOVE_DURATION_MAX      20
+#define REMD_MIN_MOVE_DURATION_DEFAULT  4
 
 #define REMD_MIN_EPOCH_MOVES_MIN        3
-#define REMD_MIN_EPOCH_MOVES_MAX        25
-#define REMD_MIN_EPOCH_MOVES_DEFAULT    10
+#define REMD_MIN_EPOCH_MOVES_MAX        20
+#define REMD_MIN_EPOCH_MOVES_DEFAULT    8
 
 
 /*-----------------------------------------------------------------------*/
@@ -364,7 +364,7 @@ DSCONF_IMPLEMENT_PROPERTY(remd_required_rem_epochs, REMD_REQUIRED_EPOCHS_MIN, RE
 DSCONF_IMPLEMENT_PROPERTY(remd_cooldown_epochs, REMD_COOLDOWN_EPOCHS_MIN, REMD_COOLDOWN_EPOCHS_MAX, 1, REMD_COOLDOWN_EPOCHS_DEFAULT)
 DSCONF_IMPLEMENT_PROPERTY(remd_min_move_duration, REMD_MIN_MOVE_DURATION_MIN, REMD_MIN_MOVE_DURATION_MAX, 1, REMD_MIN_MOVE_DURATION_DEFAULT)
 DSCONF_IMPLEMENT_PROPERTY(remd_min_epoch_moves, REMD_MIN_EPOCH_MOVES_MIN, REMD_MIN_EPOCH_MOVES_MAX, 1, REMD_MIN_EPOCH_MOVES_DEFAULT)
-DSCONF_IMPLEMENT_PROPERTY(remd_restlessness_factor, 12, 25, 1, 15)
+DSCONF_IMPLEMENT_PROPERTY(remd_restlessness_factor, 5, 50, 1, 20)
 DSCONF_IMPLEMENT_PROPERTY_GET_WITH_INVALID(duplex_mode, 1, 3, 1, 0, 0)
 DSCONF_IMPLEMENT_PROPERTY_GET_WITH_INVALID(wakeup_mode, WAKEUP_MODE_LIGHT, WAKEUP_MODE_INTENSE, 1, WAKEUP_MODE_MEDIUM, WAKEUP_MODE_CUSTOM)
 DSCONF_IMPLEMENT_PROPERTY(hints_frequency, 1, 9, 1, 1)
@@ -487,74 +487,64 @@ void Config::set_remd_profile (remd_profile_t val)
     /* update settings */
     switch (get_remd_profile ()) {
       case REMD_PROFILE_CONSERVATIVE:
-        set_remd_sensitivity (5);
-        set_remd_min_epoch_moves (13);
-        set_remd_required_rem_epochs (4);
-        set_remd_min_move_duration (8);
-        set_remd_cooldown_epochs (60);
-        // Clears the bucket very easily if you move at all. 
-        // Best for avoiding false positives.
-        set_remd_restlessness_factor (15);
+        set_remd_sensitivity (3);         // Ceiling ~35: Strict amplitude gate
+        set_remd_min_epoch_moves (12);    // Higher bar for "REM" status
+        set_remd_required_rem_epochs (4); // 2 mins of sustained activity
+        set_remd_min_move_duration (5);   // 250ms: Rejects fast jitters
+        set_remd_cooldown_epochs (60);    // 30 min cooldown
+        set_remd_restlessness_factor (12);// Discards epoch if even slightly shaky
         break;
       
-      case REMD_PROFILE_MORNING_SNOOZE:
-        set_remd_sensitivity (6);
-        set_remd_min_epoch_moves (12);
-        set_remd_required_rem_epochs (3);
-        set_remd_min_move_duration (10);
-        set_remd_cooldown_epochs (45);
-        //You are more likely to be slightly restless while dreaming 
-        // in the morning; you don't want to wipe the bucket too easily.
-        set_remd_restlessness_factor (20);
+      case REMD_PROFILE_BALANCED:
+        set_remd_sensitivity (5);         // Ceiling ~45: Goldilocks zone
+        set_remd_min_epoch_moves (8);     // Standard REM burst count
+        set_remd_required_rem_epochs (3); // 1.5 mins of sustained activity
+        set_remd_min_move_duration (4);   // 200ms: Typical saccade width
+        set_remd_cooldown_epochs (40);    // 20 min cooldown
+        set_remd_restlessness_factor (22);// Standard stability gate
         break;
 
-      case REMD_PROFILE_BALANCED:
-        set_remd_sensitivity (7);         // Balanced amplitude
-        set_remd_min_epoch_moves (10);    // Requires 10 distinct "flicks" in 30s
-        set_remd_required_rem_epochs (3); // Requires 3 * 30s (1.5 min) of sustained activity
-        set_remd_min_move_duration (12);  // Ignores very short "micro-jitters"
-        set_remd_cooldown_epochs (40);    // 20-minute break between triggers
-        // Allows some minor shifting or breathing-related noise 
-        // without wiping the bucket.
-        set_remd_restlessness_factor (20);
+      case REMD_PROFILE_MORNING_SNOOZE:
+        set_remd_sensitivity (7);         // Higher Ceiling: Allows "snappier" eyes
+        set_remd_min_epoch_moves (6);     // Lower bar: Catch the dream quickly
+        set_remd_required_rem_epochs (2); // Only 1 min needed
+        set_remd_min_move_duration (3);   // 150ms: Catch quicker flicks
+        set_remd_cooldown_epochs (30);    // 15 min cooldown
+        set_remd_restlessness_factor (35);// Very forgiving of morning movement
         break;
 
       case REMD_PROFILE_AGGRESSIVE:
-        set_remd_sensitivity (9);
-        set_remd_min_epoch_moves (7);
-        set_remd_required_rem_epochs (2);
-        set_remd_min_move_duration (20);
-        set_remd_cooldown_epochs (20);
-        // The device prioritizes flashing the LED. 
-        // It requires significant tossing to clear the bucket.
-        set_remd_restlessness_factor (25);
+        set_remd_sensitivity (9);         // Max Ceiling (65): Almost all moves count
+        set_remd_min_epoch_moves (5);     // Minimal moves to trigger
+        set_remd_required_rem_epochs (2); // Only 1 min needed
+        set_remd_min_move_duration (3);   // 150ms
+        set_remd_cooldown_epochs (20);    // 10 min cooldown
+        set_remd_restlessness_factor (45);// Prioritize triggers over stability
         break;
 
       case REMD_PROFILE_STRESS_SHIELD:
-        set_remd_sensitivity (4);
-        set_remd_min_epoch_moves (13);
-        set_remd_required_rem_epochs (4);
-        set_remd_min_move_duration (12);
-        set_remd_cooldown_epochs (90);
-        // Since this is for stress protection, you want zero false 
-        // triggers while awake
-        set_remd_restlessness_factor (15);
+        set_remd_sensitivity (2);         // Ultra-low ceiling: Blocks all blinks
+        set_remd_min_epoch_moves (15);    // Very high bar (Safety First)
+        set_remd_required_rem_epochs (5); // 2.5 mins of verified REM
+        set_remd_min_move_duration (6);   // 300ms: Filter for deep rolls only
+        set_remd_cooldown_epochs (90);    // 45 min cooldown
+        set_remd_restlessness_factor (10);// Must be perfectly still
         break;
 
       case REMD_PROFILE_STRESS_SNOOZE:
-        set_remd_sensitivity (5);
-        set_remd_min_epoch_moves (13);
+        set_remd_sensitivity (4);
+        set_remd_min_epoch_moves (10);
         set_remd_required_rem_epochs (3);
-        set_remd_min_move_duration (10);
+        set_remd_min_move_duration (4);   // 200ms
         set_remd_cooldown_epochs (60);
-        set_remd_restlessness_factor (15);
+        set_remd_restlessness_factor (18);
         break;
 
       case REMD_PROFILE_STRESS_BALANCE:
-        set_remd_sensitivity (6);
-        set_remd_min_epoch_moves (12);
-        set_remd_required_rem_epochs (3);
-        set_remd_min_move_duration (8);
+        set_remd_sensitivity (4);
+        set_remd_min_epoch_moves (10);
+        set_remd_required_rem_epochs (4);
+        set_remd_min_move_duration (5);   // 250ms
         set_remd_cooldown_epochs (75);
         set_remd_restlessness_factor (15);
         break;
@@ -566,7 +556,7 @@ void Config::set_remd_profile (remd_profile_t val)
     set_readonly_remd_cooldown_epochs (true);
     set_readonly_remd_min_move_duration (true);
     set_readonly_remd_min_epoch_moves (true);
-    set_readonly_remd_restlessness_factor (false); // temporarily allow this for testing phase
+    set_readonly_remd_restlessness_factor (true);
   }
 }
 

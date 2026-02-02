@@ -185,6 +185,7 @@ static void light_hints_brightness_setup_activate (void);
 static void sound_hints_level_setup_activate (void);
 static void light_hints_duration_setup_activate (void);
 static void sound_hints_duration_setup_activate (void);
+static void remd_check_activate (void);
 static void set_defaults_activate (void);
 static void save_settings_activate (void);
 
@@ -193,6 +194,7 @@ static void wakeup_timer_setup_exit (void);
 static void trigger_clocks_setup_exit (void);
 static void light_hints_duration_setup_exit (void);
 static void sound_hints_duration_setup_exit (void);
+static void remd_check_exit (void);
 
 // REM Detector Settings
 PROGMEM const menu_desc_t desc_rdse[] = {
@@ -215,7 +217,7 @@ PROGMEM const menu_desc_t desc_rdse[] = {
   },
   {
 	// Min Required REM Epochs
-	"rE-%i\0\0",
+	"Er-%i\0\0",
 	1,
 	remd_required_rem_epochs_setup_activate,
 	remd_required_rem_epochs_setup_exit,
@@ -251,13 +253,13 @@ PROGMEM const menu_desc_t desc_rdse[] = {
   },
   {
 	// Restlessness factor
-	"F-%.2i\0",
+	"r-%.2i\0",
 	2,
 	remd_restlessness_factor_setup_activate,
 	remd_restlessness_factor_setup_exit,
 	remd_restlessness_factor_setup,
 	remd_restlessness_factor_setup_read_value,
-  },
+  }
 };
 
 // Enhanced Settings
@@ -479,8 +481,8 @@ PROGMEM const menu_desc_t desc_root[] = {
 	// check REM detector 
 	"Chdt\0\0\0",
 	0,
-	nullptr,
-	nullptr,
+	remd_check_activate,
+	remd_check_exit,
 	remd_check_handler,
   },
   {
@@ -943,7 +945,7 @@ void ense_recording_setup ( pmenu_context_t ctx, keybrd_event_t key_event )
 
 		codec->stop ();
 	  }
-	  if (codec->get_state() == AudioCodec::STATE_IDLE) {
+	  if (codec->get_state() == AudioCodec::STATE_NONE) {
 
 		// TODO: playback next recording
 	  }
@@ -954,12 +956,10 @@ void ense_recording_setup ( pmenu_context_t ctx, keybrd_event_t key_event )
 	  if (codec->get_state() == AudioCodec::STATE_CAPTURE) {
 
 		codec->stop ();
-	  }
-	  else if (codec->get_state() == AudioCodec::STATE_IDLE) {
-		/*
-		 * start new recording 
-		 */
-		Files::make_next_file_path(newfile, RECORDS_PATH, "MYREC", "WAV", 3);
+	  } else if (codec->get_state() == AudioCodec::STATE_NONE) {
+		
+		// Start new recording 
+		Files::make_next_file_path(newfile, RECORDS_PATH, "REC", "WAV", 5);
 		codec->capture (newfile.c_str());
 	  }
 	  else {
@@ -1118,7 +1118,7 @@ void ense_vibration_setup ( pmenu_context_t ctx, keybrd_event_t key_event)
   switch( key_event ) {
 	case ( KEY_ENTER ):
 	  if (ense_vibration_setup_read_value ()) {
-		Vibro::get()->start (ense_vibration_setup_read_value (), 2000);
+		VibroMotor::get()->start (ense_vibration_setup_read_value (), 2000);
 	  }
 	  set_handled (ctx);
 	  break;
@@ -1177,47 +1177,48 @@ int ense_speaker_setup_read_value (void)
 
 void clock_setup_activate (void)
 {
-  auto rtck = RTClock::get();
+  auto clk = RTClock::get();
 
   // setup real-time clock
-  rtck->set_setup ( RTC_SETUP_HOUR );
-  rtck->show ();
+  clk->set_setup ( RTC_SETUP_HOUR );
+  clk->show ();
 
   Keyboard::get()->hold_repeat_default ();
 }
 
 void clock_setup_exit (void)
 {
-  auto rtck = RTClock::get();
+  auto clk = RTClock::get();
 
   Keyboard::get()->hold_repeat_disable ();
 
   // exit from setup
-  rtck->set_setup ( RTC_SETUP_NONE );
-  rtck->hide ();
-  rtck->backup_current_time ();
+  clk->set_setup ( RTC_SETUP_NONE );
+  clk->hide ();
+
+  clk->backup_current_time ();
 }
 
 void clock_setup ( pmenu_context_t ctx, keybrd_event_t key_event )
 {
-  auto rtck = RTClock::get();
+  auto clk = RTClock::get();
 
   switch ( key_event ) {
 	case ( KEY_ENTER ):
 	  // switch between settings
-	  rtck->next_setup ();
+	  clk->next_setup ();
 	  set_handled (ctx);
 	  break;
 
 	case ( KEY_MINUS ):
 	case ( KEY_MINUS | KEYBRD_HOLD ):
-	  rtck->setup_inc ( -1 );
+	  clk->setup_inc ( -1 );
 	  set_handled (ctx);
 	  break;
 
 	case ( KEY_PLUS ):
 	case ( KEY_PLUS | KEYBRD_HOLD ):
-	  rtck->setup_inc ( 1 );
+	  clk->setup_inc ( 1 );
 	  set_handled (ctx);
 	  break;
   }
@@ -1266,11 +1267,11 @@ void wakeup_timer_setup_exit (void)
 
 void AppMenu::wakeup_timer_setup (pmenu_context_t ctx, keybrd_event_t key_event)
 {
-  bool is_active = RTClock::get()->wakeup_timer_is_set ();
+  bool is_set = RTClock::get()->wakeup_timer_is_set ();
 
   switch ( key_event ) {
 	case ( KEY_ENTER ):
-	  driver.wakeup_timer_toggle ();
+	  Driver::get()->wakeup_timer_toggle ();
 
 	  disp_wakeup_timer_delay ();
 	  set_handled (ctx);
@@ -1278,7 +1279,7 @@ void AppMenu::wakeup_timer_setup (pmenu_context_t ctx, keybrd_event_t key_event)
 
 	case ( KEY_MINUS ):
 	case ( KEY_MINUS | KEYBRD_HOLD ):
-	  if (! is_active ) {
+	  if (! is_set ) {
 
 	  	DSCONF_DECREMENT_PROPERTY(config, wakeup_timer_delay );
 	  	disp_wakeup_timer_delay ();
@@ -1289,7 +1290,7 @@ void AppMenu::wakeup_timer_setup (pmenu_context_t ctx, keybrd_event_t key_event)
 
 	case ( KEY_PLUS ):
 	case ( KEY_PLUS | KEYBRD_HOLD ):
-	  if (! is_active ) {
+	  if (! is_set ) {
 
 	  	DSCONF_INCREMENT_PROPERTY(config, wakeup_timer_delay );
 	  	disp_wakeup_timer_delay ();
@@ -1299,7 +1300,7 @@ void AppMenu::wakeup_timer_setup (pmenu_context_t ctx, keybrd_event_t key_event)
 	  break;
 
 	case ( KEY_CHECK ):
-	  if ( is_active ) {
+	  if ( is_set ) {
 		/* Remainder is only valid if timer is active
 		 */
 	  	disp_wakeup_timer_remainder ();
@@ -1765,24 +1766,6 @@ void light_hints_duration_setup_exit (void)
 void light_hints_duration_setup (pmenu_context_t ctx, keybrd_event_t key_event)
 {
   MENU_NUMERIC_PROPERTY_SETUP(light_hints_duration, light_hints_duration, ctx, key_event)
-
-  /*switch ( key_event ) {
-	case ( KEY_MINUS ):
-	case ( KEY_MINUS | KEYBRD_HOLD ):
-	  DSCONF_DECREMENT_PROPERTY(config, light_hints_duration);
-
-	  Display::get()->number (light_hints_duration_setup_read_value ());
-	  set_handled ( ctx );
-	  break;
-
-	case ( KEY_PLUS ):
-	case ( KEY_PLUS | KEYBRD_HOLD ):
-	  DSCONF_INCREMENT_PROPERTY(config, light_hints_duration);
-
-	  Display::get()->number (light_hints_duration_setup_read_value ());
-	  set_handled ( ctx );
-	  break;
-  }*/
 }
 
 int light_hints_duration_setup_read_value (void)
@@ -1805,24 +1788,6 @@ void sound_hints_duration_setup_exit (void)
 void sound_hints_duration_setup ( pmenu_context_t ctx, keybrd_event_t key_event)
 {
   MENU_NUMERIC_PROPERTY_SETUP(sound_hints_duration, sound_hints_duration, ctx, key_event)
-
-  /*switch ( key_event ) {
-	case ( KEY_MINUS ):
-	case ( KEY_MINUS | KEYBRD_HOLD ):
-	  DSCONF_DECREMENT_PROPERTY(config, sound_hints_duration);
-
-	  Display::get()->number (sound_hints_duration_setup_read_value ());
-	  set_handled ( ctx );
-	  break;
-
-	case ( KEY_PLUS ):
-	case ( KEY_PLUS | KEYBRD_HOLD ):
-	  DSCONF_INCREMENT_PROPERTY(config, sound_hints_duration);
-
-	  Display::get()->number (sound_hints_duration_setup_read_value ());
-	  set_handled ( ctx );
-	  break;
-  }*/
 }
 
 int sound_hints_duration_setup_read_value (void)
@@ -1834,7 +1799,23 @@ void wakeup_signal_check_handler ( pmenu_context_t, keybrd_event_t key_event )
 {
 }
 
+void remd_check_activate (void)
+{
+  // Enter REM detector check mode
+  Driver::get()->remd_start_check ();
+}
+
+void remd_check_exit (void)
+{
+  // Exit REM detector check mode
+  Driver::get()->remd_stop_check ();
+}
+
 void remd_check_handler ( pmenu_context_t, keybrd_event_t key_event)
+{
+}
+
+void set_defaults_activate (void)
 {
 }
 
@@ -1846,10 +1827,6 @@ void set_defaults_handler ( pmenu_context_t, keybrd_event_t key_event)
 	  /* NOTE: device will restart */
 	  break;
   }
-}
-
-void set_defaults_activate (void)
-{
 }
 
 void save_settings_handler ( pmenu_context_t ctx, keybrd_event_t key_event)

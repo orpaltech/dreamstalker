@@ -67,7 +67,7 @@ static
 keybrd_event_t poll_keys ( void );
 
 /*-----------------------------------------------------------------------*/
-bool Keyboard::handle_isr ( void )
+bool Keyboard::handle_sysclk ( void )
 {
   return get()->irq_handler ();
 }

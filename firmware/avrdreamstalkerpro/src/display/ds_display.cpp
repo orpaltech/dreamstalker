@@ -29,6 +29,7 @@
 #include "display/ds_disp_msgs.h"
 #include "ds_config.h"
 #include "ds_rtclock.h"
+#include "ds_sysclock.h"
 
 using namespace DS;
 
@@ -241,27 +242,9 @@ Display *Display::get()
 }
 
 /*-----------------------------------------------------------------------*/
-void Display::handle_rtc (void)
+void Display::handle_sysclk (void)
 {
   get()->irq_handler ();
-}
-
-uint32_t Display::get_cycle_us (void)
-{
-  return RTClock::isr_period_us ();
-}
-
-void Display::wait_one_cycle (void)
-{
-  _delay_us (get_cycle_us ());
-}
-
-void Display::wait_cycles (unsigned num_cycles)
-{
-  for (unsigned i = 0; i < num_cycles; i++) {
-
-	wait_one_cycle ();
-  }
 }
 
 /*-----------------------------------------------------------------------*/
@@ -390,12 +373,12 @@ void Display::text_out (const char *text)
   }
 }
 
-void Display::version (char ver_type, uint16_t ver, uint16_t cycles_to_wait)
+void Display::version (char ver_type, uint16_t ver, uint16_t wait_ms)
 {
   char msg[ 6 ];
 
   snprintf (msg, 6, __disp_msg_version__, ver_type, VER_MAJOR (ver), VER_MINOR (ver));
-  message (msg, cycles_to_wait);
+  message (msg, wait_ms);
 }
 
 #ifdef DISP_NUM_CODE_ENABLE
@@ -427,14 +410,14 @@ void Display::number ( uint16_t num )
 /*
  * Displays 4 symbols of the text
  */
-void Display::message (const char *text, uint16_t cycles_to_wait)
+void Display::message (const char *text, uint16_t wait_ms)
 {
+  if (wait_ms == 0)
+  	wait_ms = 1;
+
   text_out (text);
 
-  if (cycles_to_wait == 0)
-	cycles_to_wait = 1;
-
-  wait_cycles (cycles_to_wait);
+  SysClock::get()->wait (wait_ms);
 }
 
 void Display::time (uint8_t hour, unsigned minute)

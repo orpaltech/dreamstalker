@@ -40,34 +40,39 @@ using namespace DS;
 static
 bool vibro_is_busy (void)
 {
-  return SQWave::get()->is_active (SQW_VIBRO);
+  return SquareWave::get()->is_active_unsafe (SQW_VIBRO);
 }
 
-
 /*-----------------------------------------------------------------------*/
-static Vibro vibro;
-
-/*-----------------------------------------------------------------------*/
-void Vibro::sqw_transition_callback(void *context, uint8_t slot,
+void VibroMotor::sqw_transition_callback(void *context, uint8_t slot,
                                       sqw_transition_t trans)
 {
-  Vibro *pvm = static_cast<Vibro *>(context);
+  VibroMotor *pvm = reinterpret_cast<VibroMotor *>(context);
 
   pvm->on_sqw_transition (slot, trans);
 }
 
 /*-----------------------------------------------------------------------*/
-Vibro *Vibro::get()
+VibroMotor *VibroMotor::get()
 {
-  return &vibro;
+  static VibroMotor vm;
+  return &vm;
 }
 
 /*-----------------------------------------------------------------------*/
-bool Vibro::start (uint8_t level, uint16_t duration_ms)
+bool VibroMotor::start (uint8_t	level, uint16_t duration_ms)
+{
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+
+    return start_unsafe (level, duration_ms);
+  }
+}
+
+bool VibroMotor::start_unsafe (uint8_t level, uint16_t duration_ms)
 {
   uint8_t duty_cycle;
 
-  if (vibro_is_busy())	/* skip if busy*/
+  if (is_running_unsafe ())	/* skip if busy*/
 	  return false;
 
   if (level<1)
@@ -88,26 +93,42 @@ bool Vibro::start (uint8_t level, uint16_t duration_ms)
 	  break;
   }
 
-  SQWave::get()->start (SQW_VIBRO, duration_ms, 10, duty_cycle, 
-                        sqw_transition_callback, this);
+  SquareWave::get()->start_unsafe (SQW_VIBRO, duration_ms, 10, duty_cycle, 
+                                sqw_transition_callback, this);
 
   return true;
 }
 
-void Vibro::stop (void)
+void VibroMotor::stop_unsafe (void)
 {
-  if (!vibro_is_busy())	/* skip if inactive*/
+  if (! is_running_unsafe())	/* skip if inactive*/
 	  return;
 
-  SQWave::get()->stop (SQW_VIBRO);
+  SquareWave::get()->stop_unsafe (SQW_VIBRO);
 }
 
-bool Vibro::is_running (void)
+void VibroMotor::stop (void)
+{
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+
+    stop_unsafe ();
+  }
+}
+
+bool VibroMotor::is_running (void) const
+{
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+
+    return is_running_unsafe ();
+  }
+}
+
+bool VibroMotor::is_running_unsafe (void) const
 {
   return vibro_is_busy ();
 }
 
-bool Vibro::init (void)
+bool VibroMotor::init (void)
 {
   /* Set vibration control pin to output mode */
   Pins::set_out (PIN_VIBRO);
@@ -118,7 +139,7 @@ bool Vibro::init (void)
   return true;
 }
 
-void Vibro::on_sqw_transition(uint8_t i, sqw_transition_t trans)
+void VibroMotor::on_sqw_transition(uint8_t i, sqw_transition_t trans)
 {
   if (i != SQW_VIBRO)
 	  return;

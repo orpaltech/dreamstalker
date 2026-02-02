@@ -184,18 +184,50 @@ Leds *Leds::get()
 /*-----------------------------------------------------------------------*/
 void Leds::on (led_id_t led, uint8_t brightness, uint16_t duration_ms)
 {
-  pulse (led, brightness, duration_ms, 0, 0);
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+
+    on_unsafe (led, brightness, duration_ms);
+  }
 }
 
 void Leds::stop (led_id_t led)
 {
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+
+    stop_unsafe (led);
+  }
+}
+
+void Leds::pulse (led_id_t led, uint8_t brightness, uint16_t duration_ms, uint16_t period_ms, uint8_t duty_cycle)
+{
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+
+    pulse_unsafe (led, brightness, duration_ms, period_ms, duty_cycle);
+  }
+}
+
+bool Leds::is_led_busy (led_id_t led) const
+{
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+
+    return is_led_busy_unsafe (led);
+  }
+}
+
+void Leds::on_unsafe (led_id_t led, uint8_t brightness, uint16_t duration_ms)
+{
+  pulse_unsafe (led, brightness, duration_ms, 0, 0);
+}
+
+void Leds::stop_unsafe (led_id_t led)
+{
   if (!(led == LED1 || led == LED2))
     return;
-  if (! is_led_busy (led))	// skip if not lit
+  if (! is_led_busy_unsafe (led))	// skip if not lit
 	  return;
   
   // Stop the engines
-  SQWave::get()->stop(led);
+  SquareWave::get()->stop_unsafe (led);
 
   uint8_t pin = led_to_pin(led);
 
@@ -214,19 +246,19 @@ void Leds::stop (led_id_t led)
   Pins::set_in_highz(pin);
 }
 
-bool Leds::is_led_busy(led_id_t led) const
+bool Leds::is_led_busy_unsafe(led_id_t led) const
 {
-  // Check if SQWave is using this slot
-  bool sqw_busy = SQWave::get()->is_active(led);
+  // Check if SquareWave is using this slot
+  bool sqw_busy = SquareWave::get()->is_active_unsafe (led);
   
   return sqw_busy;
 }
 
-void Leds::pulse (led_id_t led, uint8_t brightness, uint16_t duration_ms, uint16_t period_ms, uint8_t duty_cycle)
+void Leds::pulse_unsafe (led_id_t led, uint8_t brightness, uint16_t duration_ms, uint16_t period_ms, uint8_t duty_cycle)
 {
   if (!(led==LED1 || led==LED2)) 
     return;
-  if (is_led_busy (led))  // skip if already lit
+  if (is_led_busy_unsafe (led))  // skip if already lit
     return;
 
   if (duty_cycle < DUTY_CYCLE_MIN) duty_cycle = DUTY_CYCLE_MIN;
@@ -240,13 +272,14 @@ void Leds::pulse (led_id_t led, uint8_t brightness, uint16_t duration_ms, uint16
   uint16_t ocr_val = LEDS_TMR3_OCR_TOP - corrected_br;
   led_pwm_set_ocr (led, ocr_val);
 
-  led_pwm_on(led);
+  //led_pwm_on(led);
 
   // Set to Pull-up so the PORT register is 1 (HIGH/OFF)
   Pins::set_in_pullup (led_to_pin (led));
 
-  // Start the SQWave engine
-  SQWave::get()->start (led, duration_ms, period_ms, duty_cycle, sqw_transition_callback, this);
+  // Start the SquareWave engine
+  SquareWave::get()->start_unsafe (led, duration_ms, period_ms, duty_cycle,
+                                sqw_transition_callback, this);
 }
 
 /*void Leds::fade(led_id_t led, uint8_t brightness_max, uint16_t ramp_ms, uint16_t min_wait, uint16_t max_wait, uint8_t count)
@@ -385,8 +418,15 @@ void Leds::set_raw_ocr(led_id_t led, uint16_t ocr)
 
       // Clear the Timer Interrupt Flag and wait for an overflow
       // This ensures the hardware copies the 'ocr' into the 'active' register.
-      TIFR3 |= _BV(TOV3);          // Clear the overflow flag
-      while (!(TIFR3 & _BV(TOV3))); // Wait for the timer to hit TOP/Bottom transition
+#if defined (__AVR_ATmega128__)
+      // ATmega128 uses ETIFR for Timer 3
+      ETIFR |= _BV(TOV3);          // Clear the overflow flag
+      while (!(ETIFR & _BV(TOV3))); // Wait for transition
+#elif defined (__AVR_ATmega1281__)
+      // ATmega1281 uses TIFR3
+      TIFR3 |= _BV(TOV3);          
+      while (!(TIFR3 & _BV(TOV3))); 
+#endif
 
       // Connect the Timer unit to the pin
       led_pwm_on (led);

@@ -29,11 +29,8 @@ namespace DS {
 class Display {
 public:
   static Display *get();
-  static uint32_t get_cycle_us(void);	/* length of cycle in microseconds */
 
-  /* Intended for use in RTC ISR. Do not call it directly! */
-  static void handle_rtc (void);
-
+public:
   bool init (void);
 
   // Display control methods
@@ -45,9 +42,9 @@ public:
 
   /* Display utilities */ 
   void number (uint16_t num);
-  void message (const char *text, uint16_t wait_cycles);
+  void message (const char *text, uint16_t wait_ms);
   void time (uint8_t hour, unsigned minute);
-  void version (char type, uint16_t ver, uint16_t wait_cycles);	/* display version */
+  void version (char type, uint16_t ver, uint16_t wait_ms);	/* display version */
   void flag (bool flag_val);
   void confirm (void);
   void text_out (const char *text); /* show text with no delay */
@@ -62,8 +59,8 @@ public:
   void disable_unsafe (void);
   void text_out_unsafe (const char *text);
 
-  void wait_one_cycle (void);
-  void wait_cycles (unsigned num_cycles);
+  /* Intended for use in system clock ISR. Do not call it directly! */
+  static void handle_sysclk (void);
 
 protected:
   void irq_handler (void);
