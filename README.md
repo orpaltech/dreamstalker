@@ -1,3 +1,3 @@
 # dreamstalker
 
-This is a device for working with lucid dreams. The idea is derived from here: https://smartelectron.ru/projects/pribor-dlya-osoznannyh-snovidenij-dreamstalker-pro.
+This device is designed to assist with lucid dreaming. The idea comes from this site: https://smartelectron.ru/projects/pribor-dlya-osoznannyh-snovidenij-dreamstalker-pro.
