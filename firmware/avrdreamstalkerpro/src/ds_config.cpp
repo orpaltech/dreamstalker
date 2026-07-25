@@ -2,7 +2,7 @@
  * This file is part of the AVR Dreamstalker software
  * (https://github.com/orpaltech/dreamstalker).
  *
- * Copyright (c) 2013-2025	ORPAL Technologies, Inc.
+ * Copyright (c) 2013-2026	ORPAL Technologies, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -484,69 +484,69 @@ void Config::set_remd_profile (remd_profile_t val)
 
 	  cfg.props.remd_profile = val;
 
-    /* update settings */
-    switch (get_remd_profile ()) {
+
+    switch (config.get_remd_profile()) {
       case REMD_PROFILE_CONSERVATIVE:
-        set_remd_sensitivity (3);         // Ceiling ~35: Strict amplitude gate
-        set_remd_min_epoch_moves (12);    // Higher bar for "REM" status
-        set_remd_required_rem_epochs (4); // 2 mins of sustained activity
-        set_remd_min_move_duration (5);   // 250ms: Rejects fast jitters
-        set_remd_cooldown_epochs (60);    // 30 min cooldown
-        set_remd_restlessness_factor (12);// Discards epoch if even slightly shaky
+        set_remd_sensitivity(3);         // Ceiling 35: Rejects almost all blinks/fast moves
+        set_remd_min_epoch_moves(12);    // High density requirement
+        set_remd_required_rem_epochs(4); // 2 mins of verified activity
+        set_remd_min_move_duration(5);   // 250ms: Only long, steady rolls
+        set_remd_cooldown_epochs(60);    // 30 min cooldown
+        set_remd_restlessness_factor(12);// Strict stability
         break;
       
       case REMD_PROFILE_BALANCED:
-        set_remd_sensitivity (5);         // Ceiling ~45: Goldilocks zone
-        set_remd_min_epoch_moves (8);     // Standard REM burst count
-        set_remd_required_rem_epochs (3); // 1.5 mins of sustained activity
-        set_remd_min_move_duration (4);   // 200ms: Typical saccade width
-        set_remd_cooldown_epochs (40);    // 20 min cooldown
-        set_remd_restlessness_factor (22);// Standard stability gate
+        set_remd_sensitivity(6);         // Ceiling 50: captures standard moves
+        set_remd_min_epoch_moves(8);     // Standard REM burst count
+        set_remd_required_rem_epochs(3); // 1.5 mins of activity
+        set_remd_min_move_duration(4);   // 200ms
+        set_remd_cooldown_epochs(40);    // 20 min cooldown
+        set_remd_restlessness_factor(22);
         break;
 
       case REMD_PROFILE_MORNING_SNOOZE:
-        set_remd_sensitivity (7);         // Higher Ceiling: Allows "snappier" eyes
-        set_remd_min_epoch_moves (6);     // Lower bar: Catch the dream quickly
-        set_remd_required_rem_epochs (2); // Only 1 min needed
-        set_remd_min_move_duration (3);   // 150ms: Catch quicker flicks
-        set_remd_cooldown_epochs (30);    // 15 min cooldown
-        set_remd_restlessness_factor (35);// Very forgiving of morning movement
+        set_remd_sensitivity(8);         // Ceiling 60: Allow the "snappier" eyes seen in logs
+        set_remd_min_epoch_moves(6);     // Easier to hit threshold
+        set_remd_required_rem_epochs(2); // Only 1 min needed (Reduced from 3)
+        set_remd_min_move_duration(3);   // 150ms: Catch quicker flicks
+        set_remd_cooldown_epochs(30);    // 15 min cooldown
+        set_remd_restlessness_factor(35);// Forgiving of snooze-time movement
         break;
 
       case REMD_PROFILE_AGGRESSIVE:
-        set_remd_sensitivity (9);         // Max Ceiling (65): Almost all moves count
-        set_remd_min_epoch_moves (5);     // Minimal moves to trigger
-        set_remd_required_rem_epochs (2); // Only 1 min needed
-        set_remd_min_move_duration (3);   // 150ms
-        set_remd_cooldown_epochs (20);    // 10 min cooldown
-        set_remd_restlessness_factor (45);// Prioritize triggers over stability
+        set_remd_sensitivity(9);         // Ceiling 65: Max headroom for intense dreams
+        set_remd_min_epoch_moves(4);     // Minimal moves needed (Reduced from 5)
+        set_remd_required_rem_epochs(1); // INSTANT TRIGGER (1-epoch/30s)
+        set_remd_min_move_duration(2);   // 100ms: Catch every flick
+        set_remd_cooldown_epochs(20);    // 10 min cooldown
+        set_remd_restlessness_factor(45);// Prioritize triggers over all else
         break;
 
       case REMD_PROFILE_STRESS_SHIELD:
-        set_remd_sensitivity (2);         // Ultra-low ceiling: Blocks all blinks
-        set_remd_min_epoch_moves (15);    // Very high bar (Safety First)
-        set_remd_required_rem_epochs (5); // 2.5 mins of verified REM
-        set_remd_min_move_duration (6);   // 300ms: Filter for deep rolls only
-        set_remd_cooldown_epochs (90);    // 45 min cooldown
-        set_remd_restlessness_factor (10);// Must be perfectly still
+        set_remd_sensitivity(2);         // Ceiling 30: Ultra-strict
+        set_remd_min_epoch_moves(15);    // Massive bar
+        set_remd_required_rem_epochs(5); // 2.5 mins of sustained REM
+        set_remd_min_move_duration(6);   // 300ms: Deep, slow rolls only
+        set_remd_cooldown_epochs(90);    // 45 min cooldown
+        set_remd_restlessness_factor(10);
         break;
 
       case REMD_PROFILE_STRESS_SNOOZE:
-        set_remd_sensitivity (4);
-        set_remd_min_epoch_moves (10);
-        set_remd_required_rem_epochs (3);
-        set_remd_min_move_duration (4);   // 200ms
-        set_remd_cooldown_epochs (60);
-        set_remd_restlessness_factor (18);
+        set_remd_sensitivity(4);
+        set_remd_min_epoch_moves(10);
+        set_remd_required_rem_epochs(3);
+        set_remd_min_move_duration(4);
+        set_remd_cooldown_epochs(60);
+        set_remd_restlessness_factor(18);
         break;
 
       case REMD_PROFILE_STRESS_BALANCE:
-        set_remd_sensitivity (4);
-        set_remd_min_epoch_moves (10);
-        set_remd_required_rem_epochs (4);
-        set_remd_min_move_duration (5);   // 250ms
-        set_remd_cooldown_epochs (75);
-        set_remd_restlessness_factor (15);
+        set_remd_sensitivity(4);
+        set_remd_min_epoch_moves(10);
+        set_remd_required_rem_epochs(4);
+        set_remd_min_move_duration(5);
+        set_remd_cooldown_epochs(75);
+        set_remd_restlessness_factor(15);
         break;
     }
 

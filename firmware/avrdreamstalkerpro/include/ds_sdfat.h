@@ -17,36 +17,49 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ds_driver.h"
+#ifndef _DS_SDFAT_EX_DEFINED
+#define _DS_SDFAT_EX_DEFINED
+
+#include <stdbool.h>
+
+#if USE_SDFAT_LIB
+  #include <SdFat.h>
+#else
+  #include <SD.h>
+#endif
+
 
 /*-----------------------------------------------------------------------*/
-// put function declarations here:
+namespace DS {
 
 /*-----------------------------------------------------------------------*/
-void setup()
-{
-  auto drv = DS::Driver::get();
+class SdFatEx {
+public:
+  static SdFatEx *get();
+public:
+  bool  init (void);
+  void  end (void) {}
 
-  // put your setup code here, to run once
+public:
+  bool is_card_inserted (int sd = 0);
 
-  if (! drv->init ())
-    return;
+    /* The method is only used from system clock ISR. Do not call it directly. */
+  static void handle_sysclk (void);
 
-  if (! drv->start () )
-  {
-    // Handle the critical error
-    drv->reboot_on_key ();
-  }
-}
+private:
+  void irq_handler (void);
+
+  bool    is_inserted;
+  uint8_t ticks_delay;
+public:
+#if USE_SDFAT_LIB
+  SdFat             sd0;
+#else
+  SDLib::SDClass    sd0;
+#endif
+};
 
 /*-----------------------------------------------------------------------*/
-void loop()
-{
-  auto drv = DS::Driver::get();
+}   // DS
 
-  drv->process ();
-
-  /* End of app loop */
-  _NOP ();
-}
-
+#endif  // _DS_SDFAT_EX_DEFINED

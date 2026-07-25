@@ -1,0 +1,127 @@
+***
+
+In the current code, remd_sensitivity serves as the Blink Suppression Threshold (or "Velocity Ceiling").It is the primary filter that decides whether a signal spike is a real eye movement or just a blink. Mathematically and logically, here is how it works now:1. The Mathematical FormulaInside your process_sample function, the sensitivity is converted into a "Ceiling" value:
+
+Ceiling = (Sensitivity * 5) + 20
+
+Sensitivity Setting	Resulting Ceiling	Usage in Profiles
+2			30			STRESS_SHIELD (Ultra-strict)
+6			50			BALANCED (Standard)
+9			65			AGGRESSIVE (Wide open)
+
+2. The "Velocity Gate" Logic
+The algorithm uses this ceiling as a maximum allowed volume for a valid eye movement.
+
+If peak delta < Ceiling: The system says: "This is a controlled movement of the eyeball. Count it as a REM move."
+
+If peak delta > Ceiling: The system says: "This signal is too large/fast. It must be an eyelid blink or the user adjusting the mask. Ignore it."
+
+3. Why this is counter-intuitive
+Usually, "high sensitivity" means picking up small things. In your architecture, increasing sensitivity actually makes the filter "lazier" (wider). By increasing the sensitivity to 9, you are telling the computer: "Don't be so quick to call things blinks. I have very intense eye movements, so let the louder signals (up to 65 delta) pass through the filter."
+
+4. Why we changed it for your morning logs
+In your REMD0102.DAT and REMD0104.DAT files, we saw movements hitting deltas of 47 to 62.
+
+Old way: Your sensitivity was set to 5 (Ceiling 45). The algorithm saw those 47-delta moves, compared them to the 45-ceiling, and deleted them because it thought they were blinks.
+
+New way: By setting sensitivity to 8 or 9, the ceiling moves to 60 or 65. Now, those same eye movements are safely under the limit and get counted toward your REM total.
+
+Summary
+remd_sensitivity is now the "Blink Filter Gate." * Lower it if the mask is flashing every time you blink.
+
+Raise it (as we did for the morning profiles) if you know you are dreaming but the mask isn't "seeing" your eye movements in the logs.
+
+
+***
+
+In the REMDetect system, there are two primary parameters from your profile that control the detection of a single eye movement (saccade). While other parameters (like min_epoch_moves) handle the high-level sleep staging, these two decide whether a "flicker" on the sensor is counted as an eye movement at all.
+
+1. remd_sensitivity (The "Volume Limit")
+This is the most critical parameter. It is converted into the ceiling variable in your code.
+
+How it works: It acts as a maximum allowed intensity. If an eye movement is too "loud" (the delta is too high), the algorithm assumes it was an eyelid blink or a physical mask adjustment and discards it.
+
+The Logic: is_not_a_blink = (move_peak_delta < ceiling);
+
+The Impact: * If this is too low, your real eye movements are rejected because they are stronger than the limit (this is what happened in your logs).
+
+If this is too high, every time you blink your eyes, the system will count it as a "dreaming" eye movement.
+
+2. remd_min_move_duration (The "Width Filter")
+This parameter controls the timing of the movement. Your code processes data in 50ms "buckets."
+
+How it works: It defines how many consecutive 50ms buckets the signal must stay "active" (above the noise floor) to be considered a real saccade rather than an electrical glitch or a tiny twitch.
+
+The Logic: is_long_enough = (move_duration >= min_move_duration);
+
+The Impact:
+
+If set to 2: A move must last at least 100ms. This is "Aggressive" and catches fast flicks.
+
+If set to 6: A move must last at least 300ms. This is "Conservative" and only catches slow, sweeping eye rolls.
+
+Comparison of the Two
+Think of the detection like a security gate for a car:
+
+Parameter		Analogy			If too strict...				If too loose...
+Sensitivity (Ceiling)	The Height of the gate	Tall trucks (strong moves) can't get in		Birds (blinks) are counted as cars.
+Duration		The Length of the car	Short cars (quick flicks) are ignored		Small debris (noise) is counted as a car.
+
+The "Hidden" Third Parameter: threshold
+In your current .cpp file, there is a third value:
+const int16_t threshold = 2;
+
+This is currently hardcoded and not part of the profiles. It acts as the Noise Floor. It is the "trigger" that tells the system an eye movement has started. If the sensor signal changes by less than 2 units, the system ignores it entirely as background electrical noise.
+
+In summary: To make the device "see" movement more easily, you increase sensitivity (to raise the ceiling) and decrease min_move_duration (to accept shorter bursts).
+
+
+***
+
+The system distinguishes between fast and slow moves through the combination of Delta (Velocity) and Duration (Time).
+
+While the code doesn't explicitly label them "Fast" or "Slow" in the logs, it uses a "Velocity vs. Persistence" filter to decide which movements are "Real REM" and which are just noise or blinks.
+
+Here is how the speed is handled in your logic:
+
+1. delta is the Speed (Velocity)
+In your code, you calculate delta every 50ms:
+const int16_t delta = abs(current_avg - remd.last_avg);
+
+Since the time window is fixed (50ms), Delta is mathematically equivalent to Velocity.
+
+High Delta: The eye moved a long distance in 50ms (Fast move).
+
+Low Delta: The eye moved a short distance or drifted slowly (Slow move).
+
+2. How the Profiles "Sort" by Speed
+Your profile parameters define an "Acceptable Speed Zone" (The Saccade Window). Anything outside this window is rejected.
+
+A. The Upper Speed Limit (The "Blink" Filter)
+This is controlled by remd_sensitivity (the ceiling).
+
+Too Fast: If an eye move is "Ultra-Fast" (like a blink), the move_peak_delta will exceed the ceiling. The code sees this high velocity and says: "That's too fast to be a controlled REM eye roll; discard it."
+
+The Profile Effect: In Aggressive mode, you raise the ceiling, allowing "Faster" (higher velocity) moves to be counted. In Conservative mode, you lower it, allowing only "Slower," more deliberate moves.
+
+B. The Lower Speed Limit (The "Drift" Filter)
+This is controlled by the hardcoded threshold = 2.
+
+Too Slow: If the eye is just slowly drifting or the mask is shifting slightly, the delta remains below 2. The code ignores this as "static" or "background noise."
+
+3. Duration vs. Speed
+This is the most sophisticated part of your algorithm. It distinguishes between a "Flick" and a "Roll."
+
+Fast Flick (Saccade): High delta, Low duration.
+
+Morning/Aggressive profiles are tuned to catch these by having a low min_move_duration (e.g., 2 buckets / 100ms).
+
+Slow Roll (Deep REM): Moderate delta, High duration.
+
+Conservative/Shield profiles prefer these. By setting min_move_duration to 5 or 6 (250-300ms), they ignore fast jitters and only count "Heavy" eye movements.
+
+Feature			Code Variable,			Logic
+Instant Speed		delta				Change in sensor value per 50ms
+Max Speed of Move	move_peak_delta			"The ""highest gear"" the eye hit during that roll."
+Speed Filtering		ceiling				"Rejects ""Supersonic"" moves (Blinks)."
+Persistence		move_duration			"Ensures the speed wasn't just a one-time ""glitch."""

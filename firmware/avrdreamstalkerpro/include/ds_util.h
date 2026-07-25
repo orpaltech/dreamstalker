@@ -23,10 +23,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-//#include <SD.h>
-//extern SDLib::SDClass &card0;
-#include <SdFat.h>
-extern SdFat &card0;
+#include "ds_arduino.h"
 
 /*-----------------------------------------------------------------------*/
 #define MIN(X,Y)    ((X) < (Y) ? (X) : (Y))

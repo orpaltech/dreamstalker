@@ -32,6 +32,7 @@
 #include "sound/vs1053.h"
 #include "ds_sysclock.h"
 #include "ds_util.h"
+#include "ds_sdfat.h"
 
 using namespace VLSI;
 using namespace DS;
@@ -68,9 +69,10 @@ bool Vs10xx::init ( void )
   Pins::set_out( VS_PIN_XRST );
   Pins::set_out( VS_PIN_XCS );
   Pins::set_out( VS_PIN_XDCS );
-  // Ensure Chip Select pins aren't pulled low
-  Pins::drive_high( VS_PIN_XCS );
-  Pins::drive_high( VS_PIN_XDCS );
+
+  /* Deselect data & command SPI devices */
+  sci_unsel ();
+  sdi_unsel ();
 
   SPI.begin();
   
@@ -79,10 +81,6 @@ bool Vs10xx::init ( void )
 
   /* SDI: put SPI-controller in mode-0, bus clock to 4MHz*/
   sdi_settings = SPISettings( VS_MHZ * 4, MSBFIRST, SPI_MODE0 );
-
-  /* Deselect data & command SPI devices */
-  sci_unsel ();
-  sdi_unsel ();
 
   hard_reset ();
 
@@ -525,7 +523,7 @@ bool Vs10xx::patch_process_file ( const char *file_name,
   memset ( &patch_file, 0, sizeof( patch_file ));
 
   /* open file */
-  File fp = card0.open (file_name);
+  File fp = SdFatEx::get()->sd0.open (file_name);
   if (! fp)
 	  return false;
 

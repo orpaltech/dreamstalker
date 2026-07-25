@@ -2,7 +2,7 @@
  * This file is part of the AVR Dreamstalker software
  * (https://github.com/orpaltech/dreamstalker).
  *
- * Copyright (c) 2013-2025	ORPAL Technologies, Inc.
+ * Copyright (c) 2013-2026	ORPAL Technologies, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,8 +30,10 @@
 #include "display/ds_display.h"
 #include "ds_config.h"
 #include "ds_driver.h"
+#include "ds_sysclock.h"
 #include "ds_rtclock.h"
 #include "ds_util.h"
+#include "ds_sdfat.h"
 
 
 using namespace DS;
@@ -93,79 +95,90 @@ RTClock *RTClock::get()
 /*-----------------------------------------------------------------------*/
 void RTClock::irq_handler (void)
 {
+#if defined (__AVR_ATmega128__)
   /*
-   * get here every SECOND
+   * get here every 1 millisec
    */
+  SysClock::handle_isr();
 
-  system_tick(); // Updates the internal timestamp
-
-  if (Driver::get()->get_mode() != OPM_NORMAL)
-    return;
-
-  // The rest is executed only in normal power mode
-
-  struct tm last_time;
-  RTClock::get()->get_time(&last_time);
-
-  if (rtc.ticks_display < DISP_OFF_DELAY_SEC) {
-	  rtc.ticks_display++;
-	  if ((rtc.ticks_display >= DISP_OFF_DELAY_SEC)
-			&& is_visible () 
-			&& !is_setup ()) {
-		  Display::get()->disable_unsafe ();
-	  }
-	}
-
-  if (flag_is_set (RTCF_ALARM_CLOCK)) {
-
-	  /* Alarm clock is set */
-	  rtc.ticks_alarm_clock = (rtc.ticks_alarm_clock + 1) % ALARM_CLOCK_DELAY_SEC;
-  	if (rtc.ticks_alarm_clock == 0) {
-
-		  /* The alarm is one-shot, so cancel it */
-		  flag_unset (RTCF_ALARM_CLOCK);
-
-		  // Notify callback object
-		  if (rtc.pcb_alarm_clock) {
-		    (*rtc.pcb_alarm_clock) (rtc.context_alarm_clock);
-		  }
-	  }
-	}
-
-  flag_toggle (RTCF_SHOW_DOT);
-
-  if (! is_setup ()) {
-	  flag_set (RTCF_SHOW_HOUR | RTCF_SHOW_MINUTE);
-
-	  if ( is_visible ()) {
-
-		  display (last_time.tm_hour, last_time.tm_min, rtc.flags);
-	  }
-	}
-
-  if (last_time.tm_sec == 0) {
+  if (SysClock::get()->get_ticks_second () == 0) {
+#endif
     /*
-	   * get here every MINUTE
-	   */
+    * get here every SECOND
+    */
 
-    if (wakeup_timer_is_set_unsafe ()) {
-		  /* 
-		   * Wake-Up timer is set 
-		   */
-  		rtc.ticks_wakeup_timer = (rtc.ticks_wakeup_timer + 1) % config.get_wakeup_timer_delay ();
-  		if (rtc.ticks_wakeup_timer == 0) {
+    system_tick(); // Updates the internal timestamp
 
-        /* One-shot timer, so cancel it */
-		    flag_unset (RTCF_WAKEUP_TIMER);
+    if (Driver::get()->get_mode() != OPM_NORMAL)
+      return;
 
-		    /* Notify callback object */
-		    if (rtc.pcb_wakeup_timer) {
-		  	  (*rtc.pcb_wakeup_timer) (rtc.context_wakeup_timer);
-		    }
-		  }
-	  }
+    // The rest is executed only in normal power mode
+
+    struct tm last_time;
+    RTClock::get()->get_time(&last_time);
+
+    if (rtc.ticks_display < DISP_OFF_DELAY_SEC) {
+      rtc.ticks_display++;
+      if ((rtc.ticks_display >= DISP_OFF_DELAY_SEC)
+        && is_visible () 
+        && !is_setup ()) {
+        Display::get()->disable_unsafe ();
+      }
+    }
+
+    if (flag_is_set (RTCF_ALARM_CLOCK)) {
+
+      /* Alarm clock is set */
+      rtc.ticks_alarm_clock = (rtc.ticks_alarm_clock + 1) % ALARM_CLOCK_DELAY_SEC;
+      if (rtc.ticks_alarm_clock == 0) {
+
+        /* The alarm is one-shot, so cancel it */
+        flag_unset (RTCF_ALARM_CLOCK);
+
+        // Notify callback object
+        if (rtc.pcb_alarm_clock) {
+          (*rtc.pcb_alarm_clock) (rtc.context_alarm_clock);
+        }
+      }
+    }
+
+    flag_toggle (RTCF_SHOW_DOT);
+
+    if (! is_setup ()) {
+      flag_set (RTCF_SHOW_HOUR | RTCF_SHOW_MINUTE);
+
+      if ( is_visible ()) {
+
+        display (last_time.tm_hour, last_time.tm_min, rtc.flags);
+      }
+    }
+
+    if (last_time.tm_sec == 0) {
+      /*
+      * get here every MINUTE
+      */
+
+      if (wakeup_timer_is_set_unsafe ()) {
+        /* 
+        * Wake-Up timer is set 
+        */
+        rtc.ticks_wakeup_timer = (rtc.ticks_wakeup_timer + 1) % config.get_wakeup_timer_delay ();
+        if (rtc.ticks_wakeup_timer == 0) {
+
+          /* One-shot timer, so cancel it */
+          flag_unset (RTCF_WAKEUP_TIMER);
+
+          /* Notify callback object */
+          if (rtc.pcb_wakeup_timer) {
+            (*rtc.pcb_wakeup_timer) (rtc.context_wakeup_timer);
+          }
+        }
+      }
+    }
+
+#if defined (__AVR_ATmega128__)
   }
-
+#endif
 }
 
 void RTClock::process_task (void)
@@ -209,7 +222,7 @@ bool RTClock::init (void)
   } else {
 	  unix_time = stored_time;
   }
-  set_system_time (unix_time);// - UNIX_OFFSET);  
+  set_system_time (unix_time);
 
   return true;
 }
@@ -240,15 +253,11 @@ void RTClock::start (void)
   /* Set CTC mode: TOP - OCR0, TOV0 is set on MAX */
   TCCR0 = _BV(WGM01);
 
-  /*
-   * Period 1000ms = 1sec
-   */
-  TMR0_SET_N(256);	/*256x prescaler, clk=TOSC/256=128 */
+  TMR0_SET_N(1);	/*1x prescaler, clk=TOSC/1=32768 */
 
-  /* Generate 1s interrupts.
-   * Max Error: (1 / 128 * (OCR0+1)) − 1 = 0 (s)
-   */
-  OCR0 = 128;
+  // Set Compare Value for 1ms
+  // 32768 Hz / 32 = 1024 Hz, which is close to 1ms
+  OCR0 = 32; 
 
   TCNT0 = 0;		/* Reset counter */
 
@@ -263,16 +272,16 @@ void RTClock::start (void)
 #elif defined (__AVR_ATmega1281__)
 
   /* Timer/Counter 2 is be used on atmega1281 */
-  TIMSK2 &= ~(_BV(OCIE2A) | _BV(OCIE2B) | _BV(TOIE2));	/* Disable interrupts */
+  TIMSK2 = 0;   /* Disable interrupts */
 
   /* When AS2 is written to 1, Timer/Counter 2 is clocked
-	from a XTAL connected to the TOSC1 pin */
+	  from a XTAL connected to the TOSC1 pin */
   ASSR = _BV(AS2);
 
-  /* The timer input clock is 32768 Hz */
   /* Set CTC mode: TOP - OCRA, TOV is set on MAX */
   TCCR2A = _BV(WGM21);
 
+  /* The timer input clock is 32768 Hz */
   /*
    * Period: 1000ms = 1sec
    */
@@ -290,11 +299,13 @@ void RTClock::start (void)
    */
   while (ASSR & (_BV(TCN2UB) | _BV(TCR2AUB) | _BV(OCR2AUB)));
 
-  /* Clear interrupt flags */
+  // Clear interrupt flags 
   TIFR2 = _BV(OCF2A) | _BV(OCF2B) | _BV(TOV2);
-  TIMSK2 = _BV(OCIE2A);		/* Enable interrupt */
 
+  // Enable compare interrupt 
+  TIMSK2 = _BV(OCIE2A);
 #endif
+
 }
 
 void RTClock::stop (void)

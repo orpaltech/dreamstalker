@@ -1,13 +1,17 @@
 #include <QChartView>
 #include <QCheckBox>
+#include <QDateTimeAxis>
 #include <QFrame>
 #include <QGraphicsDropShadowEffect>
+#include <QGraphicsLayout>
 #include <QLineSeries>
 #include <QPushButton>
 #include <QScatterSeries>
 #include <QScrollBar>
+#include <QTimeZone>
 #include <QValueAxis>
 #include <QVBoxLayout>
+#include <QApplication>
 #include "remdepochseriesdevice.h"
 #include "remddatasource.h"
 #include "remdepochswidget.h"
@@ -66,6 +70,7 @@ void QRemDEpochsOverlayFrame::mouseMoveEvent(QMouseEvent* event)
 QRemDEpochsWidget::QRemDEpochsWidget(QRemDDataSource *sourceEpochs, QWidget *parent)
     : QWidget{parent}
     , m_sourceEpochs(sourceEpochs)
+    , m_startTime(QDateTime::currentDateTimeUtc())
     , m_minX(0.), m_maxX(0.)
     , m_maxYTop(10.), m_maxYBottom(5.)
     , m_autoScroll(true), m_windowSize(2000), m_isFollowingLive(true)
@@ -98,7 +103,8 @@ QRemDEpochsWidget::QRemDEpochsWidget(QRemDDataSource *sourceEpochs, QWidget *par
 
     connect(m_scrollbar, &QScrollBar::valueChanged, this, &QRemDEpochsWidget::handleScroll);
     connect(m_epochsSeriesDevice, &QRemDEpochSeriesDevice::dataUpdated, this, &QRemDEpochsWidget::handleDataUpdated);
-    connect(m_epochsSeriesDevice, &QRemDEpochSeriesDevice::profileIdentified, this, &QRemDEpochsWidget::handleProfileIdentified);
+    connect(m_epochsSeriesDevice, &QRemDEpochSeriesDevice::profileResolved, this, &QRemDEpochsWidget::handleProfileResolved);
+    connect(m_epochsSeriesDevice, &QRemDEpochSeriesDevice::startTimeResolved, this, &QRemDEpochsWidget::handleStartTimeResolved);
 
     // Connect the X-axis of the top chart to the bottom chart
     auto axisXTop = qobject_cast<QValueAxis*>(m_viewTop->chart()->axes(Qt::Horizontal).first());
@@ -151,221 +157,115 @@ void QRemDEpochsWidget::clearCharts()
 void QRemDEpochsWidget::setupLayout()
 {
     QVBoxLayout *layout = new QVBoxLayout(this);
-    layout->setContentsMargins(0,0,0,0);
+    layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
 
-    // --- Top Chart: Intensity Metrics ---
-    QChart *topChart = new QChart();
-    topChart->addSeries(m_seriesRestless);
-    topChart->addSeries(m_seriesVelocity);
-    topChart->addSeries(m_seriesCeiling);
-    topChart->createDefaultAxes();
-    topChart->setTitle("Sleep Intensity (Epochs)");
-    topChart->axes(Qt::Horizontal).first()->setTitleText("Epoch (30s)");
+    // 1. Initialize Charts and Views
+    m_viewTop = new QChartView(new QChart());
+    m_viewBottom = new QChartView(new QChart());
 
-    // Set the Ceiling to be a thin, dashed grey line
-    QPen ceilingPen(Qt::lightGray);
-    ceilingPen.setStyle(Qt::DashLine);
-    ceilingPen.setWidth(1);
-    m_seriesCeiling->setPen(ceilingPen);
-
-    // --- Bottom Chart: REM Detection Metrics ---
-    QChart *bottomChart = new QChart();
-    bottomChart->addSeries(m_seriesMoves);
-    bottomChart->addSeries(m_seriesTrigger);
-    bottomChart->addSeries(m_seriesBucket);
-    bottomChart->createDefaultAxes();
-    bottomChart->setTitle("Saccades & System Response");
-
-    // Style the Bucket (Thicker Cyan Line)
-    QPen bucketPen(Qt::cyan);
-    bucketPen.setWidth(2); // Set thickness here
-    m_seriesBucket->setPen(bucketPen);
-
-    m_viewTop = new QChartView(topChart);
-    m_viewBottom = new QChartView(bottomChart);
-
-    // Optional: Improved rendering for thin lines
+    // Enable Antialiasing for smoother lines
     m_viewTop->setRenderHint(QPainter::Antialiasing);
     m_viewBottom->setRenderHint(QPainter::Antialiasing);
 
-    // --- Enable Zooming ---
-    // HorizontalZoom allows you to zoom into a specific time window
-    // without changing the vertical scale (keeps the "Staircase" height visible).
+    // Enable Horizontal RubberBand Zooming
     m_viewTop->setRubberBand(QChartView::HorizontalRubberBand);
     m_viewBottom->setRubberBand(QChartView::HorizontalRubberBand);
 
+    // 2. Setup Axes (Modern QDateTime + QValue)
+    QDateTimeAxis *axisXTop = new QDateTimeAxis();
+    QDateTimeAxis *axisXBottom = new QDateTimeAxis();
+    QValueAxis *axisYTop = new QValueAxis();
+    QValueAxis *axisYBottom = new QValueAxis();
+
+    axisXTop->setTickCount(10);
+    axisXTop->setFormat("hh:mm");
+    axisXBottom->setTickCount(10);
+    axisXBottom->setFormat("hh:mm");
+    axisXBottom->setTitleText("Time");
+
+    // 3. Configure Top Chart
+    m_viewTop->chart()->addAxis(axisXTop, Qt::AlignBottom);
+    m_viewTop->chart()->addAxis(axisYTop, Qt::AlignLeft);
+    m_viewTop->chart()->addSeries(m_seriesRestless);
+    m_viewTop->chart()->addSeries(m_seriesVelocity);
+    m_viewTop->chart()->addSeries(m_seriesCeiling);
+
+    m_seriesRestless->attachAxis(axisXTop); m_seriesRestless->attachAxis(axisYTop);
+    m_seriesVelocity->attachAxis(axisXTop); m_seriesVelocity->attachAxis(axisYTop);
+    m_seriesCeiling->attachAxis(axisXTop);  m_seriesCeiling->attachAxis(axisYTop);
+
+    m_viewTop->chart()->setTitle("Sleep Intensity Metrics");
+    m_viewTop->chart()->legend()->setAlignment(Qt::AlignRight);
+
+    // 4. Configure Bottom Chart
+    m_viewBottom->chart()->addAxis(axisXBottom, Qt::AlignBottom);
+    m_viewBottom->chart()->addAxis(axisYBottom, Qt::AlignLeft);
+    m_viewBottom->chart()->addSeries(m_seriesMoves);
+    m_viewBottom->chart()->addSeries(m_seriesBucket);
+    m_viewBottom->chart()->addSeries(m_seriesTrigger);
+
+    m_seriesMoves->attachAxis(axisXBottom);   m_seriesMoves->attachAxis(axisYBottom);
+    m_seriesBucket->attachAxis(axisXBottom);  m_seriesBucket->attachAxis(axisYBottom);
+    m_seriesTrigger->attachAxis(axisXBottom); m_seriesTrigger->attachAxis(axisYBottom);
+
+    m_viewBottom->chart()->setTitle("Saccades & System Response");
+    m_viewBottom->chart()->legend()->setAlignment(Qt::AlignRight);
+
+    // 5. Synchronize Horizontal Axes
+    // When one chart is zoomed or panned, the other follows
+    connect(axisXTop, &QDateTimeAxis::rangeChanged, axisXBottom, &QDateTimeAxis::setRange);
+    connect(axisXBottom, &QDateTimeAxis::rangeChanged, axisXTop, &QDateTimeAxis::setRange);
+
+    // 6. Scrollbar Setup
     m_scrollbar = new QScrollBar(Qt::Horizontal, this);
 
-    layout->addWidget(m_viewTop);
-    layout->addWidget(m_viewBottom);
+    layout->addWidget(m_viewTop, 1); // Give charts equal weight
+    layout->addWidget(m_viewBottom, 1);
     layout->addWidget(m_scrollbar);
 
-
-    /*m_overlay = new QRemDEpochsOverlayFrame(m_viewTop);
+    // 7. Floating Overlay Setup
+    m_overlay = new QRemDEpochsOverlayFrame(m_viewTop);
     QVBoxLayout *overLayout = new QVBoxLayout(m_overlay);
 
     m_followCheck = new QCheckBox("Follow Live");
-    QPushButton *btnReset = new QPushButton("Reset Zoom");
+    m_followCheck->setChecked(true);
+    QPushButton *btnReset = new QPushButton("Home View");
     QPushButton *btnJump = new QPushButton("Find Activity");
 
-    // Pure C++ Palette for White Text
-    QPalette textPal = m_followCheck->palette();
-    textPal.setColor(QPalette::WindowText, Qt::white);
-    textPal.setColor(QPalette::ButtonText, Qt::white);
-
-    m_followCheck->setPalette(textPal);
-    btnReset->setPalette(textPal);
-    btnJump->setPalette(textPal);
+    // Set styling for overlay elements
+    QPalette pal = m_followCheck->palette();
+    pal.setColor(QPalette::WindowText, Qt::black);
+    m_followCheck->setPalette(pal);
 
     overLayout->addWidget(m_followCheck);
     overLayout->addWidget(btnReset);
     overLayout->addWidget(btnJump);
 
-
-    // Connections
-    connect(btnReset, &QPushButton::clicked, this, [this]() {
-        m_viewTop->chart()->zoomReset();
-        m_viewBottom->chart()->zoomReset();
-        m_followCheck->setChecked(true);
-    });*/
-
-    m_overlay = new QRemDEpochsOverlayFrame(m_viewTop);
-    QVBoxLayout* overLayout = new QVBoxLayout(m_overlay);
-
-    m_followCheck = new QCheckBox("Follow Live");
-    QPushButton* btnReset = new QPushButton("Home View"); // Changed name to imply 'Return'
-    QPushButton* btnJump = new QPushButton("Find Activity");
-
-    // High contrast palette (Dark text on light background)
-    QPalette darkText;
-    darkText.setColor(QPalette::WindowText, Qt::black);
-    darkText.setColor(QPalette::ButtonText, Qt::black);
-
-    m_followCheck->setPalette(darkText);
-    btnReset->setPalette(darkText);
-    btnJump->setPalette(darkText);
-
-    overLayout->addWidget(m_followCheck);
-    overLayout->addWidget(btnReset);
-    overLayout->addWidget(btnJump);
+    // 8. Connect Overlay Signals
+    connect(m_followCheck, &QCheckBox::toggled, this, [this](bool checked) {
+        m_isFollowingLive = checked;
+    });
 
     connect(btnReset, &QPushButton::clicked, this, [this]() {
         m_isFollowingLive = false;
         if (m_followCheck) m_followCheck->setChecked(false);
 
-        auto axisXTop = qobject_cast<QValueAxis*>(m_viewTop->chart()->axes(Qt::Horizontal).first());
-        auto axisXBottom = qobject_cast<QValueAxis*>(m_viewBottom->chart()->axes(Qt::Horizontal).first());
-
-        if (axisXTop && axisXBottom) {
-            // 1. Choose a "Major" interval for the full session view
-            double interval = 200.0;
-
-            // 2. Snap the VIEW range to these multiples
-            // This forces the labels to be nice (e.g., 39800, 40000...)
-            double snappedMin = std::floor(m_minX / interval) * interval;
-            double snappedMax = std::ceil(m_maxX / interval) * interval;
-
-            // 3. Apply the range and calculate the exact tick count
-            int tickCount = static_cast<int>((snappedMax - snappedMin) / interval) + 1;
-
-            axisXTop->setRange(snappedMin, snappedMax);
-            axisXTop->setTickCount(tickCount);
-            axisXTop->setLabelFormat("%d");
-
-            axisXBottom->setRange(snappedMin, snappedMax);
-            axisXBottom->setTickCount(tickCount);
-            axisXBottom->setLabelFormat("%d");
-        }
+        // Calculate full range based on detected data min/max
+        updateAxisGrid(m_viewTop->chart()->axes(Qt::Horizontal).first(), m_minX, m_maxX, true);
 
         m_viewTop->chart()->zoomReset();
         m_viewBottom->chart()->zoomReset();
 
         m_scrollbar->blockSignals(true);
-        // Align scrollbar to the actual data start, not the snapped start
         m_scrollbar->setValue(static_cast<int>(m_minX));
         m_scrollbar->blockSignals(false);
-    });
 
-    connect(m_followCheck, &QCheckBox::toggled, this, [this](bool checked) {
-        m_isFollowingLive = checked;
+        updateCharts();
     });
 
     connect(btnJump, &QPushButton::clicked, this, &QRemDEpochsWidget::jumpToActivity);
 }
-
-/*void QRemDEpochsWidget::setupLayout()
-{
-    QVBoxLayout *layout = new QVBoxLayout(this);
-
-    // --- Top Chart Setup ---
-    QChart *topChart = new QChart();
-    topChart->setTitle("Sleep Intensity (Epochs)");
-
-    QValueAxis *axisXTop = new QValueAxis(this);
-    QValueAxis *axisYTop = new QValueAxis(this);
-    topChart->addAxis(axisXTop, Qt::AlignBottom);
-    topChart->addAxis(axisYTop, Qt::AlignLeft);
-
-    topChart->addSeries(m_seriesRestless);
-    topChart->addSeries(m_seriesVelocity);
-    topChart->addSeries(m_seriesCeiling);
-
-    // CRITICAL: Every series must be attached to BOTH axes
-    m_seriesRestless->attachAxis(axisXTop);
-    m_seriesRestless->attachAxis(axisYTop);
-    m_seriesVelocity->attachAxis(axisXTop);
-    m_seriesVelocity->attachAxis(axisYTop);
-    m_seriesCeiling->attachAxis(axisXTop);
-    m_seriesCeiling->attachAxis(axisYTop);
-
-    // Style Ceiling
-    QPen ceilingPen(Qt::lightGray);
-    ceilingPen.setStyle(Qt::DashLine);
-    ceilingPen.setWidth(1);
-    m_seriesCeiling->setPen(ceilingPen);
-
-    // --- Bottom Chart Setup ---
-    QChart *bottomChart = new QChart();
-    bottomChart->setTitle("Saccades & System Response");
-
-    QValueAxis *axisXBottom = new QValueAxis(this);
-    QValueAxis *axisYBottom = new QValueAxis(this);
-    bottomChart->addAxis(axisXBottom, Qt::AlignBottom);
-    bottomChart->addAxis(axisYBottom, Qt::AlignLeft);
-
-    bottomChart->addSeries(m_seriesMoves);
-    bottomChart->addSeries(m_seriesTrigger);
-    bottomChart->addSeries(m_seriesBucket);
-
-    // CRITICAL: Attach series to axes
-    m_seriesMoves->attachAxis(axisXBottom);
-    m_seriesMoves->attachAxis(axisYBottom);
-    m_seriesTrigger->attachAxis(axisXBottom);
-    m_seriesTrigger->attachAxis(axisYBottom);
-    m_seriesBucket->attachAxis(axisXBottom);
-    m_seriesBucket->attachAxis(axisYBottom);
-
-    // Style Bucket
-    QPen bucketPen(Qt::cyan);
-    bucketPen.setWidth(2);
-    m_seriesBucket->setPen(bucketPen);
-
-    // --- Views and Interactivity ---
-    m_viewTop = new QChartView(topChart);
-    m_viewBottom = new QChartView(bottomChart);
-    m_viewTop->setRenderHint(QPainter::Antialiasing);
-    m_viewBottom->setRenderHint(QPainter::Antialiasing);
-
-    m_viewTop->setRubberBand(QChartView::HorizontalRubberBand);
-    m_viewBottom->setRubberBand(QChartView::HorizontalRubberBand);
-
-    m_scrollbar = new QScrollBar(Qt::Horizontal, this);
-
-    layout->addWidget(m_viewTop);
-    layout->addWidget(m_viewBottom);
-    layout->addWidget(m_scrollbar);
-}*/
 
 void QRemDEpochsWidget::resetZoom()
 {
@@ -383,136 +283,143 @@ void QRemDEpochsWidget::resetZoom()
 
 void QRemDEpochsWidget::jumpToActivity()
 {
-    // 1. Disable live following first
+    // 1. Disable live following
     m_isFollowingLive = false;
     if (m_followCheck) m_followCheck->setChecked(false);
 
-    // 2. Scan for the first sign of activity
+    // 2. Scan for the trigger
     auto points = m_seriesBucket->points();
     for (const QPointF &p : points) {
         if (p.y() > 0.5) {
+            // 3. Convert millisecond X back to Epoch Index
+            qint64 triggerMsecs = static_cast<qint64>(p.x());
+            QDateTime triggerTime = QDateTime::fromMSecsSinceEpoch(triggerMsecs);
 
-            // Instead of just p.x() - 50, we round down to the nearest 50.
-            // This ensures the labels land on 40500, 40550, etc., instead of 40503.
-            double rawStart = p.x() - 50;
-            double viewStart = std::floor(rawStart / 50.0) * 50.0;
-            double viewEnd = viewStart + 200.0; // Keep a clean, fixed-width window
+            // Formula: (Seconds since start / 30) + 1
+            double triggerIndex = (m_startTime.secsTo(triggerTime) / 30.0) + 1.0;
 
-            // 3. Update BOTH axes to keep them synchronized
-            auto axisXTop = qobject_cast<QValueAxis*>(m_viewTop->chart()->axes(Qt::Horizontal).first());
-            auto axisXBottom = qobject_cast<QValueAxis*>(m_viewBottom->chart()->axes(Qt::Horizontal).first());
+            // 4. Calculate the window.
+            // We want the trigger to be visible, ideally 25% into the view.
+            double viewMin = triggerIndex - (m_windowSize * 0.25);
 
-            if (axisXTop && axisXBottom) {
-                // By setting a "clean" range here, updateAxisGrid will
-                // produce "clean" ticks automatically.
-                axisXTop->setRange(viewStart, viewEnd);
-                axisXBottom->setRange(viewStart, viewEnd);
+            // 5. CLAMPING: This is the critical part to prevent the "jump to start" bug
+            // If the calculated viewMin is beyond the current data, or if we are
+            // early in the session, we must stay within [m_minX, m_maxX]
+            if (viewMin + m_windowSize > m_maxX) {
+                viewMin = qMax(m_minX, m_maxX - m_windowSize);
+            }
+            if (viewMin < m_minX) {
+                viewMin = m_minX;
             }
 
-            // 4. Update the scrollbar so it reflects the new position
+            double viewMax = viewMin + m_windowSize;
+
+            // If data is very sparse (startup), don't force a huge window
+            if (m_maxX - m_minX < m_windowSize) {
+                viewMin = m_minX;
+                viewMax = m_maxX;
+            }
+
+            // 6. Update the Scrollbar position
             m_scrollbar->blockSignals(true);
-            m_scrollbar->setValue(static_cast<int>(viewStart));
+            m_scrollbar->setValue(static_cast<int>(viewMin));
             m_scrollbar->blockSignals(false);
+
+            // 7. Update Axes directly
+            auto axisXTop = m_viewTop->chart()->axes(Qt::Horizontal).first();
+            auto axisXBottom = m_viewBottom->chart()->axes(Qt::Horizontal).first();
+
+            updateAxisGrid(axisXTop, viewMin, viewMax, true);
+            updateAxisGrid(axisXBottom, viewMin, viewMax, true);
 
             break;
         }
     }
+
+    updateCharts();
 }
 
-/*void QRemDEpochsWidget::updateAxisGrid(QValueAxis *axis, double minVal, double maxVal, bool isHorizontal)
+void QRemDEpochsWidget::updateCharts()
+{
+    // Force the Chart to recalculate its internal geometry
+    m_viewTop->chart()->layout()->activate();
+    m_viewBottom->chart()->layout()->activate();
+
+    // Invalidate the scene and schedule a repaint of the widgets
+    m_viewTop->viewport()->update();
+    m_viewBottom->viewport()->update();
+
+    // Process events to ensure the UI paints immediately
+    // This prevents the "ghosting" or "blank" effect during the transition
+    QApplication::processEvents();
+}
+
+void QRemDEpochsWidget::updateAxisGrid(QAbstractAxis *axis, double minVal, double maxVal, bool isHorizontal)
 {
     if (!axis) return;
 
     if (isHorizontal) {
-        // 1. Choose a "Human-Friendly" interval (e.g., 50, 100, 200)
+        auto timeAxis = qobject_cast<QDateTimeAxis*>(axis);
+        if (!timeAxis) return;
+
+        // 1. Calculate the dynamic epoch-based interval based on current range
         double range = maxVal - minVal;
-        double interval = (range > 1500) ? 200.0 : 50.0;
+        double epochInterval;
 
-        // 2. SNAP the boundaries for the GRID logic
-        // We find the first "nice" number AFTER minVal
-        // and the last "nice" number BEFORE maxVal
-        double firstNiceTick = std::ceil(minVal / interval) * interval;
-        double lastNiceTick = std::floor(maxVal / interval) * interval;
-
-        // 3. Calculate how many "nice" steps fit between those two
-        int tickCount = static_cast<int>((lastNiceTick - firstNiceTick) / interval) + 1;
-
-        // 4. CRITICAL: To make Qt land exactly on those nice numbers,
-        // we have to slightly expand the axis range to match the ticks perfectly.
-        axis->setRange(firstNiceTick, firstNiceTick + (tickCount - 1) * interval);
-
-        // If the expansion cut off data, we revert to the data range but keep tick math
-        if (axis->min() > minVal || axis->max() < maxVal) {
-            axis->setRange(minVal, maxVal);
-            // With a non-aligned range, ticks will always be slightly messy in Qt Charts.
-            // To fix this without changing data, we force a specific tick count:
-            axis->setTickCount(tickCount + 1);
+        if (range <= 40.0) {
+            // Under 20 minutes of data: Ticks every 2.5 minutes (5 epochs)
+            epochInterval = 5.0;
+        } else if (range <= 600.0) {
+            // Under 5 hours of data: Ticks every 10 minutes (20 epochs)
+            epochInterval = 20.0;
         } else {
-            axis->setTickCount(tickCount);
+            // Over 5 hours: Ticks every 1 hour (120 epochs)
+            epochInterval = 120.0;
         }
 
-        axis->setLabelFormat("%d");
+        // 2. Snap the indices to the interval
+        // Subtract 1 to align with 1-based data start, then add 1 back to get the epoch index
+        double cleanMinIndex = std::floor((minVal - 1) / epochInterval) * epochInterval + 1;
+        double cleanMaxIndex = std::ceil((maxVal - 1) / epochInterval) * epochInterval + 1;
 
-    } else {
-        // --- Vertical Logic (Intensity/Bucket) ---
-        // Vertical range is usually smaller, so we use a dynamic interval
-        double range = maxVal - minVal;
-        double vInterval;
+        // Ensure we don't collapse the range to zero if min/max snap to the same value
+        if (cleanMaxIndex <= cleanMinIndex) cleanMaxIndex = cleanMinIndex + epochInterval;
 
-        if (range <= 10)       vInterval = 2.0;
-        else if (range <= 50)  vInterval = 10.0;
-        else if (range <= 200) vInterval = 50.0;
-        else                   vInterval = 100.0;
+        // 3. Map snapped Indices to absolute QDateTime
+        QDateTime start = m_startTime.addSecs(static_cast<qint64>((cleanMinIndex - 1) * 30));
+        QDateTime end = m_startTime.addSecs(static_cast<qint64>((cleanMaxIndex - 1) * 30));
 
-        double cleanMax = std::ceil(maxVal / vInterval) * vInterval;
-        int vTicks = static_cast<int>(cleanMax / vInterval) + 1;
+        // 4. Apply range and ticks
+        timeAxis->setRange(start, end);
 
-        axis->setRange(0, cleanMax); // Vertical usually starts at 0
-        axis->setTickCount(vTicks);
-        axis->setLabelFormat("%.1f"); // Vertical often needs one decimal
-    }
-}*/
+        // Calculate how many tick marks fit in the clean range
+        int tickCount = static_cast<int>((cleanMaxIndex - cleanMinIndex) / epochInterval) + 1;
+        timeAxis->setTickCount(qMax(2, tickCount));
 
-void QRemDEpochsWidget::updateAxisGrid(QValueAxis *axis, double minVal, double maxVal, bool isHorizontal)
-{
-    if (!axis) return;
-
-    if (isHorizontal) {
-        // --- Horizontal Timeline Logic (Multiples of 50 or 200) ---
-        double range = maxVal - minVal;
-        double interval = (range > 1500) ? 200.0 : 50.0;
-
-        double cleanMin = std::floor(minVal / interval) * interval;
-        double cleanMax = std::ceil(maxVal / interval) * interval;
-        int ticks = static_cast<int>((cleanMax - cleanMin) / interval) + 1;
-
-        axis->setRange(cleanMin, cleanMax);
-        axis->setTickCount(qMax(2, ticks));
-        axis->setLabelFormat("%d");
+        // Format: show seconds only if zoomed in very tight (< 5 minutes / 10 epochs)
+        timeAxis->setFormat(range < 10.0 ? "hh:mm:ss" : "hh:mm");
     }
     else {
-        // --- High-Granularity Vertical Logic ---
-        double interval;
+        // Vertical logic for QValueAxis
+        auto valueAxis = qobject_cast<QValueAxis*>(axis);
+        if (!valueAxis) return;
 
-        if (maxVal <= 6.0)       interval = 1.0;  // 0, 1, 2, 3, 4, 5, 6
-        else if (maxVal <= 15.0)  interval = 2.0;  // 0, 2, 4, 6... 14
-        else if (maxVal <= 40.0)  interval = 5.0;  // 0, 5, 10, 15, 20, 25, 30, 35, 40
-        else if (maxVal <= 100.0) interval = 10.0; // 0, 10, 20... 100
-        else if (maxVal <= 500.0) interval = 50.0; // 0, 50, 100... 500
-        else                      interval = 100.0;// 0, 100, 200...
+        double interval;
+        if (maxVal <= 15.0)      interval = 2.0;
+        else if (maxVal <= 100.0) interval = 10.0;
+        else                     interval = 50.0;
+
 
         double cleanMax = std::ceil(maxVal / interval) * interval;
-        int ticks = static_cast<int>(cleanMax / interval) + 1;
+        // Add an extra interval if the data is too close to the top
+        if (cleanMax - maxVal < (interval * 0.5)) {
+            cleanMax += interval;
+        }
+        valueAxis->setRange(0, qMax(1.0, cleanMax));
 
-        // Safety check: Qt charts hate tick counts < 2
-        if (ticks < 2) ticks = 2;
-
-        axis->setRange(0, cleanMax);
-        axis->setTickCount(ticks);
-        axis->setLabelFormat("%d");
+        valueAxis->setTickCount(static_cast<int>(cleanMax / interval) + 1);
+        valueAxis->setLabelFormat("%d");
     }
-
-    // Keep grid lines visible but subtle
     axis->setGridLinePen(QPen(QColor(200, 200, 200, 80)));
 }
 
@@ -532,22 +439,33 @@ QString QRemDEpochsWidget::getProfileNameFromId(int id)
 
 void QRemDEpochsWidget::handleScroll(int value)
 {
+    // 1. Determine if we are at the end to re-enable live following
     m_isFollowingLive = (value >= m_scrollbar->maximum());
 
+    // 2. The scrollbar 'value' is our window's left edge (minIndex)
     double viewMin = static_cast<double>(value);
+
+    // 3. The right edge is exactly one windowSize away
     double viewMax = viewMin + m_windowSize;
 
-    // Prevent negative/pre-data indices
-    if (viewMin < m_minX) {
-        viewMin = m_minX;
-
-        // If you want to keep the window exactly 1000 wide even at the start:
-        // viewMax = viewMin + m_windowSize;
+    // 4. Safety Clamp: Ensure we don't show empty space if the
+    // scrollbar is somehow pushed beyond the data limits.
+    if (viewMax > m_maxX) {
+        viewMax = m_maxX;
+        viewMin = qMax(m_minX, viewMax - m_windowSize);
     }
 
-    auto axisXTop = qobject_cast<QValueAxis*>(m_viewTop->chart()->axes(Qt::Horizontal).first());
-    auto axisXBottom = qobject_cast<QValueAxis*>(m_viewBottom->chart()->axes(Qt::Horizontal).first());
+    if (viewMin < m_minX) {
+        viewMin = m_minX;
+        viewMax = viewMin + m_windowSize;
+    }
 
+    // 5. Get the horizontal axes
+    auto axisXTop = m_viewTop->chart()->axes(Qt::Horizontal).first();
+    auto axisXBottom = m_viewBottom->chart()->axes(Qt::Horizontal).first();
+
+    // 6. Update the grid and time labels
+    // This converts the clamped indices to QDateTime ranges.
     updateAxisGrid(axisXTop, viewMin, viewMax, true);
     updateAxisGrid(axisXBottom, viewMin, viewMax, true);
 }
@@ -557,60 +475,67 @@ void QRemDEpochsWidget::handleDataUpdated(double minX, double maxX, double peakT
     m_minX = minX;
     m_maxX = maxX;
 
-    // 1. Top Vertical Axis
-    double adjustedTopPeak = qMax(peakTop, 100.0);
-    if (adjustedTopPeak > m_maxYTop * 0.9 || m_maxYTop < 1.0) {
-        auto axisYTop = qobject_cast<QValueAxis*>(m_viewTop->chart()->axes(Qt::Vertical).first());
-        if (axisYTop) {
-            updateAxisGrid(axisYTop, 0, adjustedTopPeak * 1.1, false);
-            m_maxYTop = axisYTop->max();
-        }
+    // 1. Vertical scaling - Top Chart (Add 10% padding)
+    auto axisYTop = qobject_cast<QValueAxis*>(m_viewTop->chart()->axes(Qt::Vertical).first());
+    if (axisYTop) {
+        double paddedTop = peakTop * 1.1; // Add 10% headroom
+        updateAxisGrid(axisYTop, 0, qMax(paddedTop, 100.0), false);
     }
 
-    // 2. Bottom Vertical Axis
-    double adjustedBottomPeak = qMax(peakBottom, 5.0);
-    if (adjustedBottomPeak > m_maxYBottom * 0.9 || m_maxYBottom < 1.0) {
-        auto axisYBottom = qobject_cast<QValueAxis*>(m_viewBottom->chart()->axes(Qt::Vertical).first());
-        if (axisYBottom) {
-            updateAxisGrid(axisYBottom, 0, adjustedBottomPeak + 2, false);
-            m_maxYBottom = axisYBottom->max();
-        }
+    // 2. Vertical scaling - Bottom Chart (Add padding)
+    auto axisYBottom = qobject_cast<QValueAxis*>(m_viewBottom->chart()->axes(Qt::Vertical).first());
+    if (axisYBottom) {
+        // If peak is 10, paddedBottom becomes 12.
+        // updateAxisGrid will then snap it to a clean interval like 14 or 15.
+        double paddedBottom = peakBottom + (peakBottom * 0.2);
+        updateAxisGrid(axisYBottom, 0, qMax(paddedBottom, 5.0), false);
     }
 
-    // 3. Sync Horizontal Axes (The Timeline)
-    auto axisXTop = qobject_cast<QValueAxis*>(m_viewTop->chart()->axes(Qt::Horizontal).first());
-    auto axisXBottom = qobject_cast<QValueAxis*>(m_viewBottom->chart()->axes(Qt::Horizontal).first());
+    // 3. Horizontal Scaling Logic (Grow then Slide)
+    double windowSize = static_cast<double>(m_windowSize);
 
-    double windowSize = 200.0;
+    if (m_isFollowingLive) {
+        auto axisXTop = m_viewTop->chart()->axes(Qt::Horizontal).first();
+        auto axisXBottom = m_viewBottom->chart()->axes(Qt::Horizontal).first();
 
-    if (axisXTop && axisXBottom && m_isFollowingLive) {
-        // We use the same 'nice' logic for live updates
-        double viewMin = qMax(m_minX, m_maxX - windowSize);
-        double viewMax = m_maxX;
+        double viewMin, viewMax;
 
-        // Pass to updateAxisGrid to ensure labels stay on multiples of 50
+        // If total data span is less than windowSize, don't show empty space.
+        // This prevents the "squashed data" look at startup.
+        if ((m_maxX - m_minX) < windowSize) {
+            viewMin = m_minX;
+            viewMax = qMax(m_minX + 1.0, m_maxX); // Ensure range is valid (>0)
+        } else {
+            // Once data exceeds window, follow the tail (Live mode)
+            viewMin = m_maxX - windowSize;
+            viewMax = m_maxX;
+        }
+
+        // Update both axes to keep them in sync
         updateAxisGrid(axisXTop, viewMin, viewMax, true);
         updateAxisGrid(axisXBottom, viewMin, viewMax, true);
     }
 
-    // 4. Scrollbar Logic
+    // 4. Scrollbar Management
     m_scrollbar->blockSignals(true);
 
-    // The range must allow the thumb to sit at the 'start' of the window
+    // If data is smaller than window, max scroll is just minX (no scrolling needed)
     int scrollRangeMax = static_cast<int>(qMax(m_minX, m_maxX - windowSize));
+
     m_scrollbar->setRange(static_cast<int>(m_minX), scrollRangeMax);
 
     if (m_isFollowingLive) {
         m_scrollbar->setValue(scrollRangeMax);
 
-        // Zoom reset to clear any manual rubber-band zooms while following live
+        // Reset zoom to clear any manual rubber-banding during live updates
         m_viewTop->chart()->zoomReset();
         m_viewBottom->chart()->zoomReset();
     }
+
     m_scrollbar->blockSignals(false);
 }
 
-void QRemDEpochsWidget::handleProfileIdentified(int profileId)
+void QRemDEpochsWidget::handleProfileResolved(int profileId)
 {
     QString name = getProfileNameFromId(profileId);
     //m_profileLabel->setText(QString("Active Profile: <b>%1</b>").arg(name));
@@ -619,3 +544,7 @@ void QRemDEpochsWidget::handleProfileIdentified(int profileId)
     // to help you debug the false trigger from this morning.
 }
 
+void QRemDEpochsWidget::handleStartTimeResolved(const QDateTime& startTime)
+{
+    m_startTime = startTime;
+}

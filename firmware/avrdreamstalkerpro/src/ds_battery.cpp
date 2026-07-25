@@ -51,28 +51,28 @@ static constexpr float max_voltage = ( BATTMON_INPUT_VOLT * BATTMON_RESISTOR2 /
 static constexpr uint16_t max_adc_level = (max_voltage / 2.56) * ADC_MAX_VALUE;
 
 /*-----------------------------------------------------------------------*/
-void BatteryMonitor::handle_sysclk (void)	/* called every 1 min */
+void BatteryMon::handle_sysclk (void)	/* called every 1 min */
 {
   get()->irq_handler();
 }
 
 /*-----------------------------------------------------------------------*/
-void BatteryMonitor::adc_sample_callback(void *context, uint16_t sample)
+void BatteryMon::adc_sample_callback(void *context, uint16_t sample)
 {
-  BatteryMonitor *pbm = reinterpret_cast<BatteryMonitor *>(context);
+  BatteryMon *pbm = static_cast<BatteryMon *>(context);
 
   pbm->on_adc_sample( sample );
 }
 
 /*-----------------------------------------------------------------------*/
-BatteryMonitor *BatteryMonitor::get()
+BatteryMon *BatteryMon::get()
 {
-  static BatteryMonitor bm;
+  static BatteryMon bm;
   return &bm;
 }
 
 /*-----------------------------------------------------------------------*/
-void BatteryMonitor::irq_handler (void) /*runs once per 1min */
+void BatteryMon::irq_handler (void) /*runs once per 1min */
 {
   timer_ticks = ( timer_ticks + 1 ) % BATTMON_PERIOD_MINUTES;
   if ( timer_ticks == 0 ) {
@@ -84,7 +84,7 @@ void BatteryMonitor::irq_handler (void) /*runs once per 1min */
   }
 }
 
-void BatteryMonitor::run_monitor (void)
+void BatteryMon::run_monitor (void)
 {
   uint8_t lvl;
 
@@ -107,7 +107,7 @@ void BatteryMonitor::run_monitor (void)
                                   this );
 }
 
-bool BatteryMonitor::init (void)
+bool BatteryMon::init (void)
 {
   ACSR |= _BV(ACD); /* Disable analog comparator */
 
@@ -115,7 +115,7 @@ bool BatteryMonitor::init (void)
   return true;
 }
 
-void BatteryMonitor::start (void)
+void BatteryMon::start (void)
 {
   if (running)
     return;
@@ -130,17 +130,17 @@ void BatteryMonitor::start (void)
   running = true;
 }
 
-void BatteryMonitor::stop (void)
+void BatteryMon::stop (void)
 {
   running = false;
 }
 
-uint8_t BatteryMonitor::battery_level (void)
+uint8_t BatteryMon::battery_level (void)
 {
   return (uint8_t) ((uint32_t ( batt_level ) * 100U) / max_adc_level);
 }
 
-void BatteryMonitor::on_adc_sample( uint16_t sample )
+void BatteryMon::on_adc_sample( uint16_t sample )
 {
   if ( 0 == batt_level ) {
 

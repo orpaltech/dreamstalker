@@ -42,6 +42,8 @@ public:
 
   void wait (uint16_t ms);
 
+  uint16_t get_ticks_second() const { return clk.ticks_second; }
+
 public:
   static constexpr uint32_t msec_to_ticks (uint32_t ms) { return ( ms / CLK_PERIOD_MSEC ); }
   static constexpr uint32_t ticks_to_msec (uint32_t ticks) { return ticks * CLK_PERIOD_MSEC; }

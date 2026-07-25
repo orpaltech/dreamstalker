@@ -27,6 +27,7 @@
 #include "vs10xx_mcu.h"
 #include "sound/ds_tonegen.h"
 #include "ds_util.h"
+#include "ds_sdfat.h"
 
 #if ( VS_HW_SPEC == VS_HWS_1002 )
   #include "vs1002.h"
@@ -64,7 +65,7 @@ public:
 	  STATE_CAPTURE	  = 2
   };
 public:
-  bool begin (void);
+  bool init (void);
   void end (void);
 
   bool apply_patches (void);

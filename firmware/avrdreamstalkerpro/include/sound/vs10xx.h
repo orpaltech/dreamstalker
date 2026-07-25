@@ -122,7 +122,7 @@ typedef void (*pfnvs_patch_end)(pvs_patch_t, pvs_patch_state_t);
 /*-----------------------------------------------------------------------*/
 class Vs10xx {
 public:
-  // Initialize the VLSI library
+  // Initialize the VLSI codec
   bool	init ( void );
   void  end (void) {}
 

@@ -18,7 +18,10 @@
  */
 
 #include <Arduino.h>
-#include <Timer.h>
+
+#include <avr/io.h>
+#include <compat/ina90.h>
+#include <util/atomic.h>
 
 #include "ds_driver.h"
 #include "ds_config.h"
@@ -35,6 +38,7 @@
 #include "ds_sysclock.h"
 #include "ds_vibro.h"
 #include "ds_remhints.h"
+#include "ds_sdfat.h"
 
 
 using namespace DS;
@@ -68,21 +72,21 @@ Driver *Driver::get()
 /*-----------------------------------------------------------------------*/
 void Driver::alarm_clock_callback (void *context)
 {
-  Driver *pdrv = reinterpret_cast<Driver *>(context);
+  Driver *pdrv = static_cast<Driver *>(context);
 
   pdrv->on_alarm_clock ();
 }
 
 void Driver::wakeup_timer_callback (void *context)
 {
-  Driver *pdrv = reinterpret_cast<Driver *>(context);
+  Driver *pdrv = static_cast<Driver *>(context);
 
   pdrv->on_wakeup_timer ();
 }
 
 void Driver::remd_callback (void *context, remd_event_type_t event, uint16_t arg)
 {
-  Driver *pdrv = reinterpret_cast<Driver *>(context);
+  Driver *pdrv = static_cast<Driver *>(context);
 
   if ( pdrv->is_remd_check () ) {
 
@@ -97,7 +101,7 @@ void Driver::remd_callback (void *context, remd_event_type_t event, uint16_t arg
     // REMD lucid dreaming mode
 
     if ( event == REMD_EVENT_REM ) {
-      pdrv->on_remd_stable_rem( arg );
+      pdrv->on_remd_event_rem( arg );
     }
   }
 }
@@ -195,7 +199,7 @@ void Driver::process (void)
 
 #else
 
-bool Driver::begin (void)
+bool Driver::init (void)
 {
   delay(500); /* Let power stabilize */
 
@@ -204,11 +208,8 @@ bool Driver::begin (void)
 
   set_mode ( OPM_NONE );
 
-  // Disable SD at very beginning
-  Pins::set_out(SS);
-  Pins::drive_high(SS);
-
   // Initialize all subsystems
+  SdFatEx::get()->init();
   RTClock::get()->init();
   SysClock::get()->init();
   Display::get()->init();
@@ -219,7 +220,7 @@ bool Driver::begin (void)
   Leds::get()->init();
   Sound::get()->init ();
   REMDetect::get()->init();
-  BatteryMonitor::get()->init();
+  BatteryMon::get()->init();
   
 
 #if ((REMD_LOG == REMD_LOG_SERIAL) || BATTMON_TEST)
@@ -264,9 +265,14 @@ bool Driver::start (void)
 
   /* SD-card initialization */
   SdFile::dateTimeCallback(RTClock::fat_datetime);
+
+#if USE_SDFAT_LIB
   SdSpiConfig sd_spi(SS, SHARED_SPI, SD_SCK_MHZ(4));
 
-  while (! card0.begin (sd_spi)) {
+  while (! (SdFatEx::get()->is_card_inserted() && SdFatEx::get()->sd0.begin (sd_spi))) {
+#else
+  while (! (SdFatEx::get()->is_card_inserted() && SdFatEx::get()->sd0.begin ())) {
+#endif
 
     /* handle error */
     disp->message (__disp_msg_no_sd__, 1);
@@ -283,7 +289,7 @@ bool Driver::start (void)
   
 
   do {
-    if ( ! AudioCodec::get()->begin () ) {
+    if ( ! AudioCodec::get()->init () ) {
 
       // codec initialization failed!
       disp->message (__disp_msg_codec_error__, 1);
@@ -314,7 +320,7 @@ bool Driver::start (void)
 
     A2DConvert::get()->enable ();
     A2DConvert::get()->warm_up ();
-    BatteryMonitor::get()->start();
+    BatteryMon::get()->start();
 
     Sound::get()->start();
 
@@ -471,7 +477,7 @@ void Driver::remd_start_check (void)
   if ( remd_check )
     return;
 
-  if ( !remd->start (remd_callback, this)) {
+  if ( !remd->start (remd_callback, this, true)) {
     return;
   }
 
@@ -499,9 +505,12 @@ void Driver::on_alarm_clock (void)
 
 }
 
-void Driver::on_remd_stable_rem (uint16_t intensity)
+void Driver::on_remd_event_rem (uint8_t intensity)
 {
   auto clk = RTClock::get();
+
+  if ( remd_check )
+    return; // Check mode
 
   // TODO: do actions on REM detected
   // серию вспышек и звуков во время сновидения
@@ -512,37 +521,6 @@ void Driver::on_remd_stable_rem (uint16_t intensity)
 #endif
 
   REMHints::get()->start (intensity);
-  /*
-  // Parameters: LED, Limit (Intensity), Start, Inc, Period, Duty, Jitter, Count
-  uint32_t period = 5000;
-  uint8_t count = config.get_light_hints_duration ();
-  uint16_t jitter = 0;
-  uint8_t duty_cycle = Config::level_to_percent (config.get_hints_duty_cycle ());
-
-  Leds::get()->sync_with_tonegen (true, LED1);
-
-  Leds::get()->fade_rhythmic(LED1, intensity, 5, 2, period, duty_cycle, jitter, count);
-  Leds::get()->fade_rhythmic(LED2, intensity, 5, 2, period, duty_cycle, jitter, count);
-
-  Tonegen::get()->beep(period * count, 5, 4, 1);*/
-
-  // The "Gentle Probe"
-  // Ceiling: 20%, Start: 5%, Increment: 5%
-  // Period: 3.5s, Duty: 70%, Jitter: 4s, Pulses: 5
-  //Leds::get()->fade_rhythmic(LED1, 20, 5, 5, 3500, 70, 4000, 5);
-  //Leds::get()->fade_rhythmic(LED2, 20, 5, 5, 3500, 70, 4000, 5);
-
-  // The "Non-Rhythmic Breath"
-  // Ceiling: 15%, Start: 6%, Increment: 3%
-  // Period: 4s, Duty: 80%, Jitter: 10s, Pulses: 4
-  //Leds::get()->fade_rhythmic(LED1, 15, 6, 3, 4000, 80, 10000, 4);
-  //Leds::get()->fade_rhythmic(LED2, 15, 6, 3, 4000, 80, 10000, 4);
-
-  // The "Single-Step Morning"
-  // Ceiling: 12%, Start: 8%, Increment: 2%
-  // Period: 3s, Duty: 60%, Jitter: 5s, Pulses: 3
-  //Leds::get()->fade_rhythmic(LED1, 12, 8, 2, 3000, 60, 5000, 3);
-  //Leds::get()->fade_rhythmic(LED2, 12, 8, 2, 3000, 60, 5000, 3);
 
 
   /* Сheck if alarm clock is enabled */
@@ -551,6 +529,11 @@ void Driver::on_remd_stable_rem (uint16_t intensity)
     clk->alarm_clock_set (alarm_clock_callback, this);
   }
 
+}
+
+void Driver::set_mode (operation_mode_t mode)
+{
+  opmode = mode;
 }
 
 void Driver::wakeup_timer_toggle (void)
@@ -624,7 +607,7 @@ void Driver::start_lucid_dream (void)
 {
   auto remd = REMDetect::get();
 
-  if ( !remd->start_unsafe (remd_callback, this)) {
+  if ( !remd->start (remd_callback, this, false)) {
     return;
   }
 
@@ -638,7 +621,7 @@ void Driver::stop_lucid_dream (void)
 {
   auto remd = REMDetect::get();
 
-  if ( !remd->is_running ())
+  if (remd->get_state () != REMD_STATE_ON)
     return;
 
   remd->stop();
@@ -650,7 +633,9 @@ void Driver::stop_lucid_dream (void)
 
 bool Driver::is_lucid_dreaming (void) const
 {
-  return REMDetect::get()->is_running ();
+  auto remd = REMDetect::get();
+
+  return remd->get_state () == REMD_STATE_ON;
 }
 
 void Driver::power_off (void)
@@ -662,36 +647,37 @@ void Driver::power_off (void)
   disp->disable ();
 
   AudioCodec::get()->stop ();
-  BatteryMonitor::get()->stop ();
+  BatteryMon::get()->stop ();
   REMDetect::get()->stop();
-  A2DConvert::get()->disable ();	/* disable ADC to save power */
+  A2DConvert::get()->disable ();
 
   Sound::get()->stop();
 
-  SysClock::get()->stop (); /* Stop system clock as we don't need to process keyboard */
+  SysClock::get()->stop ();
 
   set_mode( OPM_PWRSAVE );  /* Set power-save mode */
+
+  Keyboard::get()->enable_key_irq ( KEY_EXIT_SLEEP );
 
   /*
    * Go to sleep...
    */
-  set_sleep_mode ( SLEEP_MODE_PWR_SAVE );
+  set_sleep_mode ( SLEEP_MODE_IDLE );
 
   do {
-	  Keyboard::get()->enable_key_irq ( KEY_EXIT_SLEEP );
 
 	  /*
 	   * ...Zzz...  
 	   */
 	  sleep_mode ();
 
-	  Keyboard::get()->disable_key_irq ( KEY_EXIT_SLEEP );
-
   } while (! (Keyboard::get()->get_irq_keys() & KEY_EXIT_SLEEP));
+
+  Keyboard::get()->disable_key_irq ( KEY_EXIT_SLEEP );
 
   set_mode( OPM_NORMAL );   /* Set normal power mode */
 
-  SysClock::get()->start ();  /* Start the system clock first */
+  SysClock::get()->start ();  /* Start the system clock */
 
   disp->enable ();
   disp->message (__disp_msg_on__, 500);
@@ -699,7 +685,7 @@ void Driver::power_off (void)
   RTClock::get()->show ();
 
   A2DConvert::get()->enable ();
-  BatteryMonitor::get()->start ();
+  BatteryMon::get()->start ();
 
   Sound::get()->start();
 

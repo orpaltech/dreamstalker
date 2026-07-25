@@ -108,7 +108,7 @@ private:
 
   void irq_handler (void);
   void handle_setup (void);
-
+  
   void flag_set (uint16_t flag);
   void flag_unset (uint16_t flag); 
   void flag_toggle (uint16_t flag);

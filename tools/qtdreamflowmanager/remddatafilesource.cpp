@@ -12,7 +12,6 @@ QRemDDataFileSourceThread::QRemDDataFileSourceThread(const QString& dataFileName
     : QThread{parent}
     , m_fileType{DataFileType::None}
     , m_dataFile{new QFile(dataFileName, this)}
-    , m_profileId(0)
 {
     QFileInfo dataFile(dataFileName);
     QString fileExt = dataFile.completeSuffix().toLower();
@@ -31,17 +30,18 @@ QRemDDataFileSourceThread::QRemDDataFileSourceThread(const QString& dataFileName
         bool result = m_dataFile->open(fileOpenFlags);
 
         if (result && m_fileType == DataFileType::Epochs) {
-            // Read the "S:xx|P:xx\n" line
-            QByteArray header = m_dataFile->readLine();
-            QString headerStr = QString::fromUtf8(header).trimmed();
-            qDebug() << "File Header Metadata:" << headerStr;
+            constexpr int headerSize = sizeof(remd_epoch_config_t);
+            QByteArray headerBytes = m_dataFile->read(headerSize);
+            if (headerBytes.size() == headerSize) {
+                const auto *header = reinterpret_cast<const remd_epoch_config_t*>(headerBytes.constData());
+                if (header->magic == REMD_EPOCH_MAGIC) {
 
-            // Use a regular expression to find the number after "P:"
-            // Example: "S:6|P:2" -> captures "2"
-            QRegularExpression re("P:(\\d+)");
-            QRegularExpressionMatch match = re.match(headerStr);
-            if (match.hasMatch())
-                m_profileId = match.captured(1).toInt();
+                    QString headerStr = QString::fromUtf8(headerBytes).trimmed();
+                    qDebug() << "File Header Metadata:" << headerStr;
+
+                    m_header = headerBytes;
+                }
+            }
         }
     }
 }
@@ -61,7 +61,7 @@ void QRemDDataFileSourceThread::run()
         return;
 
     if (m_fileType == DataFileType::Epochs) {
-        emit logHeaderParsed(m_profileId); // Tell the widget which profile this is
+        emit logHeaderParsed(m_header); // Tell the widget which profile this is
     }
 
     /* ... here is the expensive or blocking operation ... */
@@ -141,7 +141,7 @@ bool QRemDDataFileSource::start(QIODevice *outputDevice)
 {
     m_outputDevice = outputDevice;
     connect(m_workerThread, &QRemDDataFileSourceThread::dataSamplesReady, this, &QRemDDataFileSource::handleDataSamples);
-    connect(m_workerThread, &QRemDDataFileSourceThread::logHeaderParsed, this, &QRemDDataFileSource::handleLogHeaderParsed);
+    connect(m_workerThread, &QRemDDataFileSourceThread::logHeaderParsed, this, &QRemDDataFileSource::handleLogHeader);
     m_workerThread->start();
 
     return true;
@@ -159,8 +159,7 @@ void QRemDDataFileSource::handleDataSamples(const QByteArray& samples)
     m_outputDevice->write(samples);
 }
 
-void QRemDDataFileSource::handleLogHeaderParsed(quint8 profileId)
+void QRemDDataFileSource::handleLogHeader(const QByteArray& header)
 {
-    QByteArray data((const char *)&profileId, 1);
-    m_outputDevice->write(data);
+    m_outputDevice->write(header);
 }

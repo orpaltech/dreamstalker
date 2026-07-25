@@ -37,6 +37,7 @@
 #include "ds_battery.h"
 #include "ds_remhints.h"
 #include "ds_rtclock.h"
+#include "ds_sdfat.h"
 #include "ds_sysclock.h"
 
 using namespace DS;
@@ -44,17 +45,15 @@ using namespace DS;
 /*-----------------------------------------------------------------------*/
 /* Interrupt Handler 													                           */
 /*-----------------------------------------------------------------------*/
-#if defined(__AVR_ATmega128__)
-ISR(TIMER2_COMPA_vect)
-#elif defined (__AVR_ATmega1281__)
+#if defined (__AVR_ATmega1281__)
 ISR(TIMER0_COMPA_vect)
-#endif
 {
   // These tasks run at a perfect 1ms interval 
   // sourced from the 8MHz internal clock.
 
   SysClock::handle_isr();
 }
+#endif
 
 /*-----------------------------------------------------------------------*/
 void SysClock::handle_isr (void)
@@ -83,7 +82,7 @@ void SysClock::irq_handler (void)
    */
   if ( Keyboard::handle_sysclk ()) {
 
-	// Reset display-off counter on a key press
+	  // Reset display-off counter on a key press
     RTClock::get()->awake_display ();
   }
 
@@ -102,6 +101,7 @@ void SysClock::irq_handler (void)
 	   * get here every SECOND
 	   */
 
+    SdFatEx::handle_sysclk ();
     Driver::handle_sysclk ();
 	  Sound::handle_sysclk ();
 
@@ -113,7 +113,7 @@ void SysClock::irq_handler (void)
 	     * get here every MINUTE
 	     */
 
-      BatteryMonitor::handle_sysclk ();
+      BatteryMon::handle_sysclk ();
     }
 
   } // End of 1 sec block
@@ -143,25 +143,7 @@ void SysClock::start (void)
   clk.ticks_second = 0;
   clk.ticks_setup = 0;
 
-#if defined(__AVR_ATmega128__)
-  /* Use Timer 2 (Timer 0 is busy with RTC) */
-
-  // Set CTC Mode (Clear Timer on Compare Match)
-  TCCR2 = _BV(WGM21);
-
-  TMR2_SET_N(64);   // Set Prescaler to 64
-
-  // Set Compare Value for 1ms
-  // Calculation: 8,000,000 / 64 / 1000 = 125
-  OCR2 = 125;
-
-  TCNT2 = 0;  // Clear counter
-
-  /* Clear pending interrupts and enable */
-  TIFR |= _BV(OCF2);
-  TIMSK |= _BV(OCIE2);
-
-#elif defined (__AVR_ATmega1281__)
+#if defined (__AVR_ATmega1281__)
   /* Use Timer 0 (Timer 2 is busy with RTC) */
 
   // Set CTC Mode (Clear Timer on Compare Match)
@@ -183,13 +165,7 @@ void SysClock::start (void)
 
 void SysClock::stop (void)
 {
-#if defined (__AVR_ATmega128__)
-  /* Timer/Counter 2 is being used on atmega128 */
-  TMR2_OFF();
-
-  TIMSK &= ~_BV(OCIE2);
-
-#elif defined (__AVR_ATmega1281__)
+#if defined (__AVR_ATmega1281__)
 
   /* Timer/Counter 0 is being used on atmega1281 */
   TMR0_OFF();

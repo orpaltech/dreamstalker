@@ -43,7 +43,7 @@ class Driver {
 public:
   static Driver *get();
 public:
-  bool begin (void);
+  bool init (void);
   void end (void);
 
   bool start (void);
@@ -63,11 +63,11 @@ public:
 protected:
   void on_wakeup_timer (void);
   void on_alarm_clock (void);
-  void on_remd_stable_rem (uint16_t intensity);
+  void on_remd_event_rem (uint8_t intensity);
 
   friend class AppMenu;
 private:
-  void set_mode (operation_mode_t mode) { opmode = mode; }
+  void set_mode (operation_mode_t mode);
   void wakeup_timer_toggle (void);
   void wakeup_timer_quick_set (keybrd_event_t key_event);
   void start_lucid_dream (void);

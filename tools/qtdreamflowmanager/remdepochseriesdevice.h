@@ -1,6 +1,7 @@
 #ifndef REMDEPOCHSERIESDEVICE_H
 #define REMDEPOCHSERIESDEVICE_H
 
+#include <QDateTime>
 #include <QIODevice>
 
 /****************************************************/
@@ -21,7 +22,8 @@ public:
 
 signals:
     void dataUpdated(double minX, double maxX, double peakTop, double peakBottom);
-    void profileIdentified(int profileId);
+    void profileResolved(quint8 profileId);
+    void startTimeResolved(const QDateTime& startTime);
 
 protected:
     qint64 readData(char *data, qint64 maxlen) override;
@@ -32,6 +34,7 @@ private:
     QXYSeries *m_bucket, *m_ceiling;
     double m_minX, m_maxX;
     double m_maxYTop, m_maxYBottom;
+    QDateTime m_startTime;
 };
 
 #endif // REMDEPOCHSERIESDEVICE_H

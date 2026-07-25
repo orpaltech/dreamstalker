@@ -71,6 +71,7 @@
 #define T0_N_1          _BV(CS00)
 #define T0_N_8          _BV(CS01)
 #define	T0_N_64			_BV(CS02)
+#define	T0_N_128		(_BV(CS02) | _BV(CS00))
 #define	T0_N_256		(_BV(CS02) | _BV(CS01))
 #define	T0_N_1024		(_BV(CS02) | _BV(CS01) | _BV(CS00))
 
@@ -140,6 +141,7 @@
 #define T2_N_1          _BV(CS20)
 #define T2_N_8          _BV(CS21)
 #define	T2_N_64			_BV(CS22)
+#define	T2_N_128        (_BV(CS22) | _BV(CS20))
 #define	T2_N_256		(_BV(CS22) | _BV(CS21))
 #define	T2_N_1024		(_BV(CS22) | _BV(CS21) | _BV(CS20))
 

@@ -32,9 +32,10 @@
 #include "ds_vibro.h"
 #include "ds_config.h"
 #include "ds_rtclock.h"
-#include "ds_util.h"
 #include "ds_appmenu.h"
 #include "ds_driver.h"
+#include "ds_util.h"
+#include "ds_sdfat.h"
 
 
 using namespace DS;

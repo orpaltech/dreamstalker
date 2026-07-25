@@ -1,6 +1,7 @@
 #ifndef REMDEPOCHSWIDGET_H
 #define REMDEPOCHSWIDGET_H
 
+#include <QDateTime>
 #include <QWidget>
 
 /****************************************************/
@@ -10,7 +11,7 @@ QT_FORWARD_DECLARE_CLASS(QChartView)
 QT_FORWARD_DECLARE_CLASS(QLineSeries)
 QT_FORWARD_DECLARE_CLASS(QScatterSeries)
 QT_FORWARD_DECLARE_CLASS(QScrollBar)
-QT_FORWARD_DECLARE_CLASS(QValueAxis)
+QT_FORWARD_DECLARE_CLASS(QAbstractAxis)
 QT_FORWARD_DECLARE_CLASS(QFrame)
 QT_FORWARD_DECLARE_CLASS(QCheckBox)
 QT_FORWARD_DECLARE_CLASS(QRemDEpochSeriesDevice)
@@ -35,13 +36,15 @@ private:
     void setupLayout();
     void resetZoom();
     void jumpToActivity();
-    void updateAxisGrid(QValueAxis* axis, double minVal, double maxVal, bool isHorizontal);
+    void updateAxisGrid(QAbstractAxis* axis, double minVal, double maxVal, bool isHorizontal);
+    void updateCharts();
     QString getProfileNameFromId(int id);
 
 private slots:
     void handleScroll(int value);
     void handleDataUpdated(double minX, double maxX, double peakTop, double peakBottom);
-    void handleProfileIdentified(int profileId);
+    void handleProfileResolved(int profileId);
+    void handleStartTimeResolved(const QDateTime& startTime);
 
 private:
     QChartView      *m_viewTop;
@@ -63,6 +66,8 @@ private:
 
     QRemDDataSource         *m_sourceEpochs;
     QRemDEpochSeriesDevice  *m_epochsSeriesDevice;
+
+    QDateTime   m_startTime;
 
     double m_minX;          // The very first epoch index (the start)
     double m_maxX;          // The latest epoch index received

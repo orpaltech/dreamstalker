@@ -47,7 +47,7 @@ bool vibro_is_busy (void)
 void VibroMotor::sqw_transition_callback(void *context, uint8_t slot,
                                       sqw_transition_t trans)
 {
-  VibroMotor *pvm = reinterpret_cast<VibroMotor *>(context);
+  VibroMotor *pvm = static_cast<VibroMotor *>(context);
 
   pvm->on_sqw_transition (slot, trans);
 }

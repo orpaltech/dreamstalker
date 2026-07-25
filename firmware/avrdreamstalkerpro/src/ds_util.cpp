@@ -29,13 +29,7 @@
 
 #include "ds_arduino.h"
 #include "ds_util.h"
-
-
-/*-----------------------------------------------------------------------*/
-//SDLib::SDClass &card0 = SDLib::SD;
-static SdFat sd_internal;
-SdFat &card0 = sd_internal;
-
+#include "ds_sdfat.h"
 
 /*-----------------------------------------------------------------------*/
 /* String utils 
@@ -100,13 +94,16 @@ bool Files::make_next_file_path(String &file_path,
   limit -= 1;
 
   // 2. Open Directory
-  File dir = card0.open(dir_path);
+  File dir = SdFatEx::get()->sd0.open(dir_path);
   if (dir) {
     File entry;
     while (entry = dir.openNextFile()) {
-      //const char *name = entry.name();
+#if USE_SDFAT_LIB
       char name[13]; 
       entry.getName(name, sizeof(name)); // The compiler will be happy now
+#else
+      const char *name = entry.name();
+#endif
       char *dot = strchr(name, '.');
       
       // Look back from dot to extract number
@@ -146,8 +143,8 @@ bool Files::make_next_file_path(String &file_path,
   // 5. Single assignment (Safe heap management)
   file_path = local_buffer; 
 
-  if (remove_existing && card0.exists(file_path)) {
-    card0.remove(file_path);
+  if (remove_existing && SdFatEx::get()->sd0.exists(file_path)) {
+    SdFatEx::get()->sd0.remove(file_path);
   }
 
   return !overrun;

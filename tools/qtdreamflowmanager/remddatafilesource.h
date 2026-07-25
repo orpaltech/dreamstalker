@@ -2,6 +2,7 @@
 #define REMDDATAFILESOURCE_H
 
 #include <QThread>
+#include <QTime>
 #include "remddatasource.h"
 
 /****************************************************/
@@ -22,7 +23,7 @@ public:
 
 signals:
     void dataSamplesReady(const QByteArray& samples);
-    void logHeaderParsed(quint8 profileId);
+    void logHeaderParsed(const QByteArray& header);
 
 private:
     quint16 readSampleHex();
@@ -31,7 +32,7 @@ private:
 private:
     DataFileType    m_fileType;
     QFile           *m_dataFile;
-    int             m_profileId;
+    QByteArray      m_header;
 };
 
 /****************************************************/
@@ -49,7 +50,7 @@ public:
 
 public slots:
     void handleDataSamples(const QByteArray& samples);
-    void handleLogHeaderParsed(quint8 profileId);
+    void handleLogHeader(const QByteArray& header);
 
 private:
     QRemDDataFileSourceThread *m_workerThread;

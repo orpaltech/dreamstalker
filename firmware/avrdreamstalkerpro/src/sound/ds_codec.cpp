@@ -33,6 +33,7 @@
 #include "sound/ds_codec.h"
 #include "ds_config.h"
 #include "ds_util.h"
+#include "ds_sdfat.h"
 
 using namespace DS;
 
@@ -122,7 +123,7 @@ bool AudioCodec::write_wav_header (AudioCodec *c, uint32_t num_blocks)
 }
 
 /*-----------------------------------------------------------------------*/
-bool AudioCodec::begin (void)
+bool AudioCodec::init (void)
 {
   if (! vs.init ())
 	  return false;
@@ -162,7 +163,7 @@ bool AudioCodec::playback (const char *file_name)
     return false;
 
   // Open the file
-  fp = card0.open (file_name);
+  fp = SdFatEx::get()->sd0.open (file_name);
   if (! fp)
 	  return false;
 
@@ -190,13 +191,13 @@ bool AudioCodec::capture (const char *file_name)
 
   auto handle_error = [&]() {
     fp.close ();
-  	card0.remove (file_name);
+  	SdFatEx::get()->sd0.remove (file_name);
     Sound::get()->microphone_off ();
     Sound::get()->set_silent (false);
   };
 
   // Create a new file
-  fp = card0.open (file_name, FILE_WRITE);
+  fp = SdFatEx::get()->sd0.open (file_name, FILE_WRITE);
   if (! fp)
 	  return false;
 

@@ -34,9 +34,9 @@
 namespace DS {
 
 /*-----------------------------------------------------------------------*/
-class BatteryMonitor {
+class BatteryMon {
 public:
-  static BatteryMonitor *get();
+  static BatteryMon *get();
 public:
   bool init (void);
 

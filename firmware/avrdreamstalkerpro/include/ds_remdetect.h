@@ -2,7 +2,7 @@
  * This file is part of the AVR Dreamstalker software
  * (https://github.com/orpaltech/dreamstalker).
  *
- * Copyright (c) 2013-2025	ORPAL Technologies, Inc.
+ * Copyright (c) 2013-2026	ORPAL Technologies, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,6 +38,13 @@ typedef enum e_remd_event_type {
 	REMD_EVENT_REM = 2,
 } remd_event_type_t;
 
+typedef enum e_remd_state {
+  REMD_STATE_OFF = 1,
+  REMD_STATE_STARTING,
+	REMD_STATE_ON,
+  REMD_STATE_STOPPING,
+} remd_state_t;
+
 /*-----------------------------------------------------------------------*/
 typedef void (*REMDetectCB_t)(void *context, remd_event_type_t event, uint16_t arg);
 
@@ -49,13 +56,10 @@ public:
   bool init (void) ;
   void end (void);
 
-  bool start (REMDetectCB_t premdcb, void *context) ;
+  bool start (REMDetectCB_t premdcb, void *context, bool check_mode);
   void stop (void) ;
-  bool is_running (void) const;
-
-  /* Use the method from ISR */
-  bool start_unsafe (REMDetectCB_t premdcb, void *context) ;
-  void stop_unsafe (void) ;
+  remd_state_t get_state (void) const;
+  bool is_check_mode (void) const;
 
   /* Must be called in the main application loop */
   void process_task (void);
@@ -63,17 +67,21 @@ public:
 protected:
   void on_a2d_sample(uint16_t sample);
 
+  bool start_internal (void);
+  void stop_internal (void);
+
 private:
   static void a2d_sample_callback(void *context, uint16_t sample);
   
   void process_sample(int16_t sample);
   void log_epoch(uint16_t moves, uint16_t ceiling, uint16_t restlessness,
-                uint16_t peak, uint8_t bucket, uint8_t trigger);
+                uint16_t peak, uint8_t rem_epochs, uint8_t trigger);
 
 private:
-  REMDetectCB_t premdcb_func;
-  void *premdcb_context;
-  volatile bool status;
+  REMDetectCB_t pcb_func;
+  void *pcb_context;
+  bool check_mode;
+  volatile remd_state_t state;
 
   LowPassFilter lowpass_flt;
 
@@ -100,16 +108,23 @@ typedef struct s_remd_context {
     uint8_t  trigger_cycle;      // Intensity step counter (0=Subtle, 1=Med, 2=Strong)
   } remd_context_t;
 
+#define REMD_EPOCH_MAGIC  0xAA55
   typedef struct __attribute__((packed)) s_remd_epoch_stats {
-    uint16_t magic;           // 0xAA55
-    uint16_t epoch_index;     // Time/Index
-    uint16_t move_count;      // Saccades counted
-    uint16_t gate_ceiling;    // The Blink Filter height (from sensitivity)
-    uint16_t restlessness;    // The variability (shakiness)
-    uint16_t epoch_peak_delta;// The strongest single move seen
-    uint8_t  bucket_state;    // Current level of the Leaky Bucket (Integrator)
-    uint8_t  trigger_status;  // LED intensity (0, 15, 20, 30)
+    uint16_t magic;             // The value of REMD_EPOCH_MAGIC
+    uint16_t epoch_index;       // Time/Index
+    uint16_t move_count;        // Saccades counted
+    uint16_t gate_ceiling;      // The Blink Filter height (from sensitivity)
+    uint16_t restlessness;      // The variability (shakiness)
+    uint16_t epoch_peak_delta;  // The strongest single move seen
+    uint8_t  rem_epoch_count;   // Current level of the Leaky Bucket (Integrator)
+    uint8_t  trigger_status;    // LED intensity (0, 15, 20, 30)
   } remd_epoch_stats_t;
+
+  typedef struct __attribute__((packed)) s_remd_epoch_config {
+    uint16_t magic;           // The value of REMD_EPOCH_MAGIC
+    uint32_t start_time;      // The start time, in linux format
+    uint8_t profile;          // The profile used 
+  } remd_epoch_config_t;
 
   remd_context_t remd;
 
