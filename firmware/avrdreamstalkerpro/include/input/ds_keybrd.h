@@ -35,7 +35,8 @@
 #define KEYBRD_HOLD 0x80U
 
 
-namespace DS {
+namespace ds
+{
 /*-----------------------------------------------------------------------*/
 typedef uint8_t keybrd_event_t;
 
@@ -72,6 +73,6 @@ private:
 };
 
 /*-----------------------------------------------------------------------*/
-};  //DS
+} //ds
 
 #endif // _DS_KEYBRD_DEFINED

@@ -20,134 +20,134 @@
 #include <avr/io.h>
 #include <util/atomic.h>
 
+#include "ds_util.h"
 #include "display/ds_display.h"
 #include "display/ds_disp_msgs.h"
 #include "ds_battery.h"
-#include "ds_util.h"
 
-using namespace DS;
-using namespace avr_core;
+using namespace ds;
+using namespace avr::core;
 
-
-/*-----------------------------------------------------------------------*/
-#ifndef BATTMON_PERIOD_MINUTES
-  #define BATTMON_PERIOD_MINUTES	10
-#endif
-#define BATTMON_CHANNEL	2
-#define BATTMON_SAMPLES	32
-
-#ifndef BATTMON_TEST
-  #define BATTMON_TEST 0
-#endif
-
-#define BATTMON_INPUT_VOLT    3.8       // Volts, maximum battery voltage after charge
-#define BATTMON_RESISTOR2     33200.    // Ohms
-#define BATTMON_RESISTOR1     75000.    // Ohms
 
 /*-----------------------------------------------------------------------*/
-static constexpr float max_voltage = ( BATTMON_INPUT_VOLT * BATTMON_RESISTOR2 / 
-                                      ( BATTMON_RESISTOR1 + BATTMON_RESISTOR2 ));
+#ifndef BM_POLL_PERIOD_MINUTES
+  #define BM_POLL_PERIOD_MINUTES	10
+#endif
+#define BM_ADC_CHANNEL	2
+#define BM_ADC_SAMPLES	32    // Keep it as a power of 2
+
+#ifndef BM_TEST
+  #define BM_TEST 0
+#endif
+
+#define BM_INPUT_VOLT 3.8f    // Volts, Maximum battery voltage after charge
+#define BM_DIV_R2  33200.f    // Ohms
+#define BM_DIV_R1  75000.f    // Ohms
+
+/*-----------------------------------------------------------------------*/
+static constexpr float MAX_VOLTAGE = ( BM_INPUT_VOLT * BM_DIV_R2 / 
+                                      ( BM_DIV_R1 + BM_DIV_R2 ));
 // Internal ref 2.56V is used for ADC
-static constexpr uint16_t max_adc_level = (max_voltage / 2.56) * ADC_MAX_VALUE;
+static constexpr uint16_t MAX_ADC_LEVEL = (MAX_VOLTAGE / 2.56f) * ADC_MAX_VALUE;
 
 /*-----------------------------------------------------------------------*/
-void BatteryMon::handle_sysclk (void)	/* called every 1 min */
+void Battery::handle_sysclk (void)  //called once per 1min
 {
-  get()->irq_handler();
+  get()->sysclk_handler();
 }
 
-/*-----------------------------------------------------------------------*/
-void BatteryMon::adc_sample_callback(void *context, uint16_t sample)
+void Battery::adc_sample_callback(void *context, uint16_t sample)
 {
-  BatteryMon *pbm = static_cast<BatteryMon *>(context);
+  Battery *pbm = static_cast<Battery *>(context);
 
   pbm->on_adc_sample( sample );
 }
 
-/*-----------------------------------------------------------------------*/
-BatteryMon *BatteryMon::get()
+Battery *Battery::get()
 {
-  static BatteryMon bm;
+  static Battery bm;
   return &bm;
 }
 
 /*-----------------------------------------------------------------------*/
-void BatteryMon::irq_handler (void) /*runs once per 1min */
+void Battery::sysclk_handler (void)
 {
-  timer_ticks = ( timer_ticks + 1 ) % BATTMON_PERIOD_MINUTES;
-  if ( timer_ticks == 0 ) {
+  timer_ticks = ( timer_ticks + 1 ) % BM_POLL_PERIOD_MINUTES;
+  if ( 0 == timer_ticks ) {
+    if (! running) return;
 
-    if (! running)
-	    return;
-
-    run_monitor ();
+    trigger_monitor ();
   }
 }
 
-void BatteryMon::run_monitor (void)
+void Battery::trigger_monitor (void)
 {
-  uint8_t lvl;
+  // Check battery level
+  uint8_t level = battery_level ();
+  if ( level ) {
+    if ( level < BATTERY_LOW ) {
+      ds::Display::get()->text_out (__disp_msg_battery_low__);
+    }
 
-  /* Check battery level */
-  lvl = battery_level ();
-  if ( lvl ) {
-    if ( lvl < BATTERY_LOW )
-      Display::get()->text_out (__disp_msg_battery_low__);
-
-    if ( lvl < BATTERY_EMPTY )
-      return;   /* No more measurements needed */
+    if ( level < BATTERY_EMPTY ) {
+      // No more measurements needed
+      return;
+    }
   }
 
-  batt_level = 0;	/* Start a new measurement */
+  raw_batt_level = 0;   // Start a new measurement (acts as sum)
+  sample_count = 0;     // Reset the counter
 
-  /* Let ADC take a few samples */
-  A2DConvert::get()->start_unsafe ( BATTMON_CHANNEL, 
-                                  BATTMON_SAMPLES, 
-                                  adc_sample_callback, 
-                                  this );
+  // Let ADC take a few samples 
+  bool success = A2DConvert::get()->start_unsafe (
+    BM_ADC_CHANNEL, 
+    BM_ADC_SAMPLES,
+    adc_sample_callback, 
+    this );
+  static_cast<void>(success);
 }
 
-bool BatteryMon::init (void)
+bool Battery::init (void)
 {
-  ACSR |= _BV(ACD); /* Disable analog comparator */
+  ACSR |= _BV(ACD); // Disable analog comparator
 
   running = false;
   return true;
 }
 
-void BatteryMon::start (void)
+void Battery::start (void)
 {
-  if (running)
-    return;
+  if (running) return;
   
   bool success = A2DConvert::get()->setup_channel (
-                BATTMON_CHANNEL, ADC_CF_VREF_2_56);
-  if (! success)
-	  return;
+    BM_ADC_CHANNEL,
+    ADC_CF_VREF_2_56);
+  if (! success) return;
 
-  batt_level = 0;
+  raw_batt_level = 0;
   timer_ticks = 0;
   running = true;
 }
 
-void BatteryMon::stop (void)
+void Battery::stop (void)
 {
   running = false;
 }
 
-uint8_t BatteryMon::battery_level (void)
+uint8_t Battery::battery_level (void)
 {
-  return (uint8_t) ((uint32_t ( batt_level ) * 100U) / max_adc_level);
+  return (uint8_t) (raw_batt_level * 100U / MAX_ADC_LEVEL);
 }
 
-void BatteryMon::on_adc_sample( uint16_t sample )
+void Battery::on_adc_sample( uint16_t sample )
 {
-  if ( 0 == batt_level ) {
+  // Accumulate the raw sum
+  raw_batt_level += sample;
 
-	  batt_level = sample;
-  } else {
-
-	  batt_level = (uint32_t( batt_level ) + sample) / 2;
+  // Check if we have received all requested samples
+  // and calculate the true arithmetic mean
+  if (++sample_count >= BM_ADC_SAMPLES) {
+    raw_batt_level = raw_batt_level / BM_ADC_SAMPLES; 
   }
 
 #if BATTMON_TEST

@@ -40,7 +40,8 @@
 #include "ds_sdfat.h"
 #include "ds_sysclock.h"
 
-using namespace DS;
+
+using namespace ds;
 
 /*-----------------------------------------------------------------------*/
 /* Interrupt Handler 													                           */
@@ -89,8 +90,8 @@ void SysClock::irq_handler (void)
   /* Let other subsystems process interrupt */
   Display::handle_sysclk ();
   SquareWave::handle_sysclk ();
-  REMHints::handle_sysclk ();
-  avr_core::A2DConvert::handle_sysclk ();
+  remd::REMHints::handle_sysclk ();
+  avr::core::A2DConvert::handle_sysclk ();
 
 
   // ... other 1ms dependencies ...
@@ -113,7 +114,7 @@ void SysClock::irq_handler (void)
 	     * get here every MINUTE
 	     */
 
-      BatteryMon::handle_sysclk ();
+      Battery::handle_sysclk ();
     }
 
   } // End of 1 sec block

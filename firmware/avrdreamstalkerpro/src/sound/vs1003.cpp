@@ -30,8 +30,8 @@
 #include "ds_util.h"
 
 
-using namespace VLSI;
-using namespace DS;
+using namespace vlsi;
+using namespace ds;
 
 /*-----------------------------------------------------------------------*/
 	/* SCI Registers */

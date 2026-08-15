@@ -34,7 +34,7 @@
 #include "sound/pwm_notes.h"
 #include "sound/ds_tonegen.h"
 
-using namespace DS;
+using namespace ds;
 
 /*-----------------------------------------------------------------------*/
 /* Peripheral controls (Platform dependent) */

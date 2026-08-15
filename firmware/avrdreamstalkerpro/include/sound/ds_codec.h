@@ -35,7 +35,7 @@
 
 #elif ( VS_HW_SPEC == VS_HWS_1003 )
   #include "vs1003.h"
-  using VsCodec  = VLSI::Vs1003;
+  using VsCodec  = vlsi::Vs1003;
 
 #elif ( VS_HW_SPEC == VS_HWS_1053 )
   #include "vs1053.h"
@@ -53,7 +53,8 @@
 
 /*-----------------------------------------------------------------------*/
 
-namespace DS {
+namespace ds
+{
 /*-----------------------------------------------------------------------*/
 class AudioCodec {
 public:
@@ -108,6 +109,6 @@ private:
 };
 
 /*-----------------------------------------------------------------------*/
-}; //DS
+} //ds
 
 #endif // _DS_SOUND_DEFINED

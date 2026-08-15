@@ -27,10 +27,11 @@
 #include "ds_lowpass.h"
 #include "ds_util.h"
 
-#define REMD_LOG_FILE   1   // log to a file
-#define REMD_LOG_SERIAL 2   // log to serial port
+#define REMD_LOG_FILE 1   // log to a file
+#define REMD_LOG_UART 2   // log to serial port
 
-namespace DS {
+namespace ds::remd
+{
 /*-----------------------------------------------------------------------*/
 
 typedef enum e_remd_event_type {
@@ -39,10 +40,10 @@ typedef enum e_remd_event_type {
 } remd_event_type_t;
 
 typedef enum e_remd_state {
-  REMD_STATE_OFF = 1,
-  REMD_STATE_STARTING,
-	REMD_STATE_ON,
-  REMD_STATE_STOPPING,
+  REMD_STATE_OFF = 1, // Stopped
+  REMD_STATE_START,     // Start requested
+	REMD_STATE_ON,      // Started
+  REMD_STATE_STOP,      // Stop requested
 } remd_state_t;
 
 /*-----------------------------------------------------------------------*/
@@ -155,6 +156,6 @@ public:
 };
 
 /*-----------------------------------------------------------------------*/
-};  //DS
+} //namespace ds::remd
 
 #endif // _DS_REMD_DEFINED

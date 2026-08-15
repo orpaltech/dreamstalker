@@ -23,7 +23,7 @@
 #include "ds_sdfat.h"
 #include "ds_util.h"
 
-using namespace DS;
+using namespace ds;
 
 /*-----------------------------------------------------------------------*/
 #define SD_PIN_CS   PIN_SPI_SS

@@ -22,8 +22,8 @@
 
 #include "ds_leds.h"
 
-namespace DS {
-
+namespace ds::remd
+{
 /*-----------------------------------------------------------------------*/
 class REMHints {
 public:
@@ -44,6 +44,7 @@ private:
   uint8_t light_count, sound_count, master_count; // Pulse counts
 };
 
-} // namespace DS
+/*-----------------------------------------------------------------------*/
+} //ds::remd
 
 #endif  // _DS_REM_HINTS_DEFINED

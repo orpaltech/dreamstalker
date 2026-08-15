@@ -26,9 +26,9 @@
 /* System clock interval, in millisec */
 #define CLK_PERIOD_MSEC   1UL
 
-/*-----------------------------------------------------------------------*/
-namespace DS {
 
+namespace ds
+{
 /*-----------------------------------------------------------------------*/
 class SysClock {
 public:
@@ -68,6 +68,6 @@ private:
   volatile sysclk_context_t clk;
 };
 
-};  // DS
+} //ds
 
 #endif  // _DS_SYSCLOCK_DEFINED

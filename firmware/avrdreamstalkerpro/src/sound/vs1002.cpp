@@ -27,7 +27,7 @@
 #include "sound/vs10xx_mcu.h"
 #include "sound/vs1002.h"
 
-using namespace VLSI;
+using namespace vlsi;
 
 /*-----------------------------------------------------------------------*/
 	/* SCI Registers */

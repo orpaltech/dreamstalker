@@ -33,8 +33,8 @@
 #include "ds_util.h"
 #include "ds_sdfat.h"
 
-using namespace DS;
-using namespace avr_core;
+using namespace ds::remd;
+using namespace avr::core;
 
 
 /*-----------------------------------------------------------------------*/
@@ -122,13 +122,13 @@ bool REMDetect::start (REMDetectCB_t pcb, void *pcontext, bool remd_check)
   pcb_context = pcontext;
   check_mode = remd_check;
 
-  state = REMD_STATE_STARTING;  // Request start
+  state = REMD_STATE_START;   // Request start
   return true;
 }
 
 bool REMDetect::start_internal (void)
 {
-  if (get_state () != REMD_STATE_STARTING)
+  if (get_state () != REMD_STATE_START)
     return false;
 
   if (! A2DConvert::get()->setup_channel ( REMD_ADC_CHAN ))
@@ -187,7 +187,7 @@ bool REMDetect::start_internal (void)
 
 void REMDetect::stop_internal (void)
 {
-  if (get_state () != REMD_STATE_STOPPING)
+  if (get_state () != REMD_STATE_STOP)
     return;
 
   A2DConvert::get()->stop( REMD_ADC_CHAN );
@@ -210,7 +210,7 @@ void REMDetect::stop (void)
   if (get_state () != REMD_STATE_ON)
     return;
 
-  state = REMD_STATE_STOPPING;  // Request stop
+  state = REMD_STATE_STOP;  // Request stop
 }
 
 remd_state_t REMDetect::get_state (void) const
@@ -225,12 +225,12 @@ bool REMDetect::is_check_mode (void) const
 
 void REMDetect::process_task (void)
 {
-  if (get_state () == REMD_STATE_STOPPING) {
+  if (get_state () == REMD_STATE_STOP) {
     stop_internal ();
     return;
   }
 
-  if (get_state () == REMD_STATE_STARTING) {
+  if (get_state () == REMD_STATE_START) {
     start_internal ();
     return;
   }
@@ -467,7 +467,7 @@ void REMDetect::on_a2d_sample(uint16_t sample)
   int16_t filtered = lowpass_flt.process(sample);
 
 #if REMD_LOG
-  #if REMD_LOG == REMD_LOG_SERIAL
+  #if REMD_LOG == REMD_LOG_UART
 
   	/* forward sample to serial port during testing phase */
   	Serial.write((const uint8_t*)&filtered, 2);

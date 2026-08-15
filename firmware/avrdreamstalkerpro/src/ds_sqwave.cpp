@@ -24,7 +24,7 @@
 #include "ds_sqwave.h"
 #include "ds_sysclock.h"
 
-using namespace DS;
+using namespace ds;
 
 /*-----------------------------------------------------------------------*/
 void SquareWave::handle_sysclk (void)

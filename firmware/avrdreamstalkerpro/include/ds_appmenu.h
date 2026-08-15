@@ -29,7 +29,8 @@
 #define MENU_MAX_PLANES	2
 
 
-namespace DS {
+namespace ds
+{
 /*-----------------------------------------------------------------------*/
 
 typedef enum e_menu_process_flag {
@@ -73,6 +74,6 @@ private:
 };
 
 /*-----------------------------------------------------------------------*/
-};	//DS
+} //ds
 
 #endif // _DS_MENU_DEFINED

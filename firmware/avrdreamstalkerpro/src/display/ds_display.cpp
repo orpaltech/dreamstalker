@@ -31,7 +31,6 @@
 #include "ds_rtclock.h"
 #include "ds_sysclock.h"
 
-using namespace DS;
 
 /*-----------------------------------------------------------------------*/
 /* Peripheral controls (Platform dependent) */
@@ -231,6 +230,8 @@ void pins_on (void)
   PORT_DIG |= PF_ALL_DIG;		/* drive high */
   PORT_SEG |= PF_ALL_SEG;		/* drive high */
 }
+
+using namespace ds;
 
 /*-----------------------------------------------------------------------*/
 static Display disp;

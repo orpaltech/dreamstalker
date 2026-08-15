@@ -19,10 +19,11 @@
 
 #include <stdint.h>
 
-namespace DS {
-
+namespace ds::remd
+{
 /*-----------------------------------------------------------------------*/
-class LowPassFilter {
+class LowPassFilter
+{
 private:
     // Filter coefficients (Calculated for 1kHz sample rate, 40Hz cutoff)
     // Formula: Butterworth 2nd order
@@ -43,8 +44,7 @@ public:
      * Processes a 10-bit sample using 100% integer math.
      * Output is scaled by 16384.
      */
-    int16_t process(int16_t input)
-    {
+    int16_t process(int16_t input) {
         // Direct Form II Transposed
         int32_t out_wide = (int32_t)input * b0 + z1;
         
@@ -62,4 +62,4 @@ public:
     void reset() { z1 = z2 = 0; }
 };
 
-} //namespace DS
+} //namespace ds

@@ -17,12 +17,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _DS_BATTMON_DEFINED
-#define _DS_BATTMON_DEFINED
+#ifndef _DS_BATTERY_DEFINED
+#define _DS_BATTERY_DEFINED
 
 #include <stdbool.h>
 #include <stdint.h>
-
 #include "core/adc_avr.h"
 
 /*-----------------------------------------------------------------------*/
@@ -30,13 +29,13 @@
 #define BATTERY_LOW 	85U
 #define BATTERY_EMPTY   70U
 
-/*-----------------------------------------------------------------------*/
-namespace DS {
 
+namespace ds
+{
 /*-----------------------------------------------------------------------*/
-class BatteryMon {
+class Battery {
 public:
-  static BatteryMon *get();
+  static Battery *get();
 public:
   bool init (void);
 
@@ -55,15 +54,16 @@ protected:
 private:
   static void adc_sample_callback(void *context, uint16_t sample);
   
-  void irq_handler (void);
-  void run_monitor (void);
+  void sysclk_handler (void);
+  void trigger_monitor (void);
 
-  volatile uint16_t batt_level;
-  uint8_t timer_ticks;		/* minute ticks*/
+  volatile uint32_t raw_batt_level;
+  uint8_t timer_ticks;    // minute ticks
+  uint16_t sample_count;  // samples in current batch
   bool running;
 };
 
 /*-----------------------------------------------------------------------*/
-};  //DS
+} //ds
 
-#endif  //_DS_BATTMON_DEFINED
+#endif  //_DS_BATTERY_DEFINED

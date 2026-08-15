@@ -34,8 +34,8 @@
 #include "ds_util.h"
 #include "ds_sdfat.h"
 
-using namespace VLSI;
-using namespace DS;
+using namespace vlsi;
+using namespace ds;
 
 /*-----------------------------------------------------------------------*/
 #define VS_PIN_XCS		PIN_PB6		/* SCI select line	*/
@@ -256,13 +256,13 @@ void Vs10xx::soft_reset ( uint16_t mask_add, uint16_t mask_remove )
 
 void Vs10xx::wait_for_dreq ( void )
 {
-  while ( DS::Pins::is_in_low( VS_PIN_DREQ ))
+  while ( Pins::is_in_low( VS_PIN_DREQ ))
     _NOP ();
 }
 
 bool Vs10xx::is_dreq ( void )
 {
-  return ( DS::Pins::is_in_high( VS_PIN_DREQ ) );
+  return ( Pins::is_in_high( VS_PIN_DREQ ) );
 }
 
 void Vs10xx::analog_pwr_down ( void )
@@ -381,22 +381,22 @@ void Vs10xx::adpcm_record_stop ( void )
 \*-----------------------------------------------------------------------*/
 void Vs10xx::sci_select ( void )
 {
-  DS::Pins::drive_low( VS_PIN_XCS );
+  Pins::drive_low( VS_PIN_XCS );
 }
 
 void Vs10xx::sci_unsel ( void )
 {
-  DS::Pins::drive_high( VS_PIN_XCS );
+  Pins::drive_high( VS_PIN_XCS );
 }
 
 void Vs10xx::sdi_select ( void )
 {
-  DS::Pins::drive_low( VS_PIN_XDCS );
+  Pins::drive_low( VS_PIN_XDCS );
 }
 
 void Vs10xx::sdi_unsel ( void )
 {
-  DS::Pins::drive_high( VS_PIN_XDCS );
+  Pins::drive_high( VS_PIN_XDCS );
 }
 
 /*-----------------------------------------------------------------------*\

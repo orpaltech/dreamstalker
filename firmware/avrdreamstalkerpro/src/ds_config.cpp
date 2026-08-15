@@ -27,7 +27,7 @@
 #include "ds_config.h"
 #include "ds_util.h"
 
-using namespace DS;
+using namespace ds;
 
 /*-----------------------------------------------------------------------*/
 /* IMPORTANT: signature must be updated on every change 

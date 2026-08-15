@@ -149,7 +149,7 @@ typedef enum e_remd_profile {
 
 #define DSCONF_DECREMENT_PROPERTY(cfg, name)          \
   if (! cfg.is_readonly_ ## name ()) {					      \
-	  DS::Config::name ## _t val = cfg.get_ ## name (); \
+	  ds::Config::name ## _t val = cfg.get_ ## name (); \
 	  /* disable values below zero !!*/					        \
 	  if(val < cfg.step_ ## name ()) {					        \
 	    val = cfg.max_ ## name ();						          \
@@ -164,7 +164,7 @@ typedef enum e_remd_profile {
 
 #define DSCONF_INCREMENT_PROPERTY(cfg, name)          \
   if (! cfg.is_readonly_ ## name ()) {					      \
-	  DS::Config::name ## _t val = cfg.get_ ## name (); \
+	  ds::Config::name ## _t val = cfg.get_ ## name (); \
 	  val += cfg.step_ ## name ();						          \
 	  if (val > cfg.max_ ## name ()) {					        \
 	    val = cfg.min_ ## name ();						          \
@@ -199,7 +199,8 @@ typedef enum e_remd_profile {
 /*-----------------------------------------------------------------------*/
 uint16_t fw_version (void);
 
-namespace DS {
+namespace ds
+{
 /*-----------------------------------------------------------------------*/
 class Config {
 public:
@@ -535,8 +536,8 @@ private:
 };
 
 /*-----------------------------------------------------------------------*/
-};	//DS
+} //ds
 
-extern DS::Config config;
+extern ds::Config config;
 
 #endif // _DS_CONFIG_DEFINED

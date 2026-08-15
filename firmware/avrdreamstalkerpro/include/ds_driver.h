@@ -30,8 +30,9 @@
 
 //#define RUN_TEST_MODE 1
 
-namespace DS {
-
+namespace ds
+{
+/*-----------------------------------------------------------------------*/
 typedef enum e_operation_mode {
   OPM_NONE = 0,
 	OPM_NORMAL,
@@ -76,7 +77,7 @@ private:
   void power_off (void);
   static void alarm_clock_callback (void *context);
   static void wakeup_timer_callback (void *context);
-  static void remd_callback(void *context, remd_event_type_t event, uint16_t arg);
+  static void remd_callback(void *context, remd::remd_event_type_t event, uint16_t arg);
 
 private:
   uint8_t opmode;
@@ -84,6 +85,6 @@ private:
 };
 
 /*-----------------------------------------------------------------------*/
-};  //DS
+} //ds
 
 #endif  // _DS_DRIVER_DEFINED

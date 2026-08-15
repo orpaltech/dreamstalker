@@ -23,7 +23,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-namespace DS {
+namespace ds
+{
 /*-----------------------------------------------------------------------*/
 typedef enum e_tonegen_piece {
   TGP_NONE = 0,
@@ -106,6 +107,6 @@ private:
 };
 
 /*-----------------------------------------------------------------------*/
-};  //DS
+} //ds
 
 #endif  // _DS_TONEGEN_DEFINED

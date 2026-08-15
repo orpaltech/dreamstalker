@@ -71,7 +71,8 @@
 #define AICTRL1_AGC			    0
 
 
-namespace VLSI {
+namespace vlsi
+{
 /*-----------------------------------------------------------------------*/
 typedef uint8_t	vs_hwspec_t;
 
@@ -212,6 +213,6 @@ private:
 };
 
 /*-----------------------------------------------------------------------*/
-};  //VLSI
+} //vlsi
 
 #endif // _VS10XX_DEFINED

@@ -19,13 +19,10 @@
 
 #include <avr/io.h>
 #include <util/atomic.h>
-
-#include <Arduino.h>
-
-#include "ds_vibro.h"
 #include "ds_util.h"
+#include "ds_vibro.h"
 
-using namespace DS;
+using namespace ds;
 
 /*-----------------------------------------------------------------------*/
 /* Peripheral controls (Platform dependent) */

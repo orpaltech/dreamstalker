@@ -36,7 +36,7 @@
 #include "ds_sdfat.h"
 
 
-using namespace DS;
+using namespace ds;
 
 /*-----------------------------------------------------------------------*/
 /* Flags for Real-time clock ISR (make sure these do NOT overlap)

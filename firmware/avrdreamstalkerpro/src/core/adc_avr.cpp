@@ -27,7 +27,7 @@
 #include "core/adc_avr.h"
 #include "ds_util.h"
 
-using namespace avr_core;
+using namespace avr::core;
 
 /*-----------------------------------------------------------------------*/
 /* Peripheral controls (Platform dependent) */
@@ -52,8 +52,8 @@ using namespace avr_core;
 #define ADC_N(n)	ADC_N_ ## n
 
 /* Possible ADC refs */
-#define ADC_REF_AVCC	_BV(REFS0)					      /* ADC ref is AVCC */
-#define ADC_REF_256		(_BV(REFS1)|_BV(REFS0))		/* ADC ref is 2.56V */
+#define ADC_REF_AVCC	_BV(REFS0)					        /* ADC ref is AVCC */
+#define ADC_REF_256		(_BV(REFS1) | _BV(REFS0))   /* ADC ref is 2.56V */
 
 /* 5 bits in total, ADC channels 0-7 supported
  * i.e. only 3 lower bits are used to encode the channel number 
@@ -66,7 +66,7 @@ using namespace avr_core;
 
 
 /* Default ADC prescaler (F_CPU divider) */
-#define ADC_DIV		64                  /* ADC takes 13 cycles for each conversion, ~104us */
+#define ADC_DIV		64                  // ADC takes 13 cycles for each conversion, ~104us
 #define ADC_CLK   (F_CPU / ADC_DIV)
 
 
@@ -79,9 +79,9 @@ ISR(ADC_vect)
 }
 
 /*-----------------------------------------------------------------------*/
-void A2DConvert::handle_sysclk (void) /* called every 1ms*/
+void A2DConvert::handle_sysclk (void) //called every 1ms
 {
-  get()->irq_handler();
+  get()->sysclk_handler();
 }
 
 void A2DConvert::handle_adc (void)
@@ -89,7 +89,6 @@ void A2DConvert::handle_adc (void)
   get()->adc_handler();
 }
 
-/*-----------------------------------------------------------------------*/
 A2DConvert *A2DConvert::get()
 {
   static A2DConvert a2d;
@@ -97,159 +96,158 @@ A2DConvert *A2DConvert::get()
 }
 
 /*-----------------------------------------------------------------------*/
-void A2DConvert::irq_handler (void)
+void A2DConvert::sysclk_handler (void)
 {
-  int i = 0;
-
   if (! (ADCSRA & _BV(ADEN))) // Check if ADC enabled 
     return;
 
-
-  /* Next channel for convert */
-  i = get_next_running_index ();
-  if( i < 0 ) {
-    /* No channel to convert */
+  int i = get_first_running_index ();
+  if ( i < 0 ) {
+    // No channel to convert 
     return;
   }
 
-  /* Enable interrupt on data ready */
+  // Enable interrupt on ADC sample
   ADCSRA |= _BV(ADIE);
 
-  /* Next sample convert */
+  // Next sample convert 
   convert_one ( i );
 }
 
 void A2DConvert::adc_handler (void)
 {
-  uint16_t sample;
-  volatile adc_channel_t *pch;
-  int i;
+  const int i = get_index( ADC_GET_CH () );
+  if ( i < 0 ) return;
 
-  i = get_index ( ADC_GET_CH () );
-  if ( i < 0 )
-	  return;
+  volatile adc_channel_t *pch = &adc[i];
 
-  pch = &adc[i];
-
-  /* Read buffered ADC sample */
-  sample = ADC;
-
-  if (pch->flags & SF_LEFT_ADJUST)
+  // Read buffered ADC sample
+  uint16_t sample = ADC;
+  if (pch->flags & SF_LEFT_ADJUST) {
     sample >>= 6;
-  /* ADC has 10 meaningful bits */
+  }
+  // ADC has 10 meaningful bits
   sample &= ADC_MAX_VALUE;
 
   if (pch->flags & SF_RUNNING) {
 
-	  /* Allow callback function process the sample */
-	  if (pch->pfcb)
+	  // Allow callback function process the sample
+	  if (pch->pfcb) {
 	    pch->pfcb( pch->context, sample );
+    }
 
 	  if (pch->num_samples > 0) {
-	    /* Check number of samples requested 
-	     * and stop the channel, if needed 
-	     */
-	    if (--pch->num_samples == 0)
+	    // Check number of samples requested and stop channel, if needed 
+	    //
+	    if (--pch->num_samples == 0) {
 		    pch->flags &= ~SF_RUNNING;
+      }
 	  }
   }
 
-  /* Check if there are other running channels */
-  i = get_next_running_index ();
-  if( i > 0 ) {
-    /* More channels to convert */
-    convert_one ( i );
+  const int n = get_next_running_index ( i );
+  if( n < 0 ) {
+    // No more channels, disable interrupts until next sysclk tick
+    //
+    ADCSRA &= ~_BV(ADIE);
     return;
   }
 
-  /* Otherwise, disable interrupts until the next RTC tick */
-  ADCSRA &= ~_BV(ADIE);
+  // Found next channel
+  convert_one ( n );
 }
 
-uint8_t A2DConvert::get_channel ( uint8_t i )
+uint8_t A2DConvert::get_channel ( uint8_t i ) const
 {
+  const volatile adc_channel_t *pch = &adc[i];
+
   // The compiler will only read the first byte of .flags 
-  // because the mask 0x1F makes the second byte irrelevant.
-  return (uint8_t)(adc[i].channel & ADC_CHAN_MASK);
+  // because the mask 0x1F makes the second byte irrelevant
+  //
+  return (uint8_t)(pch->channel & ADC_CHAN_MASK);
 }
 
-int8_t A2DConvert::get_index( uint8_t chan )
+int8_t A2DConvert::get_index( uint8_t chan ) const
 {
-  uint8_t i;
-
-  for (i = 0; i < ADC_CHANNELS; i++) {
-	  if (get_channel ( i ) == chan)
+  for (uint8_t i = 0; i < ADC_CHANNELS; i++) {
+	  if (get_channel ( i ) == chan) {
 	    return i;
+    }
   }
   return -1;
 }
 
-int8_t A2DConvert::get_next_running_index ( void )
+int8_t A2DConvert::get_first_running_index ( void) const
 {
-  uint8_t index = chan_index;
-
-  /* Advance the channel index */
-  if (!( ++chan_index < ADC_CHANNELS ))
-    chan_index = 0;
-
-	if (adc[index].flags & SF_RUNNING) {
-    /* 
-     * Ready to capture the channel 
-     */
-    return index;
-  }
-
-  return -1;
+  return get_next_running_index( -1 );
 }
 
-void A2DConvert::convert_one ( int8_t i )
+int8_t A2DConvert::get_next_running_index(int8_t current_index) const
+{
+  // Start searching from the index immediately following the current one
+  for (int8_t i = current_index + 1; i < ADC_CHANNELS; i++) {
+    const volatile adc_channel_t *pch = &adc[i];
+
+    if (pch->flags & SF_RUNNING) {
+      // Found the next running channel
+      //
+      return i;
+    }
+  }
+
+  return -1; // Reached the end, sweep is finished
+}
+
+void A2DConvert::convert_one ( int8_t i ) const
 {
   uint8_t adc_ref, left_adjust = 0;
-  /* Setup ADC multiplexer for conversion */
-  if (adc[i].flags & SF_VREF_2_56)
-	  adc_ref = ADC_REF_256;			      /* Internal 2.56V as ref */
-  else
-	  adc_ref = ADC_REF_AVCC;			      /* AVCC as ref */
+  const volatile adc_channel_t *pch = &adc[i];
 
-  if (adc[i].flags & SF_LEFT_ADJUST)
-	  left_adjust |= _BV(ADLAR);        /* Left-adjusted result */
+  // Setup ADC multiplexer for conversion 
+  if (pch->flags & SF_VREF_2_56) {
+	  adc_ref = ADC_REF_256;			      // Internal 2.56V as ref
+  }
+  else {
+	  adc_ref = ADC_REF_AVCC;           // AVCC as ref
+  }
 
-  /* Setup multiplexer register */
+  if (pch->flags & SF_LEFT_ADJUST) {
+	  left_adjust |= _BV(ADLAR);        // Left-adjusted result
+  }
+
+  // Setup multiplexer register
   ADMUX = (adc_ref | left_adjust | get_channel( i ));	
 
-  /* Do a single conversion */
+  // Do a single conversion 
   ADCSRA |= _BV(ADSC);
 }
 
 /*-----------------------------------------------------------------------*/
 bool A2DConvert::enable (void)
 {
-  /* NOTE: ADC is in single-convert mode */
+  // NOTE: ADC is in single-convert mode
 
-  /* Enable ADC channel 0 */
-  adc[0].channel = 0U;
+  // Enable ADC channel 0 
+  adc[0].channel = 0;
   adc[0].flags = SF_ENABLED;
 
-  /* Enable ADC channel 2 */
-  adc[1].channel = 2U;
+  // Enable ADC channel 2 
+  adc[1].channel = 2;
   adc[1].flags = SF_ENABLED;
 
-  chan_index = 0;
+  // Switch ADC pins for input
+  // TODO: is this really needed ???
+  DDR_ADC &= ~(DD_ADC0 | DD_ADC2);
 
-  /* TODO: Switch ADC pins for input. 
-   *		Is this needed ???
-   */
-  DDR_ADC &= ~(DD_ADC0|DD_ADC2);
-
-  ADCSRA = _BV(ADEN);     /* Power ADC on */
-  ADC_SET_DIV(ADC_DIV);		/* Set ADC sampling rate */
+  ADCSRA = _BV(ADEN);     // Power ADC on
+  ADC_SET_DIV(ADC_DIV);		// Set ADC sampling rate
 
   return true;
 }
 
 void A2DConvert::warm_up (void) 
 {
-  /* Warm up the ADC analog circuitry */
+  // Warm up the ADC analog circuitry 
   start ( 2, 3, NULL );
 
   _delay_ms ( 10 );
@@ -257,15 +255,16 @@ void A2DConvert::warm_up (void)
 
 void A2DConvert::disable (void)
 {
-  stop ( 0 );
-  stop ( 2 );
+  for (int8_t i = 0; i < ADC_CHANNELS; i++) {
+    volatile adc_channel_t *pch = &adc[i];
 
-  /* Disable ADC channels */
-  adc[0].flags &= ~SF_ENABLED;	/* channel 0 */
-  adc[1].flags &= ~SF_ENABLED;	/* channel 2 */
+    stop ( pch->channel );
 
+    // Disable the channel
+    pch->flags &= ~SF_ENABLED;
+  }
 
-  /* Disable interrupt, Power ADC off */
+  // Disable interrupt, power ADC off
   ADCSRA &= ~(_BV(ADIE) | _BV(ADEN));
 }
 
@@ -276,24 +275,24 @@ uint32_t A2DConvert::get_adc_rate (void)
 
 bool A2DConvert::setup_channel (uint8_t chan, uint16_t flags)
 {
-  volatile adc_channel_t *pch;
-  int i;
+  int i = get_index ( chan );
+  if( i < 0 ) return false;
 
-  i = get_index ( chan );
-  if( i < 0 )
-	  return false;
+  volatile adc_channel_t *pch = &adc[i];
 
-  pch = &adc[i];
-
-  if( flags & ADC_CF_LEFT_ADJUST )
+  if( flags & ADC_CF_LEFT_ADJUST ) {
 	  pch->flags |= SF_LEFT_ADJUST;
-  else
+  }
+  else {
 	  pch->flags &= ~SF_LEFT_ADJUST;
+  }
 
-  if( flags & ADC_CF_VREF_2_56 )
+  if( flags & ADC_CF_VREF_2_56 ) {
 	  pch->flags |= SF_VREF_2_56;
-  else
+  }
+  else {
 	  pch->flags &= ~SF_VREF_2_56;
+  }
 
   return true;
 }
@@ -311,73 +310,41 @@ bool A2DConvert::start (uint8_t chan, uint16_t num_samples, A2DSampleCB_t pfcb, 
 
 bool A2DConvert::start_unsafe (uint8_t chan, uint16_t num_samples, A2DSampleCB_t pfcb, void *context)
 {
-  volatile adc_channel_t *pch;
-  int i;
+  int i = get_index ( chan );
+  if( i < 0 ) return false;
 
-  i = get_index ( chan );
-  if( i < 0 )
+  volatile adc_channel_t *pch = &adc[i];
+
+  // Check if channel is enabled
+  if (!( pch->flags & SF_ENABLED )) {
 	  return false;
+  }
 
-  pch = &adc[i];
-
-  /* Check if channel is enabled */
-  if (! ( pch->flags & SF_ENABLED ))
-	  return false;
-
-  /* Check if channel is already running */
-  if (pch->flags & SF_RUNNING)
+  // Check if channel is already running
+  if (pch->flags & SF_RUNNING) {
     return false;
+  }
 
   pch->num_samples = num_samples;
   pch->pfcb = pfcb;
   pch->context = context;
   pch->flags |= SF_RUNNING;
 
-  /* Start the conversion */
+  // Start the conversion on this channel
   return true;
 }
 
 void A2DConvert::enable_channel (uint8_t chan, bool enable)
 {
-  int i;
+  int i = get_index ( chan );
+  if( i < 0 ) return;
 
-  i = get_index ( chan );
-  if( i < 0 )
-	  return;
-
-  if (enable)
+  if (enable) {
     adc[i].flags |= SF_ENABLED;
-  else
-    adc[i].flags &= ~SF_ENABLED;
-}
-
-bool A2DConvert::is_enabled ( uint8_t chan )
-{
-  int i;
-  bool enabled;
-
-  i = get_index ( chan );
-  if( i < 0 )
-	  return false;
-
-  enabled = (adc[i].flags & SF_ENABLED ) != 0;
-  return enabled;
-}
-
-bool A2DConvert::is_running ( uint8_t chan )
-{
-  int i;
-  bool running;
-
-  i = get_index ( chan );
-  if( i < 0 )
-	  return false;
-
-  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-
-    running = (adc[i].flags & SF_RUNNING ) != 0;
   }
-  return running;
+  else {
+    adc[i].flags &= ~SF_ENABLED;
+  }
 }
 
 void A2DConvert::stop (uint8_t chan) 
@@ -390,11 +357,8 @@ void A2DConvert::stop (uint8_t chan)
 
 void A2DConvert::stop_unsafe ( uint8_t chan )
 {
-  int i;
-	
-  i = get_index ( chan );
-  if( i < 0 )
-	  return;
+  int i = get_index ( chan );
+  if( i < 0 ) return;
 
   adc[i].flags &= ~SF_RUNNING;
 }

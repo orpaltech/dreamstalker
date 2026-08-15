@@ -22,14 +22,13 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-
 #include "ds_sqwave.h"
 
-
-namespace DS {
-/*-----------------------------------------------------------------------*/
-
 #define NUM_LEDS  2
+
+namespace ds::remd
+{
+/*-----------------------------------------------------------------------*/
 
 /* The values are also slots in SquareWave */
 typedef enum e_led_id {
@@ -82,9 +81,9 @@ private:
 };
 
 /*-----------------------------------------------------------------------*/
-class Leds {
+class REMDLeds {
 public:
-  static Leds *get();
+  static REMDLeds *get();
 public:
   bool init (void);
 
@@ -127,6 +126,6 @@ private:
 };
 
 /*-----------------------------------------------------------------------*/
-};	//DS
+} //ds::remd
 
 #endif // _DS_LEDS_DEFINED

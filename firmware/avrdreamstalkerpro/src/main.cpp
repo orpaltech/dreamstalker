@@ -25,7 +25,7 @@
 /*-----------------------------------------------------------------------*/
 void setup()
 {
-  auto drv = DS::Driver::get();
+  auto drv = ds::Driver::get();
 
   // put your setup code here, to run once
 
@@ -42,7 +42,7 @@ void setup()
 /*-----------------------------------------------------------------------*/
 void loop()
 {
-  auto drv = DS::Driver::get();
+  auto drv = ds::Driver::get();
 
   drv->process ();
 

@@ -24,8 +24,8 @@
 #include "sound/ds_tonegen.h"
 #include "ds_remhints.h"
 
-using namespace DS;
 
+using namespace ds::remd;
 
 /*-----------------------------------------------------------------------*/
 PROGMEM const uint16_t u_HintsPeriods[10] = {
@@ -109,8 +109,8 @@ void REMHints::update()
 
     if (light_count > 0) {
       // Just send the "Dark" value (TOP).
-      Leds::get()->set_raw_ocr_top(LED1);
-      Leds::get()->set_raw_ocr_top(LED2);
+      REMDLeds::get()->set_raw_ocr_top(LED1);
+      REMDLeds::get()->set_raw_ocr_top(LED2);
       light_count = 0;
     }
 
@@ -128,12 +128,12 @@ void REMHints::update()
   // --- Light Scenario Logic ---
   if (light_count > 0) {
     if (current_pulse <= light_count) {
-      Leds::get()->set_raw_ocr(LED1, current_ocr);
-      Leds::get()->set_raw_ocr(LED2, current_ocr);
+      REMDLeds::get()->set_raw_ocr(LED1, current_ocr);
+      REMDLeds::get()->set_raw_ocr(LED2, current_ocr);
     } else {
       // Light's time has run out
-      Leds::get()->set_raw_ocr_top(LED1);
-      Leds::get()->set_raw_ocr_top(LED2);
+      REMDLeds::get()->set_raw_ocr_top(LED1);
+      REMDLeds::get()->set_raw_ocr_top(LED2);
       light_count = 0;
     }
   }

@@ -27,8 +27,8 @@
 #define SQW_SLOTS	3U   /* Available slots: 0,1,2 */
 
 
-namespace DS {
-
+namespace ds
+{
 /*-----------------------------------------------------------------------*/
 typedef enum e_sqw_transition {
   SQW_TRANS_LOW,
@@ -85,6 +85,6 @@ private:
 };
 
 /*-----------------------------------------------------------------------*/
-};	//DS
+} //ds
 
 #endif // _DS_SQUARE_WAVE_DEFINED

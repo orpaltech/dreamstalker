@@ -29,7 +29,7 @@
 #include "ds_util.h"
 
 
-using namespace DS;
+using namespace ds;
 
 /*-----------------------------------------------------------------------*/
 /* Peripheral controls (Platform dependent) */

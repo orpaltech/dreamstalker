@@ -35,8 +35,7 @@
 #include "ds_util.h"
 #include "ds_sdfat.h"
 
-using namespace DS;
-
+using namespace ds;
 
 /*-----------------------------------------------------------------------*/
 

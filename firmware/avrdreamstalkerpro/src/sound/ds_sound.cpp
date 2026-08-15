@@ -31,7 +31,7 @@
 #include "ds_sysclock.h"
 #include "ds_util.h"
 
-using namespace DS;
+using namespace ds;
 
 /*-----------------------------------------------------------------------*/
 /* Peripheral controls (Platform dependent) */

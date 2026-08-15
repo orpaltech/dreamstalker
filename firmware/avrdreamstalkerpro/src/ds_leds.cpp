@@ -22,15 +22,13 @@
 #include <string.h>
 #include <util/atomic.h>
 
-#include <Arduino.h>
-
+#include "ds_util.h"
 #include "core/tmr_avr.h"
 #include "sound/ds_tonegen.h"
 #include "ds_leds.h"
 #include "ds_rtclock.h"
-#include "ds_util.h"
 
-using namespace DS;
+using namespace ds::remd;
 
 /*-----------------------------------------------------------------------*/
 /* Peripheral controls (Platform dependent) */
@@ -133,7 +131,7 @@ void led_pwm_on (led_id_t led)
   uint8_t mask = digitalPinToBitMask(pin);
   volatile uint8_t *out = portOutputRegister(digitalPinToPort(pin));
 
-  // 1. Force the PORT bit HIGH (OFF for sink)
+  // Force the PORT bit HIGH (OFF for sink)
   *out |= mask;
 
   // Force the timer to the "Dark" position
@@ -167,22 +165,22 @@ void led_pwm_set_ocr (led_id_t led, uint16_t ocr)
 }
 
 /*-----------------------------------------------------------------------*/
-void Leds::sqw_transition_callback(void *context, uint8_t slot, sqw_transition_t trans)
+void REMDLeds::sqw_transition_callback(void *context, uint8_t slot, sqw_transition_t trans)
 {
-  Leds *pls = static_cast<Leds *>(context);
+  auto *pls = static_cast<REMDLeds *>(context);
 
   pls->on_sqw_transition (slot, trans);
 }
 
 /*-----------------------------------------------------------------------*/
-Leds *Leds::get()
+REMDLeds *REMDLeds::get()
 {
-  static Leds leds;
+  static REMDLeds leds;
   return &leds;
 }
 
 /*-----------------------------------------------------------------------*/
-void Leds::on (led_id_t led, uint8_t brightness, uint16_t duration_ms)
+void REMDLeds::on (led_id_t led, uint8_t brightness, uint16_t duration_ms)
 {
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
 
@@ -190,7 +188,7 @@ void Leds::on (led_id_t led, uint8_t brightness, uint16_t duration_ms)
   }
 }
 
-void Leds::stop (led_id_t led)
+void REMDLeds::stop (led_id_t led)
 {
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
 
@@ -198,7 +196,7 @@ void Leds::stop (led_id_t led)
   }
 }
 
-void Leds::pulse (led_id_t led, uint8_t brightness, uint16_t duration_ms, uint16_t period_ms, uint8_t duty_cycle)
+void REMDLeds::pulse (led_id_t led, uint8_t brightness, uint16_t duration_ms, uint16_t period_ms, uint8_t duty_cycle)
 {
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
 
@@ -206,23 +204,25 @@ void Leds::pulse (led_id_t led, uint8_t brightness, uint16_t duration_ms, uint16
   }
 }
 
-bool Leds::is_led_busy (led_id_t led) const
+bool REMDLeds::is_led_busy (led_id_t led) const
 {
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
 
     return is_led_busy_unsafe (led);
   }
+  __builtin_unreachable();
 }
 
-void Leds::on_unsafe (led_id_t led, uint8_t brightness, uint16_t duration_ms)
+void REMDLeds::on_unsafe (led_id_t led, uint8_t brightness, uint16_t duration_ms)
 {
   pulse_unsafe (led, brightness, duration_ms, 0, 0);
 }
 
-void Leds::stop_unsafe (led_id_t led)
+void REMDLeds::stop_unsafe (led_id_t led)
 {
   if (!(led == LED1 || led == LED2))
     return;
+
   if (! is_led_busy_unsafe (led))	// skip if not lit
 	  return;
   
@@ -246,7 +246,7 @@ void Leds::stop_unsafe (led_id_t led)
   Pins::set_in_highz(pin);
 }
 
-bool Leds::is_led_busy_unsafe(led_id_t led) const
+bool REMDLeds::is_led_busy_unsafe(led_id_t led) const
 {
   // Check if SquareWave is using this slot
   bool sqw_busy = SquareWave::get()->is_active_unsafe (led);
@@ -254,10 +254,11 @@ bool Leds::is_led_busy_unsafe(led_id_t led) const
   return sqw_busy;
 }
 
-void Leds::pulse_unsafe (led_id_t led, uint8_t brightness, uint16_t duration_ms, uint16_t period_ms, uint8_t duty_cycle)
+void REMDLeds::pulse_unsafe (led_id_t led, uint8_t brightness, uint16_t duration_ms, uint16_t period_ms, uint8_t duty_cycle)
 {
   if (!(led==LED1 || led==LED2)) 
     return;
+
   if (is_led_busy_unsafe (led))  // skip if already lit
     return;
 
@@ -272,8 +273,6 @@ void Leds::pulse_unsafe (led_id_t led, uint8_t brightness, uint16_t duration_ms,
   uint16_t ocr_val = LEDS_TMR3_OCR_TOP - corrected_br;
   led_pwm_set_ocr (led, ocr_val);
 
-  //led_pwm_on(led);
-
   // Set to Pull-up so the PORT register is 1 (HIGH/OFF)
   Pins::set_in_pullup (led_to_pin (led));
 
@@ -282,68 +281,7 @@ void Leds::pulse_unsafe (led_id_t led, uint8_t brightness, uint16_t duration_ms,
                                 sqw_transition_callback, this);
 }
 
-/*void Leds::fade(led_id_t led, uint8_t brightness_max, uint16_t ramp_ms, uint16_t min_wait, uint16_t max_wait, uint8_t count)
-{
-  if (!(led == LED1 || led == LED2))
-    return;
-  if (is_led_busy(led))
-    return;
-
-  // For a standard fade, we treat max_brightness as both the START and the LIMIT.
-  // We set increment to 0 so every pulse is identical.
-  uint8_t start_br = brightness_max;
-  uint8_t limit_br = brightness_max;
-  uint8_t increment_br = 0;
-
-  // 1. Initialize the fader logic
-  faders[led].start(start_br, increment_br, limit_br, ramp_ms, min_wait, max_wait, count);
-
-  // 2. Hardware Pre-sync: Set to Pull-up (PORT=1) to prevent the "zero-pulse" flash
-  Pins::set_in_pullup(led_to_pin(led));
-
-  // 3. Ensure hardware starts disconnected and at the dark value
-  led_pwm_off(led);
-  led_pwm_set_ocr(led, LEDS_TMR3_OCR_TOP);
-}*/
-
-/*void Leds::fade_rhythmic(led_id_t led, uint8_t limit_br, uint8_t start_br, 
-                        uint8_t increment_br, uint16_t period_ms, uint8_t duty_cycle, 
-                        uint16_t jitter_ms, uint8_t count)
-{
-    if (!(led == LED1 || led == LED2))
-      return;
-    if (is_led_busy(led))
-      return;
-
-    // Translate Period/Duty into internal Ramp/Wait values
-    //
-    // 1. Calculate the 'Active' time (Ramp Up + Ramp Down)
-    // Example: Period 2000ms, Duty 60% = 1200ms active
-    uint32_t active_ms = ((uint32_t)period_ms * duty_cycle) / 100;
-
-    // 2. Calculate Ramp (Half of active time)
-    // Example: 1200ms / 2 = 600ms to reach peak, 600ms to return to 0
-    uint16_t ramp_ms = (uint16_t)(active_ms / 2);
-
-    // 3. Calculate 'Wait' time (The remaining part of the period)
-    // Example: 2000ms - 1200ms = 800ms dark
-    uint16_t min_wait_ms = period_ms - (uint16_t)active_ms;
-
-    // 4. Max wait adds the jitter
-    uint16_t max_wait_ms  = min_wait_ms + jitter_ms;
-
-    // 5. Initialize the fader logic
-    faders[led].start(start_br, increment_br, limit_br, ramp_ms, min_wait_ms, max_wait_ms, count);
-
-    // 6. Hardware Pre-sync: Set to Pull-up (PORT=1) to prevent the "zero-pulse" flash
-    Pins::set_in_pullup(led_to_pin(led));
-
-    // 7. Ensure hardware starts disconnected and at the dark value
-    led_pwm_off(led);
-    led_pwm_set_ocr(led, LEDS_TMR3_OCR_TOP); 
-}*/
-
-bool Leds::init (void)
+bool REMDLeds::init (void)
 {
   // Set pins to input mode 
   Pins::set_in_pullup( PIN_LED1 );
@@ -374,7 +312,7 @@ bool Leds::init (void)
   return true;
 }
 
-void Leds::on_sqw_transition (uint8_t index, sqw_transition_t trans)
+void REMDLeds::on_sqw_transition (uint8_t index, sqw_transition_t trans)
 {
   led_id_t led = (led_id_t)index;
   uint8_t pin = led_to_pin (led);
@@ -402,7 +340,7 @@ void Leds::on_sqw_transition (uint8_t index, sqw_transition_t trans)
   }
 }
 
-void Leds::set_raw_ocr(led_id_t led, uint16_t ocr)
+void REMDLeds::set_raw_ocr(led_id_t led, uint16_t ocr)
 {
   uint8_t pin = led_to_pin(led);
 
@@ -452,7 +390,7 @@ void Leds::set_raw_ocr(led_id_t led, uint16_t ocr)
   }
 }
 
-void Leds::set_raw_ocr_top(led_id_t led)
+void REMDLeds::set_raw_ocr_top(led_id_t led)
 {
   set_raw_ocr (led, LEDS_TMR3_OCR_TOP);
 }

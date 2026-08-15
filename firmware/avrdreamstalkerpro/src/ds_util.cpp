@@ -62,7 +62,8 @@ void soft_reset ( void )
 }
 
 /*-----------------------------------------------------------------------*/
-namespace DS {
+namespace ds
+{
 
 /*-----------------------------------------------------------------------*/
 uint16_t Maths::pow_u16 ( uint16_t base, uint8_t exp )
@@ -196,4 +197,4 @@ bool Pins::is_out_low ( uint8_t pin )
   return digitalReadOutputPin( pin ) == LOW;
 }
 
-};  //DS
+} //ds

@@ -40,9 +40,8 @@
 #include "ds_remhints.h"
 #include "ds_sdfat.h"
 
-
-using namespace DS;
-using namespace avr_core;
+using namespace ds;
+using namespace avr::core;
 
 /*-----------------------------------------------------------------------*/
 
@@ -84,7 +83,7 @@ void Driver::wakeup_timer_callback (void *context)
   pdrv->on_wakeup_timer ();
 }
 
-void Driver::remd_callback (void *context, remd_event_type_t event, uint16_t arg)
+void Driver::remd_callback (void *context, remd::remd_event_type_t event, uint16_t arg)
 {
   Driver *pdrv = static_cast<Driver *>(context);
 
@@ -92,7 +91,7 @@ void Driver::remd_callback (void *context, remd_event_type_t event, uint16_t arg
 
     // REMD testing mode 
 
-    if ( event == REMD_EVENT_MOVE ) {
+    if ( event == remd::REMD_EVENT_MOVE ) {
       Tonegen::get()->beep(50, 4, 7, config.get_volume_level ());
     }
 
@@ -100,7 +99,7 @@ void Driver::remd_callback (void *context, remd_event_type_t event, uint16_t arg
 
     // REMD lucid dreaming mode
 
-    if ( event == REMD_EVENT_REM ) {
+    if ( event == remd::REMD_EVENT_REM ) {
       pdrv->on_remd_event_rem( arg );
     }
   }
@@ -217,10 +216,10 @@ bool Driver::init (void)
   AppMenu::get()->init();
   SquareWave::get()->init();
   VibroMotor::get()->init();
-  Leds::get()->init();
+  remd::REMDLeds::get()->init();
   Sound::get()->init ();
-  REMDetect::get()->init();
-  BatteryMon::get()->init();
+  remd::REMDetect::get()->init();
+  Battery::get()->init();
   
 
 #if ((REMD_LOG == REMD_LOG_SERIAL) || BATTMON_TEST)
@@ -320,7 +319,7 @@ bool Driver::start (void)
 
     A2DConvert::get()->enable ();
     A2DConvert::get()->warm_up ();
-    BatteryMon::get()->start();
+    Battery::get()->start();
 
     Sound::get()->start();
 
@@ -455,7 +454,7 @@ void Driver::process (void)
    * Process different tasks
    */
   RTClock::get()->process_task ();
-  REMDetect::get()->process_task ();
+  remd::REMDetect::get()->process_task ();
   AudioCodec::get()->process_task ();
 
 }
@@ -472,7 +471,7 @@ void Driver::reboot_on_key (void)
 
 void Driver::remd_start_check (void)
 {
-  auto remd = REMDetect::get();
+  auto remd = remd::REMDetect::get();
 
   if ( remd_check )
     return;
@@ -486,7 +485,7 @@ void Driver::remd_start_check (void)
 
 void Driver::remd_stop_check (void)
 {
-  auto remd = REMDetect::get();
+  auto remd = remd::REMDetect::get();
 
   if (! remd_check )
     return;
@@ -520,7 +519,7 @@ void Driver::on_remd_event_rem (uint8_t intensity)
   intensity = Config::level_to_percent (config.get_light_hints_brightness ());
 #endif
 
-  REMHints::get()->start (intensity);
+  remd::REMHints::get()->start (intensity);
 
 
   /* Сheck if alarm clock is enabled */
@@ -605,7 +604,7 @@ void Driver::handle_sysclk (void)
 
 void Driver::start_lucid_dream (void)
 {
-  auto remd = REMDetect::get();
+  auto remd = remd::REMDetect::get();
 
   if ( !remd->start (remd_callback, this, false)) {
     return;
@@ -619,9 +618,9 @@ void Driver::start_lucid_dream (void)
 
 void Driver::stop_lucid_dream (void)
 {
-  auto remd = REMDetect::get();
+  auto remd = remd::REMDetect::get();
 
-  if (remd->get_state () != REMD_STATE_ON)
+  if (remd->get_state () != remd::REMD_STATE_ON)
     return;
 
   remd->stop();
@@ -633,9 +632,9 @@ void Driver::stop_lucid_dream (void)
 
 bool Driver::is_lucid_dreaming (void) const
 {
-  auto remd = REMDetect::get();
+  auto remd = remd::REMDetect::get();
 
-  return remd->get_state () == REMD_STATE_ON;
+  return remd->get_state () == remd::REMD_STATE_ON;
 }
 
 void Driver::power_off (void)
@@ -647,8 +646,8 @@ void Driver::power_off (void)
   disp->disable ();
 
   AudioCodec::get()->stop ();
-  BatteryMon::get()->stop ();
-  REMDetect::get()->stop();
+  Battery::get()->stop ();
+  remd::REMDetect::get()->stop();
   A2DConvert::get()->disable ();
 
   Sound::get()->stop();
@@ -685,7 +684,7 @@ void Driver::power_off (void)
   RTClock::get()->show ();
 
   A2DConvert::get()->enable ();
-  BatteryMon::get()->start ();
+  Battery::get()->start ();
 
   Sound::get()->start();
 

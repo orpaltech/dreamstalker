@@ -24,9 +24,9 @@
 #include <stdint.h>
 #include <time.h>
 
-
+namespace ds
+{
 /*-----------------------------------------------------------------------*/
-namespace DS {
 
 typedef enum e_rtc_setup_mode {
   RTC_SETUP_NONE	= 0,
@@ -143,6 +143,6 @@ private:
 };
 
 /*-----------------------------------------------------------------------*/
-};	//DS
+} //ds
 
 #endif // _DS_RTCLOCK_DEFINED
