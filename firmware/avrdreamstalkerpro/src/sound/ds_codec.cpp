@@ -127,7 +127,7 @@ bool AudioCodec::init (void)
   if (! vs.init ())
 	  return false;
 
-  state = STATE_NONE;	// Set initial state
+  state = State::None;  // Set initial state
   return true;
 }
 
@@ -158,7 +158,7 @@ void AudioCodec::set_volume (uint8_t left_chan, uint8_t right_chan)
 
 bool AudioCodec::playback (const char *file_name)
 {
-  if (get_state () != STATE_NONE)
+  if (get_state () != State::None)
     return false;
 
   // Open the file
@@ -175,18 +175,16 @@ bool AudioCodec::playback (const char *file_name)
   uint8_t vol = config.get_volume_level ();
   set_volume ( vol, vol );
 
-  // Reset number of VS blocks processed 
-  count_blocks = 0;
-
-  // Update status flag
-  state = STATE_PLAYBACK;
+  count_blocks = 0;         // Reset number of blocks processed
+  state = State::Playback;  // Update status flag
 
   return true;
 }
 
 bool AudioCodec::capture (const char *file_name)
 {
-  if (get_state () != STATE_NONE) return false;
+  if (get_state () != State::None)
+    return false;
 
   auto handle_error = [&]() {
     fp.close ();
@@ -209,19 +207,18 @@ bool AudioCodec::capture (const char *file_name)
     return false;
   }
 
-  bool success =  vs.adpcm_record_start ( ADPCM_SAMPLE_RATE,
-                                        config.get_record_gain_level (), 
-                                        ADPCM_USE_HP_FILTER);
+  bool success =  vs.adpcm_record_start (
+    ADPCM_SAMPLE_RATE,
+    config.get_record_gain_level (), 
+    ADPCM_USE_HP_FILTER );
+
   if (!success) {
   	handle_error ();
     return false;
   }
 
-  // Reset number of ADPCM blocks processed
-  count_blocks = 0;
-
-  // Update status flag
-  state = STATE_CAPTURE;
+  count_blocks = 0;       // Reset number of blocks processed
+  state = State::Capture; // Update status flag
 
   return true;
 }
@@ -236,8 +233,7 @@ void AudioCodec::end_playback (AudioCodec *c, bool on_error)
     // TODO: output error message or whatever
   }
 
-  // Update status flag
-  c->state = STATE_NONE;
+  c->state = State::None; // Update status flag
 }
 
 void AudioCodec::end_capture (AudioCodec *c, bool on_error)
@@ -272,8 +268,7 @@ void AudioCodec::end_capture (AudioCodec *c, bool on_error)
 
   c->fp.close();
 
-  // Update status flag
-  c->state = STATE_NONE;
+  c->state = State::None; // Update status flag
 }
 
 void AudioCodec::process_playback (AudioCodec *c)
@@ -347,11 +342,11 @@ void AudioCodec::process_capture (AudioCodec *c)
 void AudioCodec::stop (void)
 {
   switch (get_state ()) {
-	  case STATE_PLAYBACK:
+	  case State::Playback:
       end_playback ( this, false );
 	    break;
 
-	  case STATE_CAPTURE:
+	  case State::Capture:
       end_capture ( this, false );
 	    break;
 
@@ -363,11 +358,11 @@ void AudioCodec::stop (void)
 void AudioCodec::process_task (void)
 {
   switch (get_state ()) {
-	  case STATE_PLAYBACK:
+	  case State::Playback:
       process_playback ( this );
 	    break;
 
-	  case STATE_CAPTURE:
+	  case State::Capture:
       process_capture ( this );
 	    break;
 

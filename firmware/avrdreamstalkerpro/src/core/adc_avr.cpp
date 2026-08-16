@@ -114,15 +114,16 @@ void A2DConvert::sysclk_handler (void)
   convert_one ( i );
 }
 
-void A2DConvert::adc_handler (void)
+void A2DConvert::adc_handler ( void)
 {
-  const int i = get_index( ADC_GET_CH () );
+  const int i = get_index( ADC_GET_CH() );
   if ( i < 0 ) return;
 
-  volatile adc_channel_t *pch = &adc[i];
+  volatile auto *pch = &adc[i];
 
   // Read buffered ADC sample
   uint16_t sample = ADC;
+
   if (pch->flags & SF_LEFT_ADJUST) {
     sample >>= 6;
   }
@@ -130,7 +131,6 @@ void A2DConvert::adc_handler (void)
   sample &= ADC_MAX_VALUE;
 
   if (pch->flags & SF_RUNNING) {
-
 	  // Allow callback function process the sample
 	  if (pch->pfcb) {
 	    pch->pfcb( pch->context, sample );
@@ -157,20 +157,11 @@ void A2DConvert::adc_handler (void)
   convert_one ( n );
 }
 
-uint8_t A2DConvert::get_channel ( uint8_t i ) const
-{
-  const volatile adc_channel_t *pch = &adc[i];
-
-  // The compiler will only read the first byte of .flags 
-  // because the mask 0x1F makes the second byte irrelevant
-  //
-  return (uint8_t)(pch->channel & ADC_CHAN_MASK);
-}
-
 int8_t A2DConvert::get_index( uint8_t chan ) const
 {
   for (uint8_t i = 0; i < ADC_CHANNELS; i++) {
-	  if (get_channel ( i ) == chan) {
+    const volatile auto *pch = &adc[i];
+	  if (pch->channel == chan) {
 	    return i;
     }
   }
@@ -182,11 +173,12 @@ int8_t A2DConvert::get_first_running_index ( void) const
   return get_next_running_index( -1 );
 }
 
-int8_t A2DConvert::get_next_running_index(int8_t current_index) const
+int8_t A2DConvert::get_next_running_index ( int8_t current_index) const
 {
-  // Start searching from the index immediately following the current one
+  // Start searching from the index immediately following 
+  // the current one
   for (int8_t i = current_index + 1; i < ADC_CHANNELS; i++) {
-    const volatile adc_channel_t *pch = &adc[i];
+    const volatile auto *pch = &adc[i];
 
     if (pch->flags & SF_RUNNING) {
       // Found the next running channel
@@ -201,7 +193,7 @@ int8_t A2DConvert::get_next_running_index(int8_t current_index) const
 void A2DConvert::convert_one ( int8_t i ) const
 {
   uint8_t adc_ref, left_adjust = 0;
-  const volatile adc_channel_t *pch = &adc[i];
+  const volatile auto *pch = &adc[i];
 
   // Setup ADC multiplexer for conversion 
   if (pch->flags & SF_VREF_2_56) {
@@ -216,7 +208,7 @@ void A2DConvert::convert_one ( int8_t i ) const
   }
 
   // Setup multiplexer register
-  ADMUX = (adc_ref | left_adjust | get_channel( i ));	
+  ADMUX = (adc_ref | left_adjust | pch->channel);	
 
   // Do a single conversion 
   ADCSRA |= _BV(ADSC);
@@ -237,6 +229,7 @@ bool A2DConvert::enable (void)
 
   // Switch ADC pins for input
   // TODO: is this really needed ???
+  //
   DDR_ADC &= ~(DD_ADC0 | DD_ADC2);
 
   ADCSRA = _BV(ADEN);     // Power ADC on
@@ -256,7 +249,7 @@ void A2DConvert::warm_up (void)
 void A2DConvert::disable (void)
 {
   for (int8_t i = 0; i < ADC_CHANNELS; i++) {
-    volatile adc_channel_t *pch = &adc[i];
+    volatile auto *pch = &adc[i];
 
     stop ( pch->channel );
 
@@ -278,7 +271,7 @@ bool A2DConvert::setup_channel (uint8_t chan, uint16_t flags)
   int i = get_index ( chan );
   if( i < 0 ) return false;
 
-  volatile adc_channel_t *pch = &adc[i];
+  volatile auto *pch = &adc[i];
 
   if( flags & ADC_CF_LEFT_ADJUST ) {
 	  pch->flags |= SF_LEFT_ADJUST;
@@ -313,7 +306,7 @@ bool A2DConvert::start_unsafe (uint8_t chan, uint16_t num_samples, A2DSampleCB_t
   int i = get_index ( chan );
   if( i < 0 ) return false;
 
-  volatile adc_channel_t *pch = &adc[i];
+  volatile auto *pch = &adc[i];
 
   // Check if channel is enabled
   if (!( pch->flags & SF_ENABLED )) {

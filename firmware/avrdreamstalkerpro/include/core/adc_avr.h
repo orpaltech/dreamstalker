@@ -50,7 +50,7 @@ public:
 
   void warm_up ( void);
 
-  bool setup_channel(uint8_t chan, uint16_t flags = ADC_CF_NONE);
+  bool setup_channel (uint8_t chan, uint16_t flags = ADC_CF_NONE);
   bool start (uint8_t chan, uint16_t num_samples, A2DSampleCB_t pfcb = nullptr, void *context = nullptr);
   void stop (uint8_t chan) ;
   void enable_channel (uint8_t chan, bool enable);
@@ -65,7 +65,6 @@ public:
   static void handle_adc (void);
 
 private:
-  uint8_t get_channel( uint8_t index) const;
   int8_t  get_index( uint8_t chan ) const;
   int8_t  get_next_running_index (int8_t current_index) const;
   int8_t  get_first_running_index ( void) const;

@@ -31,7 +31,7 @@
 
 #if ( VS_HW_SPEC == VS_HWS_1002 )
   #include "vs1002.h"
-  using VsCodec = VLSI::Vs1002;
+  using VsCodec = vlsi::Vs1002;
 
 #elif ( VS_HW_SPEC == VS_HWS_1003 )
   #include "vs1003.h"
@@ -39,7 +39,7 @@
 
 #elif ( VS_HW_SPEC == VS_HWS_1053 )
   #include "vs1053.h"
-  using VsCodec = VLSI::Vs1053;
+  using VsCodec = vlsi::Vs1053;
 
 #endif
 
@@ -60,11 +60,12 @@ class AudioCodec {
 public:
   static AudioCodec *get();
 
-  enum State {
-	  STATE_NONE      = 0,
-	  STATE_PLAYBACK	= 1,
-	  STATE_CAPTURE	  = 2
+  enum class State {
+	  None = 0,
+	  Playback,
+	  Capture
   };
+
 public:
   bool init (void);
   void end (void);

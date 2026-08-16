@@ -86,7 +86,7 @@ void Battery::trigger_monitor (void)
   uint8_t level = battery_level ();
   if ( level ) {
     if ( level < BATTERY_LOW ) {
-      ds::Display::get()->text_out (__disp_msg_battery_low__);
+      Display::get()->text_out (__disp_msg_battery_low__);
     }
 
     if ( level < BATTERY_EMPTY ) {

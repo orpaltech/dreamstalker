@@ -937,28 +937,25 @@ void ense_recording_setup_activate ( void )
 void ense_recording_setup ( pmenu_context_t ctx, keybrd_event_t key_event )
 {
   String newfile;
-  auto codec = AudioCodec::get();
+  auto *codec = AudioCodec::get();
 
   switch ( key_event ) {
-	
 	case ( KEY_ENTER ):
-	  if (codec->get_state() == AudioCodec::STATE_PLAYBACK) {
-
-		codec->stop ();
+	  if (codec->get_state() == AudioCodec::State::Playback) {
+		codec->stop();
 	  }
-	  if (codec->get_state() == AudioCodec::STATE_NONE) {
 
+	  if (codec->get_state() == AudioCodec::State::None) {
 		// TODO: playback next recording
 	  }
 	  set_handled (ctx);
 	  break;
 
 	case ( KEY_CHECK ):
-	  if (codec->get_state() == AudioCodec::STATE_CAPTURE) {
-
+	  if (codec->get_state() == AudioCodec::State::Capture) {
 		codec->stop ();
-	  } else if (codec->get_state() == AudioCodec::STATE_NONE) {
-		
+	  }
+	  else if (codec->get_state() == AudioCodec::State::None) {
 		// Start new recording 
 		Files::make_next_file_path(newfile, RECORDS_PATH, "REC", "WAV", 5);
 		codec->capture (newfile.c_str());
@@ -992,24 +989,6 @@ void ense_record_gain_setup_activate (void)
 void ense_record_gain_setup (pmenu_context_t ctx, keybrd_event_t key_event)
 {
   MENU_NUMERIC_PROPERTY_SETUP(ense_record_gain, record_gain_level, ctx, key_event)
-
-  /*switch ( key_event ) {
-	case ( KEY_MINUS ):
-	case ( KEY_MINUS | KEYBRD_HOLD):
-	  DSCONF_DECREMENT_PROPERTY(config, record_gain_level);
-
-	  Display::get()->number ( ense_record_gain_setup_read_value ());
-	  set_handled ( ctx );
-	  break;
-
-	case ( KEY_PLUS ):
-	case ( KEY_PLUS | KEYBRD_HOLD ):
-	  DSCONF_INCREMENT_PROPERTY(config, record_gain_level);
-
-	  Display::get()->number ( ense_record_gain_setup_read_value ());
-	  set_handled ( ctx );
-	  break;
-  }*/
 }
 
 int ense_record_gain_setup_read_value (void)
@@ -1025,24 +1004,6 @@ void ense_volume_level_setup_activate (void)
 void ense_volume_level_setup (pmenu_context_t ctx, keybrd_event_t key_event)
 {
   MENU_NUMERIC_PROPERTY_SETUP(ense_volume_level, volume_level, ctx, key_event)
-
-  /*switch ( key_event ) {
-	case ( KEY_MINUS ):
-	case ( KEY_MINUS | KEYBRD_HOLD ):
-	  DSCONF_DECREMENT_PROPERTY(config, volume_level);
-
-	  Display::get()->number ( ense_volume_level_setup_read_value ());
-	  set_handled ( ctx);
-	  break;
-
-	case ( KEY_PLUS ):
-	case ( KEY_PLUS | KEYBRD_HOLD ):
-	  DSCONF_INCREMENT_PROPERTY(config, volume_level);
-
-	  Display::get()->number ( ense_volume_level_setup_read_value ());
-	  set_handled ( ctx );
-	  break;
-  }*/
 }
 
 int ense_volume_level_setup_read_value (void)
@@ -1159,7 +1120,8 @@ void ense_speaker_setup ( pmenu_context_t ctx, keybrd_event_t key_event )
 	case ( KEY_PLUS ):
 	  if (ense_speaker_setup_read_value ()) {
 		Sound::get()->speaker_on ();
-	  } else {
+	  }
+	  else {
 		Sound::get()->speaker_off ();
 	  }
 

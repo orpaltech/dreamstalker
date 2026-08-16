@@ -117,7 +117,7 @@ typedef enum e_remd_profile {
 
 /*-----------------------------------------------------------------------*/
 #define DSCONF_DECLARE_PROPERTY(name, type) \
-  typedef type name ## _t;					        \
+  using name ## _t = type;					        \
   type	min_ ## name (void);				        \
   type	max_ ## name (void);				        \
   type	step_ ## name (void);				        \
@@ -135,7 +135,7 @@ typedef enum e_remd_profile {
   bool	is_ ## name ## _invalid (void);
 
 #define DSCONF_DECLARE_STATIC_COUNTER_PROPERTY(name, type)  \
-  typedef type name ## _t;									                \
+  using name ## _t = type;									                \
   static name ## _t v_ ## name;								              \
   type	get_ ## name (void);								                \
   void	inc_ ## name (void);								                \
@@ -207,7 +207,7 @@ public:
   bool begin (void);
   void set_defaults (void);	/* reset to firmware defaults */
   void save_to_storage (void);
-
+    
   //
   // Conversion routines
   //
@@ -532,7 +532,6 @@ public:
 
 private:
   ds_config_t cfg;
-
 };
 
 /*-----------------------------------------------------------------------*/
