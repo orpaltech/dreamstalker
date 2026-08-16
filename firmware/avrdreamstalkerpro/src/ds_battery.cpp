@@ -83,7 +83,7 @@ void Battery::sysclk_handler (void)
 void Battery::trigger_monitor (void)
 {
   // Check battery level
-  uint8_t level = battery_level ();
+  uint8_t level = get_battery_level ();
   if ( level ) {
     if ( level < BATTERY_LOW ) {
       Display::get()->text_out (__disp_msg_battery_low__);
@@ -125,6 +125,7 @@ void Battery::start (void)
   if (! success) return;
 
   raw_batt_level = 0;
+  battery_level = 0;
   timer_ticks = 0;
   running = true;
 }
@@ -132,11 +133,6 @@ void Battery::start (void)
 void Battery::stop (void)
 {
   running = false;
-}
-
-uint8_t Battery::battery_level (void)
-{
-  return (uint8_t) (raw_batt_level * 100U / MAX_ADC_LEVEL);
 }
 
 void Battery::on_adc_sample( uint16_t sample )
@@ -147,7 +143,8 @@ void Battery::on_adc_sample( uint16_t sample )
   // Check if we have received all requested samples
   // and calculate the true arithmetic mean
   if (++sample_count >= BM_ADC_SAMPLES) {
-    raw_batt_level = raw_batt_level / BM_ADC_SAMPLES; 
+    uint32_t avg_batt_level = raw_batt_level / BM_ADC_SAMPLES; 
+    battery_level = (uint8_t) (avg_batt_level * 100U / MAX_ADC_LEVEL);
   }
 
 #if BATTMON_TEST

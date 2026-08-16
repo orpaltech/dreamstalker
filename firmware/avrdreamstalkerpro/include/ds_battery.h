@@ -43,7 +43,7 @@ public:
   void stop (void);
   bool is_running (void) const { return running;}
 
-  uint8_t battery_level (void);
+  uint8_t get_battery_level (void) const { return battery_level; }
 
   /* Intended for use from system clock ISR only. Do not call it directly! */
   static void handle_sysclk (void);
@@ -58,6 +58,7 @@ private:
   void trigger_monitor (void);
 
   volatile uint32_t raw_batt_level;
+  uint8_t battery_level;
   uint8_t timer_ticks;    // minute ticks
   uint16_t sample_count;  // samples in current batch
   bool running;
