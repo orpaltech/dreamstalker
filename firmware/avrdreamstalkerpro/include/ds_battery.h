@@ -48,14 +48,12 @@ public:
   /* Intended for use from system clock ISR only. Do not call it directly! */
   static void handle_sysclk (void);
 
-protected:
-  virtual void on_adc_sample(uint16_t sample);
-
 private:
   static void adc_sample_callback(void *context, uint16_t sample);
   
   void sysclk_handler (void);
   void trigger_monitor (void);
+  void process_sample (uint16_t sample);
 
   volatile uint32_t raw_batt_level;
   uint8_t battery_level;

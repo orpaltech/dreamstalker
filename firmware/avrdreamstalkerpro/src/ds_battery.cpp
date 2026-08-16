@@ -60,7 +60,7 @@ void Battery::adc_sample_callback(void *context, uint16_t sample)
 {
   Battery *pbm = static_cast<Battery *>(context);
 
-  pbm->on_adc_sample( sample );
+  pbm->process_sample( sample );
 }
 
 Battery *Battery::get()
@@ -135,7 +135,7 @@ void Battery::stop (void)
   running = false;
 }
 
-void Battery::on_adc_sample( uint16_t sample )
+void Battery::process_sample( uint16_t sample )
 {
   // Accumulate the raw sum
   raw_batt_level += sample;
