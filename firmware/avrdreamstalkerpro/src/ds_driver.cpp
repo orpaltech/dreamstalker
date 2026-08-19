@@ -52,7 +52,7 @@ using namespace avr::core;
 namespace ds
 {
 /*-----------------------------------------------------------------------*/
-static void key_tone (bool wait = false)
+void key_tone (bool wait = false)
 {
   uint16_t duration = 80;
   Tonegen::get()->beep ( duration, 3, 6, Config::get()->get_volume_level ());
@@ -66,8 +66,8 @@ static void key_tone (bool wait = false)
 /*-----------------------------------------------------------------------*/
 Driver *Driver::get()
 {
-  static Driver drv;
-  return &drv;
+  static Driver instance;
+  return &instance;
 }
 
 /*-----------------------------------------------------------------------*/
@@ -97,8 +97,9 @@ void Driver::remd_callback (void *context, remd::remd_event_type_t event, uint16
       Tonegen::get()->beep(50, 4, 7, Config::get()->get_volume_level ());
     }
 
-  } else {
-
+  }
+  else {
+    
     // REMD lucid dreaming mode
 
     if ( event == remd::REMD_EVENT_REM ) {
@@ -620,11 +621,9 @@ void Driver::start_lucid_dream (void)
 
 void Driver::stop_lucid_dream (void)
 {
-  auto remd = remd::Detector::get();
+  if (! is_lucid_dreaming ()) return;
 
-  if (remd->get_state () != remd::REMD_STATE_ON)
-    return;
-
+  auto *remd = remd::Detector::get();
   remd->stop();
 
 #if REMD_TEST
@@ -634,14 +633,14 @@ void Driver::stop_lucid_dream (void)
 
 bool Driver::is_lucid_dreaming (void) const
 {
-  auto remd = remd::Detector::get();
+  auto *remd = remd::Detector::get();
 
-  return remd->get_state () == remd::REMD_STATE_ON;
+  return remd->get_state () == remd::Detector::State::On;
 }
 
 void Driver::power_off (void)
 {
-  auto disp = Display::get();
+  auto *disp = Display::get();
 
   RTClock::get()->hide ();
   disp->message (__disp_msg_off__, 500);
@@ -654,10 +653,11 @@ void Driver::power_off (void)
 
   Sound::get()->stop();
 
+  // Stop the system clock
   SysClock::get()->stop ();
 
-  set_mode( OperationMode::PowerSave );  /* Set power-save mode */
-
+  // Set power-saving mode
+  set_mode( OperationMode::PowerSave );
   Keyboard::get()->enable_key_irq ( KEY_EXIT_SLEEP );
 
   /*
@@ -673,11 +673,12 @@ void Driver::power_off (void)
   }
   while (! (Keyboard::get()->get_irq_keys() & KEY_EXIT_SLEEP));
 
+  // Set normal power mode
+  set_mode( OperationMode::Normal );
   Keyboard::get()->disable_key_irq ( KEY_EXIT_SLEEP );
 
-  set_mode( OperationMode::Normal );   /* Set normal power mode */
-
-  SysClock::get()->start ();  /* Start the system clock */
+  // Start the system clock, since it was stopped during sleep
+  SysClock::get()->start ();
 
   disp->enable ();
   disp->message (__disp_msg_on__, 500);

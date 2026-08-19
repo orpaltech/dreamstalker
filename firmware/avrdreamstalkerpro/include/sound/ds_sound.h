@@ -29,8 +29,8 @@ namespace ds
 /*-----------------------------------------------------------------------*/
 class Sound {
 public:
-  Sound();
   static Sound *get();
+  
 public:
   bool init( void );
 

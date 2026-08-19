@@ -33,7 +33,7 @@ using namespace avr::core;
 #ifndef BM_POLL_PERIOD_MINUTES
   #define BM_POLL_PERIOD_MINUTES	10
 #endif
-#define BM_ADC_CHANNEL	2
+#define BM_ADC_CHANNEL	A2DConvert::CHAN_2
 #define BM_ADC_SAMPLES	32    // Keep it as a power of 2
 
 #ifndef BM_TEST
@@ -48,7 +48,7 @@ using namespace avr::core;
 static constexpr float MAX_VOLTAGE = ( BM_INPUT_VOLT * BM_DIV_R2 / 
                                       ( BM_DIV_R1 + BM_DIV_R2 ));
 // Internal ref 2.56V is used for ADC
-static constexpr uint16_t MAX_ADC_LEVEL = (MAX_VOLTAGE / 2.56f) * ADC_MAX_VALUE;
+static constexpr uint16_t MAX_ADC_LEVEL = (MAX_VOLTAGE / 2.56f) * A2DConvert::MAX_VALUE;
 
 /*-----------------------------------------------------------------------*/
 void Battery::handle_sysclk (void)  //called once per 1min
@@ -121,7 +121,7 @@ void Battery::start (void)
   
   bool success = A2DConvert::get()->setup_channel (
     BM_ADC_CHANNEL,
-    ADC_CF_VREF_2_56);
+    A2DConvert::CF_VREF_2_56);
   if (! success) return;
 
   raw_batt_level = 0;

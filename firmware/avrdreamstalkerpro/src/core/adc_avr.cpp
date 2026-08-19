@@ -27,7 +27,6 @@
 #include "core/adc_avr.h"
 #include "ds_util.h"
 
-using namespace avr::core;
 
 /*-----------------------------------------------------------------------*/
 /* Peripheral controls (Platform dependent) */
@@ -71,14 +70,49 @@ using namespace avr::core;
 
 
 
-// code to be executed when ADC interrupts
 /*-----------------------------------------------------------------------*/
+// Code executed when ADC interrupts
+//
 ISR(ADC_vect)
 {
-  A2DConvert::handle_adc ();
+  avr::core::A2DConvert::handle_adc ();
+}
+
+namespace avr::core
+{
+/*-----------------------------------------------------------------------*/
+bool is_adc_enabled ( void)
+{
+  // Check if ADC enabled 
+  return (ADCSRA & _BV(ADEN)) != 0;
+}
+
+uint8_t get_adc_channel ( void)
+{
+  return ADC_GET_CH();
+}
+
+uint16_t read_adc_sample ( uint8_t flags)
+{
+  uint16_t sample = ADC;
+
+  if (flags & SF_LEFT_ADJUST) {
+    sample >>= 6;
+  }
+
+  // ADC has 10 meaningful bits
+  sample &= A2DConvert::MAX_VALUE;
+  
+  return sample;
 }
 
 /*-----------------------------------------------------------------------*/
+A2DConvert *A2DConvert::get()
+{
+  static A2DConvert instance;
+  return &instance;
+}
+
 void A2DConvert::handle_sysclk (void) //called every 1ms
 {
   get()->sysclk_handler();
@@ -89,17 +123,10 @@ void A2DConvert::handle_adc (void)
   get()->adc_handler();
 }
 
-A2DConvert *A2DConvert::get()
-{
-  static A2DConvert a2d;
-  return &a2d;
-}
-
 /*-----------------------------------------------------------------------*/
 void A2DConvert::sysclk_handler (void)
 {
-  if (! (ADCSRA & _BV(ADEN))) // Check if ADC enabled 
-    return;
+  if (! is_adc_enabled()) return;
 
   int i = get_first_running_index ();
   if ( i < 0 ) {
@@ -116,19 +143,13 @@ void A2DConvert::sysclk_handler (void)
 
 void A2DConvert::adc_handler ( void)
 {
-  const int i = get_index( ADC_GET_CH() );
+  const int i = get_index( get_adc_channel() );
   if ( i < 0 ) return;
 
   volatile auto *pch = &adc[i];
 
   // Read buffered ADC sample
-  uint16_t sample = ADC;
-
-  if (pch->flags & SF_LEFT_ADJUST) {
-    sample >>= 6;
-  }
-  // ADC has 10 meaningful bits
-  sample &= ADC_MAX_VALUE;
+  uint16_t sample = read_adc_sample( pch->flags );
 
   if (pch->flags & SF_RUNNING) {
 	  // Allow callback function process the sample
@@ -159,7 +180,7 @@ void A2DConvert::adc_handler ( void)
 
 int8_t A2DConvert::get_index( uint8_t chan ) const
 {
-  for (uint8_t i = 0; i < ADC_CHANNELS; i++) {
+  for (uint8_t i = 0; i < MAX_CHANNELS; i++) {
     const volatile auto *pch = &adc[i];
 	  if (pch->channel == chan) {
 	    return i;
@@ -177,7 +198,7 @@ int8_t A2DConvert::get_next_running_index ( int8_t current_index) const
 {
   // Start searching from the index immediately following 
   // the current one
-  for (int8_t i = current_index + 1; i < ADC_CHANNELS; i++) {
+  for (int8_t i = current_index + 1; i < MAX_CHANNELS; i++) {
     const volatile auto *pch = &adc[i];
 
     if (pch->flags & SF_RUNNING) {
@@ -220,11 +241,11 @@ bool A2DConvert::enable (void)
   // NOTE: ADC is in single-convert mode
 
   // Enable ADC channel 0 
-  adc[0].channel = 0;
+  adc[0].channel = CHAN_0;
   adc[0].flags = SF_ENABLED;
 
   // Enable ADC channel 2 
-  adc[1].channel = 2;
+  adc[1].channel = CHAN_2;
   adc[1].flags = SF_ENABLED;
 
   // Switch ADC pins for input
@@ -241,14 +262,14 @@ bool A2DConvert::enable (void)
 void A2DConvert::warm_up (void) 
 {
   // Warm up the ADC analog circuitry 
-  start ( 2, 3, NULL );
+  start ( CHAN_2, 3, NULL );
 
   _delay_ms ( 10 );
 }
 
 void A2DConvert::disable (void)
 {
-  for (int8_t i = 0; i < ADC_CHANNELS; i++) {
+  for (int8_t i = 0; i < MAX_CHANNELS; i++) {
     volatile auto *pch = &adc[i];
 
     stop ( pch->channel );
@@ -273,14 +294,14 @@ bool A2DConvert::setup_channel (uint8_t chan, uint16_t flags)
 
   volatile auto *pch = &adc[i];
 
-  if( flags & ADC_CF_LEFT_ADJUST ) {
+  if( flags & CF_LEFT_ADJUST ) {
 	  pch->flags |= SF_LEFT_ADJUST;
   }
   else {
 	  pch->flags &= ~SF_LEFT_ADJUST;
   }
 
-  if( flags & ADC_CF_VREF_2_56 ) {
+  if( flags & CF_VREF_2_56 ) {
 	  pch->flags |= SF_VREF_2_56;
   }
   else {
@@ -355,3 +376,5 @@ void A2DConvert::stop_unsafe ( uint8_t chan )
 
   adc[i].flags &= ~SF_RUNNING;
 }
+
+} //namespace avr::core

@@ -23,20 +23,9 @@
 #include <stdbool.h>
 #include <avr/power.h>
 
-/*-----------------------------------------------------------------------*/
-#define ADC_CHANNELS	2
-#define ADC_MAX_VALUE 0x3FFU  // 10bit
-
 
 namespace avr::core
 {
-/*-----------------------------------------------------------------------*/
-typedef enum adc_channel_flag {
-  ADC_CF_NONE         = 0,
-  ADC_CF_VREF_2_56    = 1,
-  ADC_CF_LEFT_ADJUST  = 2,
-} adc_channel_flag_t;
-
 /*-----------------------------------------------------------------------*/
 typedef void (*A2DSampleCB_t)(void *context, uint16_t sample);
 
@@ -44,13 +33,28 @@ typedef void (*A2DSampleCB_t)(void *context, uint16_t sample);
 class A2DConvert {
 public:
   static A2DConvert *get();
+
+  enum Channels : uint8_t {
+    CHAN_0 = 0,
+    CHAN_2 = 2
+  };
+
+  enum ChannelFlags : uint16_t {
+    CF_NONE         = 0,
+    CF_VREF_2_56    = 1,
+    CF_LEFT_ADJUST  = 2,
+  };
+
+  static constexpr uint8_t MAX_CHANNELS = 2;
+  static constexpr uint16_t MAX_VALUE = 0x3FFU;  // 10bit
+
 public:
   bool enable (void) ;
   void disable (void) ;
 
   void warm_up ( void);
 
-  bool setup_channel (uint8_t chan, uint16_t flags = ADC_CF_NONE);
+  bool setup_channel (uint8_t chan, uint16_t flags = CF_NONE);
   bool start (uint8_t chan, uint16_t num_samples, A2DSampleCB_t pfcb = nullptr, void *context = nullptr);
   void stop (uint8_t chan) ;
   void enable_channel (uint8_t chan, bool enable);
@@ -71,17 +75,17 @@ private:
   void  convert_one ( int8_t index ) const;
   void  sysclk_handler ( void);
   void  adc_handler ( void);
-
+  
 private:
-  typedef struct s_adc_channel {
+  typedef struct s_adc_context {
     uint8_t channel;
     uint8_t flags;
     uint16_t num_samples;
     A2DSampleCB_t pfcb;
     void *context;
-  } adc_channel_t;
+  } adc_context_t;
   
-  volatile adc_channel_t adc[ADC_CHANNELS];
+  volatile adc_context_t adc[MAX_CHANNELS];
 };
 
 /*-----------------------------------------------------------------------*/

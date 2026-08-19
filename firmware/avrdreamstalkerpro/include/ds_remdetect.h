@@ -39,13 +39,6 @@ typedef enum e_remd_event_type {
 	REMD_EVENT_REM = 2,
 } remd_event_type_t;
 
-typedef enum e_remd_state {
-  REMD_STATE_OFF = 1, // Stopped
-  REMD_STATE_START,     // Start requested
-	REMD_STATE_ON,      // Started
-  REMD_STATE_STOP,      // Stop requested
-} remd_state_t;
-
 /*-----------------------------------------------------------------------*/
 typedef void (*REMDetectCB_t)(void *context, remd_event_type_t event, uint16_t arg);
 
@@ -54,12 +47,19 @@ class Detector {
 public:
   static Detector *get();
 
+  enum class State {
+    Off = 1,  // Stopped
+    Starting, // Start requested
+    On,       // Started
+    Stopping  // Stop requested
+  };
+
   bool init (void) ;
   void end (void);
 
   bool start (REMDetectCB_t premdcb, void *context, bool check_mode);
   void stop (void) ;
-  remd_state_t get_state (void) const;
+  State get_state (void) const;
   bool is_check_mode (void) const;
 
   /* Must be called in the main application loop */
@@ -82,7 +82,7 @@ private:
   REMDetectCB_t pcb_func;
   void *pcb_context;
   bool check_mode;
-  volatile remd_state_t state;
+  volatile State state;
 
   LowPassFilter lowpass_flt;
 

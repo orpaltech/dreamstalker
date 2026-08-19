@@ -31,7 +31,6 @@
 #include "ds_sysclock.h"
 #include "ds_util.h"
 
-using namespace ds;
 
 /*-----------------------------------------------------------------------*/
 /* Peripheral controls (Platform dependent) */
@@ -46,24 +45,21 @@ using namespace ds;
 #define PIN_MLEFT     PIN_PG1
 
 
+namespace ds
+{
 /*-----------------------------------------------------------------------*/
+Sound *Sound::get()
+{
+  static Sound instance;
+	return &instance;
+}
+
 void Sound::handle_sysclk (void)	/* runs every 1 sec */
 {
 	get()->irq_handler ();
 }
 
 /*-----------------------------------------------------------------------*/
-Sound *Sound::get()
-{
-  static Sound snd;
-	return &snd;
-}
-
-/*-----------------------------------------------------------------------*/
-Sound::Sound()
-{
-}
-
 void Sound::irq_handler (void)
 {
   if (Pins::is_in_low ( PIN_HPTS )) {
@@ -71,7 +67,8 @@ void Sound::irq_handler (void)
     // off loudspeaker
     if ( is_speaker_on () )
       speaker_off( );
-  } else {
+  }
+  else {
 
 	  // on loudspeaker (if enabled by config)
 	  if ( Config::get()->get_loud_speaker_enabled () && ! is_speaker_on () )
@@ -104,7 +101,8 @@ void Sound::set_silent (bool silent)
 
     Pins::set_out( PIN_SILENT );
     Pins::drive_low( PIN_SILENT );
-  } else {
+  }
+  else {
 
     Pins::set_in_highz( PIN_SILENT );
   }
@@ -151,7 +149,7 @@ bool Sound::init ( void )
 
   speaker_off ();
 
-  /* Power down microphone */
+  // Power down microphone 
   microphone_off ();
 
   Tonegen::get()->init ();
@@ -175,3 +173,5 @@ void Sound::stop (void)
 {
   speaker_off();
 }
+
+} //namespace ds

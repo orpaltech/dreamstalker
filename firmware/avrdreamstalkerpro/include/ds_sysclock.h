@@ -23,9 +23,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-/* System clock interval, in millisec */
-#define CLK_PERIOD_MSEC   1UL
 
+// System clock period, in milliseconds
+#define CLK_PERIOD_MSEC  1UL
 
 namespace ds
 {
@@ -33,6 +33,7 @@ namespace ds
 class SysClock {
 public:
   static SysClock *get();
+
 public:
   bool init (void);
   void end (void) {}
@@ -45,11 +46,12 @@ public:
   uint16_t get_ticks_second() const { return clk.ticks_second; }
 
 public:
-  static constexpr uint32_t msec_to_ticks (uint32_t ms) { return ( ms / CLK_PERIOD_MSEC ); }
-  static constexpr uint32_t ticks_to_msec (uint32_t ticks) { return ticks * CLK_PERIOD_MSEC; }
+  static constexpr uint32_t msec_to_ticks (uint32_t ms) { return ( ms / clk_period_ms() ); }
+  static constexpr uint32_t ticks_to_msec (uint32_t ticks) { return ticks * clk_period_ms(); }
 
   /* RTC interrupt interval, in microseconds */
   static constexpr uint32_t clk_period_us (void) { return ( clk_period_ms () * 1000 ); }
+  /* System clock interval, in millisec */
   static constexpr uint32_t clk_period_ms (void) { return CLK_PERIOD_MSEC; }
 
   /* Intended for use in ISR. Do not call it directly! */

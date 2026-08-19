@@ -49,7 +49,7 @@ using namespace avr::core;
 
 
 /*-----------------------------------------------------------------------*/
-#define REMD_ADC_CHAN   0
+#define REMD_ADC_CHAN   A2DConvert::CHAN_0
 
 #if CLK_PERIOD_MSEC == 1
   // ADC is taking samples every 1ms, i.e. 1KHz
@@ -87,47 +87,45 @@ void Detector::a2d_sample_callback(void *context, uint16_t sample)
 /*-----------------------------------------------------------------------*/
 Detector *Detector::get()
 {
-  static Detector only;
-  return &only;
+  static Detector instance;
+  return &instance;
 }
 
 /*-----------------------------------------------------------------------*/
 bool Detector::init (void)
 {
-  /* Enable IRTX line */
-  Pins::set_out ( PIN_IRTX );       /*set output mode*/
+  // Enable IRTX line
+  Pins::set_out ( PIN_IRTX );       // set output mode
 
-  /* Switch-off IRX transmitter*/
-  Pins::drive_high ( PIN_IRTX );    /*drive pin high*/
+  // Switch-off IRX transmitter
+  Pins::drive_high ( PIN_IRTX );
 
-  state = REMD_STATE_OFF;	/* not running */
+  state = State::Off;  // Not running
   check_mode = false;
   return true;
 }
 
 void Detector::end (void)
 {
-  /* Disable IRTX line */
-  Pins::set_in_highz ( PIN_IRTX );  /*set input mode, high-Z*/
+  // Disable IRTX line
+  Pins::set_in_highz ( PIN_IRTX );  // set input mode, high-Z
 }
 
 bool Detector::start (REMDetectCB_t pcb, void *pcontext, bool remd_check)
 {
-  if (get_state () != REMD_STATE_OFF)
-    return false;
+  if (get_state () != State::Off) return false;
 
   pcb_func = pcb;
   pcb_context = pcontext;
   check_mode = remd_check;
 
-  state = REMD_STATE_START;   // Request start
+  state = State::Starting;  // Request start
   return true;
 }
 
 bool Detector::start_internal (void)
 {
-  if (get_state () != REMD_STATE_START)
-    return false;
+  if (get_state () != State::Starting) return false;
 
   if (! A2DConvert::get()->setup_channel ( REMD_ADC_CHAN ))
 	  return false;
@@ -135,12 +133,12 @@ bool Detector::start_internal (void)
   if (! A2DConvert::get()->start ( REMD_ADC_CHAN, 0, a2d_sample_callback, this ))
 	  return false;
 
-  /* Switch-on IRX transmitter*/
-  Pins::drive_low ( PIN_IRTX );   /*drive pin low*/
+  // Switch-on IRX transmitter
+  Pins::drive_low ( PIN_IRTX );
 
   lowpass_flt.reset();
 
-  /* Initialize algorithm-related variables */
+  // Initialize algorithm-related variables
   remd.move_count = 0;
   remd.epoch_samples = 0;
   remd.current_epoch = 0;
@@ -178,22 +176,20 @@ bool Detector::start_internal (void)
   slog_fp = card0.open (filepath.c_str(), FILE_WRITE);
 #endif
 
-  /* Set running */
-  state = REMD_STATE_ON;
+  state = State::On;  // Set running
   return true;
 }
 
 void Detector::stop_internal (void)
 {
-  if (get_state () != REMD_STATE_STOP)
-    return;
+  if (get_state() != State::Stopping) return;
 
   A2DConvert::get()->stop( REMD_ADC_CHAN );
 
-  /* Switch-off IRX transmitter*/
-  Pins::drive_high( PIN_IRTX );    /*drive pin high*/
+  // Switch-off IRX transmitter
+  Pins::drive_high( PIN_IRTX ); 
 
-  state = REMD_STATE_OFF;	/* not running*/
+  state = State::Off; // Set stopped
 
 #if REMD_LOG == REMD_LOG_FILE
   if ( slog_fp ) {
@@ -205,13 +201,12 @@ void Detector::stop_internal (void)
 
 void Detector::stop (void) 
 {
-  if (get_state () != REMD_STATE_ON)
-    return;
+  if (get_state() != State::On) return;
 
-  state = REMD_STATE_STOP;  // Request stop
+  state = State::Stopping;  // Request stop
 }
 
-remd_state_t Detector::get_state (void) const
+Detector::State Detector::get_state (void) const
 {
   return state;
 }
@@ -223,20 +218,17 @@ bool Detector::is_check_mode (void) const
 
 void Detector::process_task (void)
 {
-  if (get_state () == REMD_STATE_STOP) {
-    stop_internal ();
+  if (get_state() == State::Stopping) {
+    stop_internal();
     return;
   }
 
-  if (get_state () == REMD_STATE_START) {
-    start_internal ();
+  if (get_state() == State::Starting) {
+    start_internal();
     return;
   }
 
-  if (get_state () != REMD_STATE_ON) {
-    // Nothing to do
-    return;
-  }
+  if (get_state() != State::On) return;
 
 #if REMD_LOG
   #if REMD_LOG == REMD_LOG_FILE
