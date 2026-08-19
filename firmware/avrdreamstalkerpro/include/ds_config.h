@@ -58,64 +58,6 @@
 #define ALARM_CLOCK_DELAY_SEC 60
 
 /*-----------------------------------------------------------------------*/
-typedef enum e_remd_profile {
-
-  REMD_PROFILE_CUSTOM             = 0,
-
-  /* The "Snooze Filter": Engineered for maximum certainty. It ignores 
-   *  light sleep "flickers" and postural shifts by requiring a high-velocity 
-   *  threshold and a long 90-second (3-epoch) sustained plateau. 
-   *  Best used when you are prone to waking up from the lights or 
-   *  when sleep quality is the priority.
-   * Use Case: Deep Night / Light Sleepers
-   */
-  REMD_PROFILE_CONSERVATIVE,
-
-  /* The "Daily Driver": The standard baseline for a full night's sleep.
-   *  It uses a moderate velocity wall and a 10-move threshold to catch 
-   *  standard REM cycles. It provides a good balance between catching 
-   *  dreams early and filtering out minor nocturnal movements.
-   * Use Case: Standard Overnight
-   */
-  REMD_PROFILE_BALANCED,
-
-  /* The "Early Hour Bridge": Specifically tuned for the final 2 hours 
-   *  of sleep where REM is frequent but sleep is fragmented.
-   *  It sets the move threshold just above common "snooze jitters" 
-   *  (12 moves) and requires a 60-second (2-epoch) commitment. 
-   *  It is less "deaf" than Conservative but much harder to accidentally 
-   *  trigger than Balanced.
-   * Use Case: 5AM - 8AM / Fragmented Sleep
-   */
-  REMD_PROFILE_MORNING_SNOOZE,
-
-  /* The "Dream Hunter": High-sensitivity, instant-trigger mode. 
-   *  It ignores the need for persistence (1-epoch) and lowers the 
-   *  velocity wall significantly. Best used for afternoon naps or 
-   *  by heavy sleepers who have difficulty remembering dreams and 
-   *  want a signal the moment any movement is detected.
-   * Use Case: Naps / Heavy Sleepers
-   */
-  REMD_PROFILE_AGGRESSIVE,
-
-  /* The "Leave Me Alone": This is for when you are exhausted 
-   *  but your mind is racing.
-   */
-  REMD_PROFILE_STRESS_SHIELD,
-
-  /* The "Grey Zone" Morning: For that 5 AM to 8 AM window where you
-   *  previously saw "Instant Triggers."
-   */
-  REMD_PROFILE_STRESS_SNOOZE,
-
-  /* The "Safe" Discovery: For when you feel a bit more centered but 
-   *  still notice "micro-jitters" in your logs.
-   */
-  REMD_PROFILE_STRESS_BALANCE
-
-} remd_profile_t;
-
-/*-----------------------------------------------------------------------*/
 #define DSCONF_DECLARE_PROPERTY(name, type) \
   using name ## _t = type;					        \
   type	min_ ## name (void);				        \
@@ -148,44 +90,44 @@ typedef enum e_remd_profile {
   void	set_default_ ## name (void);
 
 #define DSCONF_DECREMENT_PROPERTY(cfg, name)          \
-  if (! cfg.is_readonly_ ## name ()) {					      \
-	  ds::Config::name ## _t val = cfg.get_ ## name (); \
+  if (! cfg->is_readonly_ ## name ()) {					      \
+	  ds::Config::name ## _t val = cfg->get_ ## name ();\
 	  /* disable values below zero !!*/					        \
-	  if(val < cfg.step_ ## name ()) {					        \
-	    val = cfg.max_ ## name ();						          \
+	  if(val < cfg->step_ ## name ()) {					        \
+	    val = cfg->max_ ## name ();						          \
     } else {												                  \
-	    val -= cfg.step_ ## name ();						        \
-	    if(val < cfg.min_ ## name ()) {					        \
-		    val = cfg.max_ ## name ();						        \
+	    val -= cfg->step_ ## name ();						        \
+	    if(val < cfg->min_ ## name ()) {                \
+		    val = cfg->max_ ## name ();						        \
       }                                               \
 	  }													                        \
-	  cfg.set_ ## name (val);								            \
+	  cfg->set_ ## name (val);								          \
   }
 
 #define DSCONF_INCREMENT_PROPERTY(cfg, name)          \
-  if (! cfg.is_readonly_ ## name ()) {					      \
-	  ds::Config::name ## _t val = cfg.get_ ## name (); \
-	  val += cfg.step_ ## name ();						          \
-	  if (val > cfg.max_ ## name ()) {					        \
-	    val = cfg.min_ ## name ();						          \
+  if (! cfg->is_readonly_ ## name ()) {					      \
+	  ds::Config::name ## _t val = cfg->get_ ## name ();\
+	  val += cfg->step_ ## name ();						          \
+	  if (val > cfg->max_ ## name ()) {					        \
+	    val = cfg->min_ ## name ();						          \
     }                                                 \
-	  cfg.set_ ## name (val);								            \
+	  cfg->set_ ## name (val);								          \
   }
 
-#define DSCONF_DECREMENT_PROPERTY_WITH_INVALID(cfg, name)	\
-  if (! cfg.is_ ## name ## _invalid ())							      \
+#define DSCONF_DECREMENT_PROPERTY_WITH_INVALID(cfg, name) \
+  if (! cfg->is_ ## name ## _invalid ())							    \
 	DSCONF_DECREMENT_PROPERTY(cfg, name)
 
 #define DSCONF_INCREMENT_PROPERTY_WITH_INVALID(cfg, name) \
-  if (! cfg.is_ ## name ## _invalid ())							      \
+  if (! cfg->is_ ## name ## _invalid ())							    \
 	DSCONF_INCREMENT_PROPERTY(cfg, name)
 
 #define DSCONF_TOGGLE_PROPERTY_WITH_INVALID(cfg, name)  \
-  if (! cfg.is_readonly_ ## name ()) {					        \
-	  if (cfg.is_ ## name ## _invalid ()) {						    \
-	    cfg.set_default_ ## name ();						          \
+  if (! cfg->is_readonly_ ## name ()) {					        \
+	  if (cfg->is_ ## name ## _invalid ()) {						  \
+	    cfg->set_default_ ## name ();						          \
     } else {												                    \
-	    cfg.set_ ## name ## _invalid ();  			          \
+	    cfg->set_ ## name ## _invalid ();  			          \
     }                                                   \
   }
 
@@ -193,16 +135,73 @@ typedef enum e_remd_profile {
 /*-----------------------------------------------------------------------*/
 #define DSCONF_DEFINE_FLAG(name)		  uint8_t name : 1
 #define DSCONF_DEFINE_FLAG_RO(name)		DSCONF_DEFINE_FLAG(name ## __RO)
-#define DSCONF_DEFINE_FIELD(name)		  name ## _t	name
+#define DSCONF_DEFINE_PROP(name)		  name ## _t	name
 
-
-/*-----------------------------------------------------------------------*/
-uint16_t fw_version (void);
 
 namespace ds
 {
 /*-----------------------------------------------------------------------*/
+typedef enum e_remd_profile : uint8_t {
+
+  REMD_PROFILE_CUSTOM = 0,
+
+  /* The "Snooze Filter": Engineered for maximum certainty. It ignores 
+  *  light sleep "flickers" and postural shifts by requiring a high-velocity 
+  *  threshold and a long 90-second (3-epoch) sustained plateau. 
+  *  Best used when you are prone to waking up from the lights or 
+  *  when sleep quality is the priority.
+  * Use Case: Deep Night / Light Sleepers
+  */
+  REMD_PROFILE_CONSERVATIVE,
+
+  /* The "Daily Driver": The standard baseline for a full night's sleep.
+  *  It uses a moderate velocity wall and a 10-move threshold to catch 
+  *  standard REM cycles. It provides a good balance between catching 
+  *  dreams early and filtering out minor nocturnal movements.
+  * Use Case: Standard Overnight
+  */
+  REMD_PROFILE_BALANCED,
+
+  /* The "Early Hour Bridge": Specifically tuned for the final 2 hours 
+  *  of sleep where REM is frequent but sleep is fragmented.
+  *  It sets the move threshold just above common "snooze jitters" 
+  *  (12 moves) and requires a 60-second (2-epoch) commitment. 
+  *  It is less "deaf" than Conservative but much harder to accidentally 
+  *  trigger than Balanced.
+  * Use Case: 5AM - 8AM / Fragmented Sleep
+  */
+  REMD_PROFILE_MORNING_SNOOZE,
+
+  /* The "Dream Hunter": High-sensitivity, instant-trigger mode. 
+  *  It ignores the need for persistence (1-epoch) and lowers the 
+  *  velocity wall significantly. Best used for afternoon naps or 
+  *  by heavy sleepers who have difficulty remembering dreams and 
+  *  want a signal the moment any movement is detected.
+  * Use Case: Naps / Heavy Sleepers
+  */
+  REMD_PROFILE_AGGRESSIVE,
+
+  /* The "Leave Me Alone": This is for when you are exhausted 
+  *  but your mind is racing.
+  */
+  REMD_PROFILE_STRESS_SHIELD,
+
+  /* The "Grey Zone" Morning: For that 5 AM to 8 AM window where you
+  *  previously saw "Instant Triggers."
+  */
+  REMD_PROFILE_STRESS_SNOOZE,
+
+  /* The "Safe" Discovery: For when you feel a bit more centered but 
+  *  still notice "micro-jitters" in your logs.
+  */
+  REMD_PROFILE_STRESS_BALANCE
+
+} remd_profile_t;
+
+/*-----------------------------------------------------------------------*/
 class Config {
+public:
+  static Config* get();
 public:
   bool begin (void);
   void set_defaults (void);	/* reset to firmware defaults */
@@ -458,7 +457,7 @@ protected:
   void erase_storage (void);
 
 public:
-  typedef struct s_ds_config_props {
+  typedef struct s_config_props {
 
     DSCONF_DEFINE_FLAG(before_hints);
     DSCONF_DEFINE_FLAG(after_hints);
@@ -466,35 +465,35 @@ public:
     DSCONF_DEFINE_FLAG(loud_speaker_enabled);
     DSCONF_DEFINE_FLAG(alarm_clock_enabled);
 
-    DSCONF_DEFINE_FIELD(wakeup_timer_delay);
-    DSCONF_DEFINE_FIELD(sleep_scenario);
-    DSCONF_DEFINE_FIELD(relax_tunes);
-    DSCONF_DEFINE_FIELD(volume_level);
-    DSCONF_DEFINE_FIELD(record_gain_level);
-    DSCONF_DEFINE_FIELD(remd_profile);
-    DSCONF_DEFINE_FIELD(remd_sensitivity);
-    DSCONF_DEFINE_FIELD(remd_required_rem_epochs);
-    DSCONF_DEFINE_FIELD(remd_cooldown_epochs);
-    DSCONF_DEFINE_FIELD(remd_min_move_duration);
-    DSCONF_DEFINE_FIELD(remd_min_epoch_moves);
-    DSCONF_DEFINE_FIELD(remd_restlessness_factor);
-    DSCONF_DEFINE_FIELD(duplex_mode);
-    DSCONF_DEFINE_FIELD(wakeup_mode);
-    DSCONF_DEFINE_FIELD(vibration_level);
-    DSCONF_DEFINE_FIELD(hints_frequency);
-    DSCONF_DEFINE_FIELD(hints_duty_cycle);
-    DSCONF_DEFINE_FIELD(light_hints_brightness);
-    DSCONF_DEFINE_FIELD(sound_hints_volume);
-    DSCONF_DEFINE_FIELD(light_hints_duration);
-    DSCONF_DEFINE_FIELD(sound_hints_duration);
+    DSCONF_DEFINE_PROP(wakeup_timer_delay);
+    DSCONF_DEFINE_PROP(sleep_scenario);
+    DSCONF_DEFINE_PROP(relax_tunes);
+    DSCONF_DEFINE_PROP(volume_level);
+    DSCONF_DEFINE_PROP(record_gain_level);
+    DSCONF_DEFINE_PROP(remd_profile);
+    DSCONF_DEFINE_PROP(remd_sensitivity);
+    DSCONF_DEFINE_PROP(remd_required_rem_epochs);
+    DSCONF_DEFINE_PROP(remd_cooldown_epochs);
+    DSCONF_DEFINE_PROP(remd_min_move_duration);
+    DSCONF_DEFINE_PROP(remd_min_epoch_moves);
+    DSCONF_DEFINE_PROP(remd_restlessness_factor);
+    DSCONF_DEFINE_PROP(duplex_mode);
+    DSCONF_DEFINE_PROP(wakeup_mode);
+    DSCONF_DEFINE_PROP(vibration_level);
+    DSCONF_DEFINE_PROP(hints_frequency);
+    DSCONF_DEFINE_PROP(hints_duty_cycle);
+    DSCONF_DEFINE_PROP(light_hints_brightness);
+    DSCONF_DEFINE_PROP(sound_hints_volume);
+    DSCONF_DEFINE_PROP(light_hints_duration);
+    DSCONF_DEFINE_PROP(sound_hints_duration);
 
 	/*
 	 * TODO: add more members if you create new properties
 	 */
 
-  } ds_config_props_t;
+  } config_props_t;
 
-  typedef struct s_ds_config_states {
+  typedef struct s_config_states {
 
     DSCONF_DEFINE_FLAG_RO(wakeup_timer_delay);
     DSCONF_DEFINE_FLAG_RO(sleep_scenario);
@@ -518,25 +517,26 @@ public:
     DSCONF_DEFINE_FLAG_RO(light_hints_duration);
     DSCONF_DEFINE_FLAG_RO(sound_hints_duration);
 
-	/*
-	 * TODO: add more members if you create new properties
-	 */
-	
-  } ds_config_states_t;
+	  /*
+	   * TODO: add more members if you create new properties
+	   */
 
-  typedef struct s_ds_config {
+  } config_states_t;
+
+  typedef struct s_config_context {
 	  uint16_t signature;
-	  ds_config_props_t props;
-	  ds_config_states_t states;
-  } ds_config_t;
+	  config_props_t props;
+	  config_states_t states;
+  } config_context_t;
 
 private:
-  ds_config_t cfg;
+  config_context_t cfg;
 };
 
 /*-----------------------------------------------------------------------*/
-} //ds
+uint16_t fw_version (void);
 
-extern ds::Config config;
+/*-----------------------------------------------------------------------*/
+} //namespace ds
 
 #endif // _DS_CONFIG_DEFINED

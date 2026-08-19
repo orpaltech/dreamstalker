@@ -35,7 +35,6 @@
 #include "ds_util.h"
 #include "ds_sdfat.h"
 
-using namespace ds;
 
 /*-----------------------------------------------------------------------*/
 
@@ -53,6 +52,8 @@ PROGMEM const uint8_t uVolumeToVS [] = {
 };
 
 
+namespace ds
+{
 /*-----------------------------------------------------------------------*/
 AudioCodec *AudioCodec::get()
 {
@@ -172,7 +173,7 @@ bool AudioCodec::playback (const char *file_name)
   }
 
   // Read volume level from config 
-  uint8_t vol = config.get_volume_level ();
+  uint8_t vol = Config::get()->get_volume_level ();
   set_volume ( vol, vol );
 
   count_blocks = 0;         // Reset number of blocks processed
@@ -209,7 +210,7 @@ bool AudioCodec::capture (const char *file_name)
 
   bool success =  vs.adpcm_record_start (
     ADPCM_SAMPLE_RATE,
-    config.get_record_gain_level (), 
+    Config::get()->get_record_gain_level (), 
     ADPCM_USE_HP_FILTER );
 
   if (!success) {
@@ -370,3 +371,6 @@ void AudioCodec::process_task (void)
 	    break;
   }
 }
+
+/*-----------------------------------------------------------------------*/
+} //namespace ds

@@ -143,8 +143,8 @@ void Battery::process_sample( uint16_t sample )
   // Check if we have received all requested samples
   // and calculate the true arithmetic mean
   if (++sample_count >= BM_ADC_SAMPLES) {
-    uint32_t avg_batt_level = raw_batt_level / BM_ADC_SAMPLES; 
-    battery_level = (uint8_t) (avg_batt_level * 100U / MAX_ADC_LEVEL);
+    uint32_t avg_level = raw_batt_level / BM_ADC_SAMPLES; 
+    battery_level = (uint8_t) (avg_level * 100U / MAX_ADC_LEVEL);
   }
 
 #if BATTMON_TEST

@@ -2,7 +2,7 @@
  * This file is part of the AVR Dreamstalker software
  * (https://github.com/orpaltech/dreamstalker).
  *
- * Copyright (c) 2013-2025	ORPAL Technologies, Inc.
+ * Copyright (c) 2013-2026	ORPAL Technologies, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,8 +38,6 @@
 #include "ds_sdfat.h"
 
 
-using namespace ds;
-
 /*-----------------------------------------------------------------------*/
 
 #define MENU_LABEL_LEN	7
@@ -50,20 +48,22 @@ using namespace ds;
   switch ( key_event ) {												\
 	case ( KEY_MINUS ):													\
 	case ( KEY_MINUS | KEYBRD_HOLD ):									\
-	  DSCONF_DECREMENT_PROPERTY(config, property);						\
+	  DSCONF_DECREMENT_PROPERTY(Config::get(), property);				\
 	  Display::get()->number ( setup ## _setup_read_value ());			\
 	  set_handled (ctx);												\
 	  break;															\
 	  																	\
 	case ( KEY_PLUS ):													\
 	case ( KEY_PLUS | KEYBRD_HOLD ):									\
-	  DSCONF_INCREMENT_PROPERTY(config, property);						\
+	  DSCONF_INCREMENT_PROPERTY(Config::get(), property);				\
 	  Display::get()->number ( setup ## _setup_read_value ());			\
 	  set_handled (ctx);												\
 	  break;															\
   }
 
 
+namespace ds
+{
 /*-----------------------------------------------------------------------*/
 typedef void (*pfn_activate)(void);
 typedef void (*pfn_exit)(void);
@@ -749,7 +749,7 @@ bool AppMenu::is_active (void)
 
 void AppMenu::play_tone (void)
 {
-  Tonegen::get()->beep ( 80, 4, 6, config.get_volume_level ());
+  Tonegen::get()->beep ( 80, 4, 6, Config::get()->get_volume_level ());
 }
 
 int AppMenu::handle_key (uint8_t key_event)
@@ -851,7 +851,7 @@ void ense_before_hints_setup ( pmenu_context_t ctx, keybrd_event_t key_event)
   switch ( key_event ) {
 	case ( KEY_MINUS ):
 	case ( KEY_PLUS ):
-	  config.toggle_before_hints ();
+	  Config::get()->toggle_before_hints ();
 
 	  Display::get()->flag (ense_before_hints_setup_read_value ());
 	  set_handled (ctx);
@@ -861,7 +861,7 @@ void ense_before_hints_setup ( pmenu_context_t ctx, keybrd_event_t key_event)
 
 int ense_before_hints_setup_read_value (void)
 {
-  return config.get_before_hints();
+  return Config::get()->get_before_hints();
 }
 
 void ense_after_hints_setup_activate (void)
@@ -874,7 +874,7 @@ void ense_after_hints_setup ( pmenu_context_t ctx, keybrd_event_t key_event)
   switch ( key_event ) {
 	case ( KEY_MINUS ):
 	case ( KEY_PLUS ):
-	  config.toggle_after_hints ();
+	  Config::get()->toggle_after_hints ();
 
 	  Display::get()->flag ( ense_after_hints_setup_read_value ());
 	  set_handled (ctx);
@@ -884,7 +884,7 @@ void ense_after_hints_setup ( pmenu_context_t ctx, keybrd_event_t key_event)
 
 int ense_after_hints_setup_read_value (void)
 {
-  return config.get_after_hints ();
+  return Config::get()->get_after_hints ();
 }
 
 static
@@ -908,7 +908,7 @@ void ense_sleep_scenario_setup ( pmenu_context_t ctx, keybrd_event_t key_event)
 
 	case ( KEY_MINUS ):
 	case ( KEY_MINUS | KEYBRD_HOLD ):
-	  DSCONF_DECREMENT_PROPERTY(config, sleep_scenario);
+	  DSCONF_DECREMENT_PROPERTY(Config::get(), sleep_scenario);
 
 	  disp_sleep_scenario ();
 	  set_handled (ctx);
@@ -916,7 +916,7 @@ void ense_sleep_scenario_setup ( pmenu_context_t ctx, keybrd_event_t key_event)
 
 	case ( KEY_PLUS ):
 	case ( KEY_PLUS | KEYBRD_HOLD ):
-	  DSCONF_INCREMENT_PROPERTY(config, sleep_scenario);
+	  DSCONF_INCREMENT_PROPERTY(Config::get(), sleep_scenario);
 
 	  disp_sleep_scenario ();
 	  set_handled (ctx);
@@ -926,7 +926,7 @@ void ense_sleep_scenario_setup ( pmenu_context_t ctx, keybrd_event_t key_event)
 
 int ense_sleep_scenario_setup_read_value (void)
 {
-  return config.get_sleep_scenario();
+  return Config::get()->get_sleep_scenario();
 }
 
 void ense_recording_setup_activate ( void )
@@ -968,7 +968,7 @@ void ense_recording_setup ( pmenu_context_t ctx, keybrd_event_t key_event )
 
 	case ( KEY_MINUS ):
 	case ( KEY_PLUS ):
-	  config.toggle_voice_recording ();
+	  Config::get()->toggle_voice_recording ();
 
 	  Display::get()->flag (ense_recording_setup_read_value ());
 	  set_handled (ctx);
@@ -978,7 +978,7 @@ void ense_recording_setup ( pmenu_context_t ctx, keybrd_event_t key_event )
 
 int ense_recording_setup_read_value (void)
 {
-  return config.get_voice_recording ();
+  return Config::get()->get_voice_recording ();
 }
 
 void ense_record_gain_setup_activate (void)
@@ -993,7 +993,7 @@ void ense_record_gain_setup (pmenu_context_t ctx, keybrd_event_t key_event)
 
 int ense_record_gain_setup_read_value (void)
 {
-  return config.get_record_gain_level ();
+  return Config::get()->get_record_gain_level ();
 }
 
 void ense_volume_level_setup_activate (void)
@@ -1008,7 +1008,7 @@ void ense_volume_level_setup (pmenu_context_t ctx, keybrd_event_t key_event)
 
 int ense_volume_level_setup_read_value (void)
 {
-  return config.get_volume_level ();
+  return Config::get()->get_volume_level ();
 }
 
 static
@@ -1032,7 +1032,7 @@ void ense_tunes_setup ( pmenu_context_t ctx, keybrd_event_t key_event )
 
 	case ( KEY_MINUS ):
 	case ( KEY_MINUS | KEYBRD_HOLD ):
-	  DSCONF_DECREMENT_PROPERTY(config, relax_tunes);
+	  DSCONF_DECREMENT_PROPERTY(Config::get(), relax_tunes);
 
 	  disp_relax_tunes ();
 	  set_handled (ctx);
@@ -1040,7 +1040,7 @@ void ense_tunes_setup ( pmenu_context_t ctx, keybrd_event_t key_event )
 
 	case ( KEY_PLUS ):
 	case ( KEY_PLUS | KEYBRD_HOLD ):
-	  DSCONF_INCREMENT_PROPERTY(config, relax_tunes);
+	  DSCONF_INCREMENT_PROPERTY(Config::get(), relax_tunes);
 
 	  disp_relax_tunes ();
 	  set_handled (ctx);
@@ -1050,7 +1050,7 @@ void ense_tunes_setup ( pmenu_context_t ctx, keybrd_event_t key_event )
 
 int ense_tunes_setup_read_value (void)
 {
-  return config.get_relax_tunes ();
+  return Config::get()->get_relax_tunes ();
 }
 
 void ense_delete_records_setup ( pmenu_context_t ctx, keybrd_event_t key_event)
@@ -1087,7 +1087,7 @@ void ense_vibration_setup ( pmenu_context_t ctx, keybrd_event_t key_event)
 
 	case ( KEY_MINUS ):
 	case ( KEY_MINUS | KEYBRD_HOLD ):
-	  DSCONF_DECREMENT_PROPERTY(config, vibration_level);
+	  DSCONF_DECREMENT_PROPERTY(Config::get(), vibration_level);
 
 	  Display::get()->number (ense_vibration_setup_read_value ());
 	  set_handled (ctx);
@@ -1095,7 +1095,7 @@ void ense_vibration_setup ( pmenu_context_t ctx, keybrd_event_t key_event)
 
 	case ( KEY_PLUS ):
 	case ( KEY_PLUS | KEYBRD_HOLD ):
-	  DSCONF_INCREMENT_PROPERTY(config, vibration_level);
+	  DSCONF_INCREMENT_PROPERTY(Config::get(), vibration_level);
 
 	  Display::get()->number (ense_vibration_setup_read_value ());
 	  set_handled (ctx);
@@ -1105,7 +1105,7 @@ void ense_vibration_setup ( pmenu_context_t ctx, keybrd_event_t key_event)
 
 int ense_vibration_setup_read_value (void)
 {
-  return config.get_vibration_level ();
+  return Config::get()->get_vibration_level ();
 }
 
 void ense_speaker_setup_activate ( void )
@@ -1125,7 +1125,7 @@ void ense_speaker_setup ( pmenu_context_t ctx, keybrd_event_t key_event )
 		Sound::get()->speaker_off ();
 	  }
 
-	  config.toggle_loud_speaker_enabled ();
+	  Config::get()->toggle_loud_speaker_enabled ();
 	  Display::get()->flag (ense_speaker_setup_read_value ());
 
 	  set_handled (ctx);
@@ -1135,7 +1135,7 @@ void ense_speaker_setup ( pmenu_context_t ctx, keybrd_event_t key_event )
 
 int ense_speaker_setup_read_value (void)
 {
-  return config.get_loud_speaker_enabled ();
+  return Config::get()->get_loud_speaker_enabled ();
 }
 
 void clock_setup_activate (void)
@@ -1143,7 +1143,7 @@ void clock_setup_activate (void)
   auto clk = RTClock::get();
 
   // setup real-time clock
-  clk->set_setup ( RTC_SETUP_HOUR );
+  clk->set_setup ( RTClock::SetupMode::Hour );
   clk->show ();
 
   Keyboard::get()->hold_repeat_default ();
@@ -1156,7 +1156,7 @@ void clock_setup_exit (void)
   Keyboard::get()->hold_repeat_disable ();
 
   // exit from setup
-  clk->set_setup ( RTC_SETUP_NONE );
+  clk->set_setup ( RTClock::SetupMode::None );
   clk->hide ();
 
   clk->backup_current_time ();
@@ -1189,14 +1189,12 @@ void clock_setup ( pmenu_context_t ctx, keybrd_event_t key_event )
 
 void disp_wakeup_timer_delay (void)
 {
-  uint16_t delay;
-  uint8_t hour, minute;
-  char msg[ 6 ];
+  uint16_t delay = Config::get()->get_wakeup_timer_delay ();
+  uint8_t hour = delay / 60;
+  uint8_t minute = delay - ( 60U * hour );
 
-  delay = config.get_wakeup_timer_delay ();
-  hour = delay / 60;
-  minute = delay - ( 60U * hour );
-  snprintf (msg, 6, __disp_msg_time__, hour, minute);
+  char msg[ 6 ];
+  snprintf ( msg, 6, __disp_msg_time__, hour, minute );
 
   Display::get()->message (msg, 1);
 }
@@ -1244,7 +1242,7 @@ void AppMenu::wakeup_timer_setup (pmenu_context_t ctx, keybrd_event_t key_event)
 	case ( KEY_MINUS | KEYBRD_HOLD ):
 	  if (! is_set ) {
 
-	  	DSCONF_DECREMENT_PROPERTY(config, wakeup_timer_delay );
+	  	DSCONF_DECREMENT_PROPERTY(Config::get(), wakeup_timer_delay );
 	  	disp_wakeup_timer_delay ();
 	  }
 
@@ -1255,7 +1253,7 @@ void AppMenu::wakeup_timer_setup (pmenu_context_t ctx, keybrd_event_t key_event)
 	case ( KEY_PLUS | KEYBRD_HOLD ):
 	  if (! is_set ) {
 
-	  	DSCONF_INCREMENT_PROPERTY(config, wakeup_timer_delay );
+	  	DSCONF_INCREMENT_PROPERTY(Config::get(), wakeup_timer_delay );
 	  	disp_wakeup_timer_delay ();
 	  }
 
@@ -1275,7 +1273,7 @@ void AppMenu::wakeup_timer_setup (pmenu_context_t ctx, keybrd_event_t key_event)
 
 void trigger_count_display (void)
 {
-  Display::get()->number (config.get_remd_trigger_count ());
+  Display::get()->number (Config::get()->get_remd_trigger_count ());
 }
 
 // TODO: implement reading triggering history
@@ -1305,7 +1303,7 @@ void trigger_clocks_setup ( pmenu_context_t, keybrd_event_t key_event )
 static
 void disp_remd_profile (void)
 {
-  if ( config.is_remd_profile_invalid ()) {
+  if ( Config::get()->is_remd_profile_invalid ()) {
 
 	Display::get()->message ( __disp_msg_off__, 1 );
   } else {
@@ -1323,21 +1321,21 @@ void remd_profile_setup (pmenu_context_t ctx, keybrd_event_t key_event)
 {
   switch ( key_event ) {
 	case ( KEY_ENTER ):
-	  DSCONF_TOGGLE_PROPERTY_WITH_INVALID(config, remd_profile);
+	  DSCONF_TOGGLE_PROPERTY_WITH_INVALID(Config::get(), remd_profile);
 
 	  disp_remd_profile ();
 	  set_handled (ctx);
 	  break;
 
 	case ( KEY_MINUS ):
-	  DSCONF_DECREMENT_PROPERTY(config, remd_profile);
+	  DSCONF_DECREMENT_PROPERTY(Config::get(), remd_profile);
 
 	  disp_remd_profile ();
 	  set_handled (ctx);
 	  break;
 
 	case ( KEY_PLUS ):
-	  DSCONF_INCREMENT_PROPERTY(config, remd_profile);
+	  DSCONF_INCREMENT_PROPERTY(Config::get(), remd_profile);
 
 	  disp_remd_profile ();
 	  set_handled (ctx);
@@ -1449,43 +1447,43 @@ void remd_restlessness_factor_setup (pmenu_context_t ctx, keybrd_event_t key_eve
 
 int remd_profile_setup_read_value (void)
 {
-	return config.get_remd_profile ();
+	return Config::get()->get_remd_profile ();
 }
 
 int remd_sensitivity_setup_read_value (void)
 {
-  return config.get_remd_sensitivity ();
+  return Config::get()->get_remd_sensitivity ();
 }
 
 int remd_required_rem_epochs_setup_read_value (void)
 {
-  return config.get_remd_required_rem_epochs ();
+  return Config::get()->get_remd_required_rem_epochs ();
 }
 
 int remd_cooldown_epochs_setup_read_value (void)
 {
-  return config.get_remd_cooldown_epochs ();
+  return Config::get()->get_remd_cooldown_epochs ();
 }
 
 int remd_min_move_duration_setup_read_value (void)
 {
-  return config.get_remd_min_move_duration ();
+  return Config::get()->get_remd_min_move_duration ();
 }
 
 int remd_min_epoch_moves_setup_read_value (void)
 {
-  return config.get_remd_min_epoch_moves ();
+  return Config::get()->get_remd_min_epoch_moves ();
 }
 
 int remd_restlessness_factor_setup_read_value (void)
 {
-  return config.get_remd_restlessness_factor ();
+  return Config::get()->get_remd_restlessness_factor ();
 }
 
 static
 void disp_duplex_mode (void)
 {
-  if ( config.is_duplex_mode_invalid ())
+  if ( Config::get()->is_duplex_mode_invalid ())
 	Display::get()->message ( __disp_msg_off__, 1 );
   else
 	Display::get()->number (duplex_mode_setup_read_value ());
@@ -1500,21 +1498,21 @@ void duplex_mode_setup ( pmenu_context_t ctx, keybrd_event_t key_event )
 {
   switch ( key_event ) {
 	case ( KEY_ENTER ):
-	  DSCONF_TOGGLE_PROPERTY_WITH_INVALID(config, duplex_mode);
+	  DSCONF_TOGGLE_PROPERTY_WITH_INVALID(Config::get(), duplex_mode);
 
 	  disp_duplex_mode ();
 	  set_handled (ctx);
 	  break;
 
 	case ( KEY_MINUS ):
-	  DSCONF_DECREMENT_PROPERTY_WITH_INVALID(config, duplex_mode);
+	  DSCONF_DECREMENT_PROPERTY_WITH_INVALID(Config::get(), duplex_mode);
 
 	  disp_duplex_mode ();
 	  set_handled (ctx);
 	  break;
 
 	case ( KEY_PLUS ):
-	  DSCONF_INCREMENT_PROPERTY_WITH_INVALID(config, duplex_mode);
+	  DSCONF_INCREMENT_PROPERTY_WITH_INVALID(Config::get(), duplex_mode);
 
 	  disp_duplex_mode ();
 	  set_handled (ctx);
@@ -1524,13 +1522,13 @@ void duplex_mode_setup ( pmenu_context_t ctx, keybrd_event_t key_event )
 
 int duplex_mode_setup_read_value (void)
 {
-  return config.get_duplex_mode ();
+  return Config::get()->get_duplex_mode ();
 }
 
 static
 void disp_wakeup_mode (void)
 {
-  if ( config.is_wakeup_mode_invalid ()) {
+  if ( Config::get()->is_wakeup_mode_invalid ()) {
 
 	Display::get()->message ( __disp_msg_off__, 1 );
   } else {
@@ -1548,21 +1546,21 @@ void wakeup_mode_setup ( pmenu_context_t ctx, keybrd_event_t key_event )
 {
   switch ( key_event ) {
 	case ( KEY_ENTER ):
-	  DSCONF_TOGGLE_PROPERTY_WITH_INVALID(config, wakeup_mode);
+	  DSCONF_TOGGLE_PROPERTY_WITH_INVALID(Config::get(), wakeup_mode);
 
 	  disp_wakeup_mode ();
 	  set_handled (ctx);
 	  break;
 
 	case ( KEY_MINUS ):
-	  DSCONF_DECREMENT_PROPERTY(config, wakeup_mode);
+	  DSCONF_DECREMENT_PROPERTY(Config::get(), wakeup_mode);
 
 	  disp_wakeup_mode ();
 	  set_handled (ctx);
 	  break;
 
 	case ( KEY_PLUS ):
-	  DSCONF_INCREMENT_PROPERTY(config, wakeup_mode);
+	  DSCONF_INCREMENT_PROPERTY(Config::get(), wakeup_mode);
 
 	  disp_wakeup_mode ();
 	  set_handled (ctx);
@@ -1572,7 +1570,7 @@ void wakeup_mode_setup ( pmenu_context_t ctx, keybrd_event_t key_event )
 
 int wakeup_mode_setup_read_value (void)
 {
-  return config.get_wakeup_mode ();
+  return Config::get()->get_wakeup_mode ();
 }
 
 void alarm_clock_setup_activate (void)
@@ -1585,7 +1583,7 @@ void alarm_clock_setup ( pmenu_context_t ctx, keybrd_event_t key_event )
   switch ( key_event ) {
 	case ( KEY_MINUS ):
 	case ( KEY_PLUS ):
-	  config.toggle_alarm_clock_enabled ();
+	  Config::get()->toggle_alarm_clock_enabled ();
 
 	  Display::get()->flag (alarm_clock_setup_read_value ());
 	  set_handled (ctx);
@@ -1595,7 +1593,7 @@ void alarm_clock_setup ( pmenu_context_t ctx, keybrd_event_t key_event )
 
 int alarm_clock_setup_read_value (void)
 {
-  return config.get_alarm_clock_enabled ();	
+  return Config::get()->get_alarm_clock_enabled ();	
 }
 
 void hints_frequency_setup_activate (void)
@@ -1607,14 +1605,14 @@ void hints_frequency_setup ( pmenu_context_t ctx, keybrd_event_t key_event)
 {
   switch ( key_event ) {
 	case ( KEY_MINUS ):
-	  DSCONF_DECREMENT_PROPERTY(config, hints_frequency );
+	  DSCONF_DECREMENT_PROPERTY(Config::get(), hints_frequency );
 
 	  Display::get()->number (hints_frequency_setup_read_value ());
 	  set_handled ( ctx );
 	  break;
 
 	case ( KEY_PLUS ):
-	  DSCONF_INCREMENT_PROPERTY(config, hints_frequency );
+	  DSCONF_INCREMENT_PROPERTY(Config::get(), hints_frequency );
 
 	  Display::get()->number (hints_frequency_setup_read_value ());
 	  set_handled ( ctx );
@@ -1624,7 +1622,7 @@ void hints_frequency_setup ( pmenu_context_t ctx, keybrd_event_t key_event)
 
 int hints_frequency_setup_read_value (void)
 {
-  return config.get_hints_frequency ();
+  return Config::get()->get_hints_frequency ();
 }
 
 void hints_duty_cycle_setup_activate (void)
@@ -1636,14 +1634,14 @@ void hints_duty_cycle_setup ( pmenu_context_t ctx, keybrd_event_t key_event)
 {
   switch ( key_event ) {
 	case ( KEY_MINUS ):
-	  DSCONF_DECREMENT_PROPERTY(config, hints_duty_cycle );
+	  DSCONF_DECREMENT_PROPERTY(Config::get(), hints_duty_cycle );
 
 	  Display::get()->number (hints_duty_cycle_setup_read_value ());
 	  set_handled ( ctx );
 	  break;
 
 	case ( KEY_PLUS ):
-	  DSCONF_INCREMENT_PROPERTY(config, hints_duty_cycle );
+	  DSCONF_INCREMENT_PROPERTY(Config::get(), hints_duty_cycle );
 
 	  Display::get()->number (hints_duty_cycle_setup_read_value ());
 	  set_handled ( ctx );
@@ -1653,7 +1651,7 @@ void hints_duty_cycle_setup ( pmenu_context_t ctx, keybrd_event_t key_event)
 
 int hints_duty_cycle_setup_read_value (void)
 {
-  return config.get_hints_duty_cycle ();
+  return Config::get()->get_hints_duty_cycle ();
 }
 
 void sound_hints_level_setup_activate ( void )
@@ -1665,14 +1663,14 @@ void sound_hints_level_setup ( pmenu_context_t ctx, keybrd_event_t key_event)
 {
   switch ( key_event ) {
 	case ( KEY_MINUS ):
-	  DSCONF_DECREMENT_PROPERTY(config, sound_hints_volume );
+	  DSCONF_DECREMENT_PROPERTY(Config::get(), sound_hints_volume );
 
 	  Display::get()->number (sound_hints_level_setup_read_value () );
 	  set_handled ( ctx );
 	  break;
 
 	case ( KEY_PLUS ):
-	  DSCONF_INCREMENT_PROPERTY(config, sound_hints_volume );
+	  DSCONF_INCREMENT_PROPERTY(Config::get(), sound_hints_volume );
 
 	  Display::get()->number (sound_hints_level_setup_read_value ());
 	  set_handled ( ctx );
@@ -1682,7 +1680,7 @@ void sound_hints_level_setup ( pmenu_context_t ctx, keybrd_event_t key_event)
 
 int sound_hints_level_setup_read_value (void)
 {
-  return config.get_sound_hints_volume ();
+  return Config::get()->get_sound_hints_volume ();
 }
 
 void light_hints_brightness_setup_activate (void)
@@ -1694,14 +1692,14 @@ void light_hints_brightness_setup ( pmenu_context_t ctx, keybrd_event_t key_even
 {
   switch ( key_event ) {
 	case ( KEY_MINUS ):
-	  DSCONF_DECREMENT_PROPERTY(config, light_hints_brightness );
+	  DSCONF_DECREMENT_PROPERTY(Config::get(), light_hints_brightness );
 
 	  Display::get()->number (light_hints_brightness_setup_read_value ());
 	  set_handled ( ctx );
 	  break;
 
 	case ( KEY_PLUS ):
-	  DSCONF_INCREMENT_PROPERTY(config, light_hints_brightness );
+	  DSCONF_INCREMENT_PROPERTY(Config::get(), light_hints_brightness );
 
 	  Display::get()->number (light_hints_brightness_setup_read_value ());
 	  set_handled ( ctx );
@@ -1711,7 +1709,7 @@ void light_hints_brightness_setup ( pmenu_context_t ctx, keybrd_event_t key_even
 
 int light_hints_brightness_setup_read_value (void)
 {
-  return config.get_light_hints_brightness ();
+  return Config::get()->get_light_hints_brightness ();
 }
 
 void light_hints_duration_setup_activate (void)
@@ -1733,7 +1731,7 @@ void light_hints_duration_setup (pmenu_context_t ctx, keybrd_event_t key_event)
 
 int light_hints_duration_setup_read_value (void)
 {
-  return config.get_light_hints_duration ();
+  return Config::get()->get_light_hints_duration ();
 }
 
 void sound_hints_duration_setup_activate (void)
@@ -1755,7 +1753,7 @@ void sound_hints_duration_setup ( pmenu_context_t ctx, keybrd_event_t key_event)
 
 int sound_hints_duration_setup_read_value (void)
 {
-  return config.get_sound_hints_duration ();
+  return Config::get()->get_sound_hints_duration ();
 }
 
 void wakeup_signal_check_handler ( pmenu_context_t, keybrd_event_t key_event )
@@ -1786,7 +1784,7 @@ void set_defaults_handler ( pmenu_context_t, keybrd_event_t key_event)
 {
   switch ( key_event ) {
 	case ( KEY_ENTER ):
-	  config.set_defaults ();
+	  Config::get()->set_defaults ();
 	  /* NOTE: device will restart */
 	  break;
   }
@@ -1796,7 +1794,7 @@ void save_settings_handler ( pmenu_context_t ctx, keybrd_event_t key_event)
 {
   switch ( key_event ) {
 	case ( KEY_ENTER ):
-	  config.save_to_storage ();
+	  Config::get()->save_to_storage ();
 	  Display::get()->message (__disp_msg_done__, 300);
 	  set_handled (ctx);
 	  set_return (ctx);
@@ -1808,3 +1806,6 @@ void save_settings_activate (void)
 {
   Display::get()->confirm ();
 }
+
+/*-----------------------------------------------------------------------*/
+} //namespace ds

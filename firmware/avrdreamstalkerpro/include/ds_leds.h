@@ -17,8 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _DS_LEDS_DEFINED
-#define _DS_LEDS_DEFINED
+#ifndef _DS_REMD_LIGHTS_DEFINED
+#define _DS_REMD_LIGHTS_DEFINED
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -81,9 +81,9 @@ private:
 };
 
 /*-----------------------------------------------------------------------*/
-class REMDLeds {
+class Lights {
 public:
-  static REMDLeds *get();
+  static Lights *get();
 public:
   bool init (void);
 
@@ -128,4 +128,4 @@ private:
 /*-----------------------------------------------------------------------*/
 } //ds::remd
 
-#endif // _DS_LEDS_DEFINED
+#endif // _DS_REMD_LIGHTS_DEFINED

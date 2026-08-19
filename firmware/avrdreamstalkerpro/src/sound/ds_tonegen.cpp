@@ -433,7 +433,7 @@ void Tonegen::set_intensity (uint16_t intensity, uint16_t max_intensity)
   }
 
   uint32_t progress = ((uint32_t)intensity * 1024) / max_intensity;
-  uint8_t volume = config.get_sound_hints_volume();
+  uint8_t volume = Config::get()->get_sound_hints_volume();
   
   // 1. STABLE BASE PITCH
   // We stay on the root note to avoid the "bomber" effect
@@ -595,10 +595,11 @@ void Tonegen::irq_handler (void)
 	}
 
 	/* Skip ',' or '|' */
-	if (melody_get_char () == ',' || melody_get_char () == '|')
+	if (melody_get_char () == ',' || melody_get_char () == '|') {
 	  melody.buffer++;
+	}
 
-	tone_on(note, octave, config.get_volume_level ());
+	tone_on(note, octave, Config::get()->get_volume_level ());
   }
 
   if (++melody.ticks >= melody.duration) {

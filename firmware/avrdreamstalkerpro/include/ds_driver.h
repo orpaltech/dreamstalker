@@ -33,16 +33,23 @@
 namespace ds
 {
 /*-----------------------------------------------------------------------*/
-typedef enum e_operation_mode {
+/*typedef enum e_operation_mode {
   OPM_NONE = 0,
 	OPM_NORMAL,
 	OPM_PWRSAVE
-} operation_mode_t; 
+} operation_mode_t; */
 
 /*-----------------------------------------------------------------------*/
 class Driver {
 public:
   static Driver *get();
+
+  enum class OperationMode : uint8_t {
+    None,
+    Normal,
+    PowerSave
+  };
+
 public:
   bool init (void);
   void end (void);
@@ -53,7 +60,7 @@ public:
 
   void reboot_on_key (void);
 
-  operation_mode_t get_mode () const { return static_cast<operation_mode_t>(opmode); }
+  OperationMode get_mode () const { return static_cast<OperationMode>(opmode); }
 
   void remd_start_check (void);
   void remd_stop_check (void);
@@ -68,7 +75,7 @@ protected:
 
   friend class AppMenu;
 private:
-  void set_mode (operation_mode_t mode);
+  void set_mode (OperationMode mode);
   void wakeup_timer_toggle (void);
   void wakeup_timer_quick_set (keybrd_event_t key_event);
   void start_lucid_dream (void);

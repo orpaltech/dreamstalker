@@ -36,11 +36,9 @@
 #include "ds_sdfat.h"
 
 
-using namespace ds;
-
 /*-----------------------------------------------------------------------*/
-/* Flags for Real-time clock ISR (make sure these do NOT overlap)
- */
+// Flags for Real-time clock ISR (make sure these do NOT overlap)
+//
 #define RTCF_SHOW_HOUR		0x0001U
 #define RTCF_SHOW_MINUTE	0x0002U
 #define RTCF_SHOW_DOT		  0x0004U
@@ -54,21 +52,26 @@ using namespace ds;
 #define DISP_OFF_DELAY_SEC	30U		/* seconds, max 60 */
 
 /*-----------------------------------------------------------------------*/
-/* Interrupt Handler 													 */
-/*-----------------------------------------------------------------------*/
+// Interrupt handler for the system clock timer
+//
 #if defined (__AVR_ATmega128__)
 ISR(TIMER0_COMP_vect)
 #elif defined (__AVR_ATmega1281__)
 ISR(TIMER2_COMPA_vect)
 #endif
 {
-  RTClock::handle_isr();
+  ds::RTClock::handle_isr();
 }
 
-/*-----------------------------------------------------------------------*/
-void RTClock::handle_isr (void)
+static uint32_t EEMEM eeprom_timestamp; // Allocate 4 bytes in EEPROM
+
+namespace ds
 {
-  get()->irq_handler();
+/*-----------------------------------------------------------------------*/
+RTClock *RTClock::get()
+{
+  static RTClock rtck;
+  return &rtck;
 }
 
 /*-----------------------------------------------------------------------*/
@@ -81,15 +84,9 @@ void RTClock::fat_datetime(uint16_t *date_val, uint16_t *time_val)
   *time_val = FAT_TIME(ltm.tm_hour, ltm.tm_min, ltm.tm_sec);
 }
 
-/*-----------------------------------------------------------------------*/
-static uint32_t EEMEM eeprom_timestamp; // Allocate 4 bytes in EEPROM
-
-
-/*-----------------------------------------------------------------------*/
-RTClock *RTClock::get()
+void RTClock::handle_isr (void)
 {
-  static RTClock rtck;
-  return &rtck;
+  get()->irq_handler();
 }
 
 /*-----------------------------------------------------------------------*/
@@ -109,7 +106,7 @@ void RTClock::irq_handler (void)
 
     system_tick(); // Updates the internal timestamp
 
-    if (Driver::get()->get_mode() != OPM_NORMAL)
+    if (Driver::get()->get_mode() != Driver::OperationMode::Normal)
       return;
 
     // The rest is executed only in normal power mode
@@ -162,7 +159,7 @@ void RTClock::irq_handler (void)
         /* 
         * Wake-Up timer is set 
         */
-        rtc.ticks_wakeup_timer = (rtc.ticks_wakeup_timer + 1) % config.get_wakeup_timer_delay ();
+        rtc.ticks_wakeup_timer = (rtc.ticks_wakeup_timer + 1) % Config::get()->get_wakeup_timer_delay ();
         if (rtc.ticks_wakeup_timer == 0) {
 
           /* One-shot timer, so cancel it */
@@ -198,7 +195,7 @@ bool RTClock::init (void)
   delay (200);	/* let XTAL stabilize */
 
   rtc.flags = RTCF_SHOW_HOUR | RTCF_SHOW_MINUTE;
-  rtc.setup_mode = RTC_SETUP_NONE;
+  rtc.setup_mode = static_cast<uint8_t>(SetupMode::None);
 
   backup_stamp = 0;	/* Reset last backup timestamp */
 
@@ -397,7 +394,7 @@ void RTClock::handle_setup (void)
 
   switch( get_setup ())
   {
-	  case RTC_SETUP_MINUTE:
+	  case SetupMode::Minute:
 		  flag_set    (RTCF_SHOW_HOUR);
 		  flag_toggle (RTCF_SHOW_MINUTE);
 
@@ -408,7 +405,7 @@ void RTClock::handle_setup (void)
               rtc.flags & ~RTCF_WAKEUP_TIMER);
 		  break;
 
-	  case RTC_SETUP_HOUR:
+	  case SetupMode::Hour:
 		  flag_set    (RTCF_SHOW_MINUTE);
 		  flag_toggle (RTCF_SHOW_HOUR);
 
@@ -419,15 +416,15 @@ void RTClock::handle_setup (void)
               rtc.flags & ~RTCF_WAKEUP_TIMER);
 		  break;
 
-	  case RTC_SETUP_YEAR:
+	  case SetupMode::Year:
 		  display_year (&ltm);
 	    break;
 
-	  case RTC_SETUP_MONTH:
+	  case SetupMode::Month:
 	  	display_month (&ltm);
 	    break;
 
-	  case RTC_SETUP_MDAY:
+	  case SetupMode::MonthDay:
 	    display_mday (&ltm);
 	    break;
 
@@ -438,30 +435,30 @@ void RTClock::handle_setup (void)
 
 bool RTClock::is_setup (void) const
 {
-  return ( get_setup () != RTC_SETUP_NONE );
+  return ( get_setup () != SetupMode::None );
 }
 
-void RTClock::set_setup (rtc_setup_mode_t mode)
+void RTClock::set_setup (SetupMode mode)
 {
   ATOMIC_BLOCK (ATOMIC_RESTORESTATE) {
 
-    rtc.setup_mode = mode;
+    rtc.setup_mode = static_cast<uint8_t>(mode);
   }
 }
 
-#define SETUP_FIRST	RTC_SETUP_HOUR
-#define SETUP_LAST  RTC_SETUP_MDAY
+#define SETUP_FIRST	static_cast<uint8_t>(SetupMode::Hour)
+#define SETUP_LAST  static_cast<uint8_t>(SetupMode::MonthDay)
 
-rtc_setup_mode_t RTClock::next_setup (void)
+RTClock::SetupMode RTClock::next_setup (void)
 { 
   uint8_t next_mode = rtc.setup_mode + 1;
   if (next_mode > SETUP_LAST)
 	  rtc.setup_mode = SETUP_FIRST;
   else
 	  rtc.setup_mode = next_mode;
-  rtc_setup_mode_t mode = get_setup ();
+  SetupMode mode = get_setup ();
 
-  if ( mode == RTC_SETUP_HOUR || mode == RTC_SETUP_MINUTE ) {
+  if ( mode == SetupMode::Hour || mode == SetupMode::Minute ) {
 
 	  show ();
   } else {
@@ -472,9 +469,9 @@ rtc_setup_mode_t RTClock::next_setup (void)
   return mode;
 }
 
-rtc_setup_mode_t RTClock::get_setup (void) const
+RTClock::SetupMode RTClock::get_setup (void) const
 {
-  return static_cast<rtc_setup_mode_t> (rtc.setup_mode);
+  return static_cast<SetupMode> (rtc.setup_mode);
 }
 
 void RTClock::setup_inc (int sign)
@@ -483,23 +480,23 @@ void RTClock::setup_inc (int sign)
   get_time (&ltm);
 
   switch ( get_setup ()) {
-	  case RTC_SETUP_MINUTE:
+	  case SetupMode::Minute:
       inc_minute (&ltm, sign);
 	    break;
 
-	  case RTC_SETUP_HOUR:
+	  case SetupMode::Hour:
       inc_hour (&ltm, sign);
 	    break;
 
-	  case RTC_SETUP_MDAY:
+	  case SetupMode::MonthDay:
       inc_mday (&ltm, sign);
 	    break;
 
-	  case RTC_SETUP_MONTH:
+	  case SetupMode::Month:
       inc_month (&ltm, sign);
 	    break;
 
-	  case RTC_SETUP_YEAR:
+	  case SetupMode::Year:
       inc_year (&ltm, sign);
 	    break;
 
@@ -686,7 +683,7 @@ uint16_t RTClock::wakeup_timer_get_remainder (void)
   ATOMIC_BLOCK (ATOMIC_RESTORESTATE) {
 
 	  if (wakeup_timer_is_set_unsafe ()) {
-	    res = config.get_wakeup_timer_delay () - rtc.ticks_wakeup_timer;
+	    res = Config::get()->get_wakeup_timer_delay () - rtc.ticks_wakeup_timer;
 	  }
   }
 
@@ -732,3 +729,6 @@ bool RTClock::alarm_clock_is_set (void)
   }
   return res;
 }
+
+/*-----------------------------------------------------------------------*/
+} //namespace ds

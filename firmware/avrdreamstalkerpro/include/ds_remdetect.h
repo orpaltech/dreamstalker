@@ -50,9 +50,9 @@ typedef enum e_remd_state {
 typedef void (*REMDetectCB_t)(void *context, remd_event_type_t event, uint16_t arg);
 
 /*-----------------------------------------------------------------------*/
-class REMDetect {
+class Detector {
 public:
-  static REMDetect *get();
+  static Detector *get();
 
   bool init (void) ;
   void end (void);

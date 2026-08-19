@@ -17,17 +17,17 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _DS_REM_HINTS_DEFINED
-#define _DS_REM_HINTS_DEFINED
+#ifndef _DS_REMD_HINTS_DEFINED
+#define _DS_REMD_HINTS_DEFINED
 
 #include "ds_leds.h"
 
 namespace ds::remd
 {
 /*-----------------------------------------------------------------------*/
-class REMHints {
+class Hints {
 public:
-  static REMHints *get();
+  static Hints *get();
 
 public:
   void start(uint8_t intensity_limit);
@@ -45,6 +45,6 @@ private:
 };
 
 /*-----------------------------------------------------------------------*/
-} //ds::remd
+} //namespace ds::remd
 
-#endif  // _DS_REM_HINTS_DEFINED
+#endif  // _DS_REMD_HINTS_DEFINED

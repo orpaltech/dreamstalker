@@ -33,9 +33,7 @@
 #include "ds_util.h"
 #include "ds_sdfat.h"
 
-using namespace ds::remd;
 using namespace avr::core;
-
 
 /*-----------------------------------------------------------------------*/
 /** Defines the REM detector test mode
@@ -76,25 +74,25 @@ using namespace avr::core;
 //#define MULT_1P5(val) (val + ((val) >> 1))
 //#define MULT_2(val)   ((val) << 1)
 
-/*-----------------------------------------------------------------------*/
-static REMDetect only;
-
-/*-----------------------------------------------------------------------*/
-void REMDetect::a2d_sample_callback(void *context, uint16_t sample)
+namespace ds::remd
 {
-  REMDetect *premd = static_cast<REMDetect *>(context);
+/*-----------------------------------------------------------------------*/
+void Detector::a2d_sample_callback(void *context, uint16_t sample)
+{
+  Detector *premd = static_cast<Detector *>(context);
 
   premd->on_a2d_sample(sample);
 }
 
 /*-----------------------------------------------------------------------*/
-REMDetect *REMDetect::get()
+Detector *Detector::get()
 {
+  static Detector only;
   return &only;
 }
 
 /*-----------------------------------------------------------------------*/
-bool REMDetect::init (void)
+bool Detector::init (void)
 {
   /* Enable IRTX line */
   Pins::set_out ( PIN_IRTX );       /*set output mode*/
@@ -107,13 +105,13 @@ bool REMDetect::init (void)
   return true;
 }
 
-void REMDetect::end (void)
+void Detector::end (void)
 {
   /* Disable IRTX line */
   Pins::set_in_highz ( PIN_IRTX );  /*set input mode, high-Z*/
 }
 
-bool REMDetect::start (REMDetectCB_t pcb, void *pcontext, bool remd_check)
+bool Detector::start (REMDetectCB_t pcb, void *pcontext, bool remd_check)
 {
   if (get_state () != REMD_STATE_OFF)
     return false;
@@ -126,7 +124,7 @@ bool REMDetect::start (REMDetectCB_t pcb, void *pcontext, bool remd_check)
   return true;
 }
 
-bool REMDetect::start_internal (void)
+bool Detector::start_internal (void)
 {
   if (get_state () != REMD_STATE_START)
     return false;
@@ -185,7 +183,7 @@ bool REMDetect::start_internal (void)
   return true;
 }
 
-void REMDetect::stop_internal (void)
+void Detector::stop_internal (void)
 {
   if (get_state () != REMD_STATE_STOP)
     return;
@@ -205,7 +203,7 @@ void REMDetect::stop_internal (void)
 #endif
 }
 
-void REMDetect::stop (void) 
+void Detector::stop (void) 
 {
   if (get_state () != REMD_STATE_ON)
     return;
@@ -213,17 +211,17 @@ void REMDetect::stop (void)
   state = REMD_STATE_STOP;  // Request stop
 }
 
-remd_state_t REMDetect::get_state (void) const
+remd_state_t Detector::get_state (void) const
 {
   return state;
 }
 
-bool REMDetect::is_check_mode (void) const
+bool Detector::is_check_mode (void) const
 {
   return check_mode;
 }
 
-void REMDetect::process_task (void)
+void Detector::process_task (void)
 {
   if (get_state () == REMD_STATE_STOP) {
     stop_internal ();
@@ -287,7 +285,7 @@ void REMDetect::process_task (void)
           remd_epoch_config_t cfg = {
             .magic = REMD_EPOCH_MAGIC,
             .start_time = time (nullptr) + UNIX_OFFSET,
-            .profile = config.get_remd_profile ()
+            .profile = Config::get()->get_remd_profile ()
           };
           fp.write((const uint8_t*)&cfg, sizeof(remd_epoch_config_t));
         }
@@ -309,7 +307,7 @@ void REMDetect::process_task (void)
 #endif
 }
 
-void REMDetect::log_epoch(uint16_t moves, uint16_t ceiling, uint16_t restlessness,
+void Detector::log_epoch(uint16_t moves, uint16_t ceiling, uint16_t restlessness,
                         uint16_t peak, uint8_t rem_epochs, uint8_t trigger)
 {
   volatile remd_epoch_stats_t &rpt = stats_buff.data[stats_buff.write_idx];
@@ -335,8 +333,10 @@ void REMDetect::log_epoch(uint16_t moves, uint16_t ceiling, uint16_t restlessnes
   }
 }
 
-void REMDetect::process_sample(int16_t sample)
-{ 
+void Detector::process_sample(int16_t sample)
+{
+  auto *cfg = Config::get();
+
   // 1. TIMING & EPOCH TRACKING
   remd.epoch_samples++;
   
@@ -362,7 +362,7 @@ void REMDetect::process_sample(int16_t sample)
   remd.epoch_total_delta += (uint32_t)delta;
 
   // 3. PARAMETER MAPPING
-  const int16_t ceiling = (config.get_remd_sensitivity() * 5) + 20;
+  const int16_t ceiling = (cfg->get_remd_sensitivity() * 5) + 20;
   const int16_t threshold = 2; 
 
   // 4. THE WINDOW COMPARATOR
@@ -380,7 +380,7 @@ void REMDetect::process_sample(int16_t sample)
     }
 
   } else {
-    bool is_long_enough = (remd.move_duration >= config.get_remd_min_move_duration());
+    bool is_long_enough = (remd.move_duration >= cfg->get_remd_min_move_duration());
     bool is_not_a_blink = (remd.move_peak_delta < ceiling);
 
     if (is_long_enough && is_not_a_blink) {
@@ -399,12 +399,12 @@ void REMDetect::process_sample(int16_t sample)
     const uint16_t variability = (uint16_t)(remd.epoch_total_delta / buckets_per_epoch);
 
     // RESTLESSNESS CHECK
-    if (variability > config.get_remd_restlessness_factor()) {
+    if (variability > cfg->get_remd_restlessness_factor()) {
       remd.move_count = 0;
     }
 
-    const bool is_rem_epoch = (remd.move_count >= config.get_remd_min_epoch_moves());
-    const uint8_t required_epochs = config.get_remd_required_rem_epochs();
+    const bool is_rem_epoch = (remd.move_count >= cfg->get_remd_min_epoch_moves());
+    const uint8_t required_epochs = cfg->get_remd_required_rem_epochs();
 
     // LEAKY BUCKET (Integrator)
     if (is_rem_epoch) {
@@ -425,7 +425,7 @@ void REMDetect::process_sample(int16_t sample)
     if (remd.rem_epoch_count >= required_epochs) {
       uint16_t elapsed = remd.current_epoch - remd.last_trigger_epoch;
       
-      if (remd.last_trigger_epoch == 0 || elapsed >= config.get_remd_cooldown_epochs()) {
+      if (remd.last_trigger_epoch == 0 || elapsed >= cfg->get_remd_cooldown_epochs()) {
 
         // Dynamic Intensity Logic
         switch(remd.trigger_cycle % 3) {
@@ -462,7 +462,7 @@ void REMDetect::process_sample(int16_t sample)
   }
 }
 
-void REMDetect::on_a2d_sample(uint16_t sample)
+void Detector::on_a2d_sample(uint16_t sample)
 {
   int16_t filtered = lowpass_flt.process(sample);
 
@@ -490,3 +490,6 @@ void REMDetect::on_a2d_sample(uint16_t sample)
 
 #endif
 }
+
+/*-----------------------------------------------------------------------*/
+} //namespace ds::remd

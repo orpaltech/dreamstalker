@@ -27,10 +27,9 @@
 #include "ds_config.h"
 #include "ds_util.h"
 
-using namespace ds;
 
 /*-----------------------------------------------------------------------*/
-/* IMPORTANT: signature must be updated on every change 
+/* IMPORTANT: signature MUST be updated on every change 
  *			made to the configuration layout !!!
  */
 #define DSCONF_SIGNATURE	0x8007
@@ -62,6 +61,28 @@ using namespace ds;
 #define REMD_MIN_EPOCH_MOVES_MAX        20
 #define REMD_MIN_EPOCH_MOVES_DEFAULT    8
 
+
+/*-----------------------------------------------------------------------*/
+PROGMEM const uint16_t u_FirmwareVersion = MAKE_VER ( 2,4 );
+
+PROGMEM const uint8_t u_LevelToPercent[10] = {
+  0, 10, 15, 22, 32, 45, 60, 75, 88, 100
+};
+
+/*-----------------------------------------------------------------------*/
+
+#if ( CONF_STG == STG_EEPROM )
+static EEMEM ds::Config::config_context_t eeprom_cfg;
+#endif
+
+namespace ds
+{
+/*-----------------------------------------------------------------------*/
+Config* Config::get()
+{
+  static Config instance;
+  return &instance;
+}
 
 /*-----------------------------------------------------------------------*/
 
@@ -191,23 +212,6 @@ void Config::set_default_ ## name (void)	\
   else										                \
 	  cfg.props.name = 0;						        \
 }
-
-
-/*-----------------------------------------------------------------------*/
-PROGMEM const uint16_t u_FirmwareVersion = MAKE_VER ( 2,4 );
-
-PROGMEM const uint8_t u_LevelToPercent[10] = {
-  0, 10, 15, 22, 32, 45, 60, 75, 88, 100
-};
-
-/*-----------------------------------------------------------------------*/
-Config config;
-
-/*-----------------------------------------------------------------------*/
-
-#if ( CONF_STG == STG_EEPROM )
-static EEMEM Config::ds_config_t eeprom_cfg;
-#endif
 
 /*-----------------------------------------------------------------------*/
 void Config::set_default_values (void)
@@ -485,7 +489,7 @@ void Config::set_remd_profile (remd_profile_t val)
 	  cfg.props.remd_profile = val;
 
 
-    switch (config.get_remd_profile()) {
+    switch (get_remd_profile()) {
       case REMD_PROFILE_CONSERVATIVE:
         set_remd_sensitivity(3);         // Ceiling 35: Rejects almost all blinks/fast moves
         set_remd_min_epoch_moves(12);    // High density requirement
@@ -596,3 +600,5 @@ uint16_t fw_version (void)
 {
 	return pgm_read_word_far (&u_FirmwareVersion);
 }
+
+} //namespace ds

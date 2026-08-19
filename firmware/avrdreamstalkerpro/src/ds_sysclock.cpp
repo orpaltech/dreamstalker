@@ -41,32 +41,32 @@
 #include "ds_sysclock.h"
 
 
-using namespace ds;
-
 /*-----------------------------------------------------------------------*/
-/* Interrupt Handler 													                           */
-/*-----------------------------------------------------------------------*/
+// Interrupt Handler
+//
 #if defined (__AVR_ATmega1281__)
 ISR(TIMER0_COMPA_vect)
 {
   // These tasks run at a perfect 1ms interval 
   // sourced from the 8MHz internal clock.
 
-  SysClock::handle_isr();
+  ds::SysClock::handle_isr();
 }
 #endif
+
+namespace ds
+{
+/*-----------------------------------------------------------------------*/
+SysClock *SysClock::get()
+{
+  static SysClock instance;
+  return &instance;
+}
 
 /*-----------------------------------------------------------------------*/
 void SysClock::handle_isr (void)
 {
   get()->irq_handler();
-}
-
-/*-----------------------------------------------------------------------*/
-SysClock *SysClock::get()
-{
-  static SysClock sys_clk;
-  return &sys_clk;
 }
 
 /*-----------------------------------------------------------------------*/
@@ -76,21 +76,22 @@ static constexpr uint8_t ticks_200ms = SysClock::msec_to_ticks (200);
 /*-----------------------------------------------------------------------*/
 void SysClock::irq_handler (void)
 {
-  if (Driver::get()->get_mode() != OPM_NORMAL)
+  if (Driver::get()->get_mode() != Driver::OperationMode::Normal)
     return;
 
-  /* Let keyboard first process the interrupt 
-   */
+  // Let keyboard first process interrupt 
+  //
   if ( Keyboard::handle_sysclk ()) {
 
 	  // Reset display-off counter on a key press
     RTClock::get()->awake_display ();
   }
 
-  /* Let other subsystems process interrupt */
+  // Let other subsystems process interrupt
+  //
   Display::handle_sysclk ();
   SquareWave::handle_sysclk ();
-  remd::REMHints::handle_sysclk ();
+  remd::Hints::handle_sysclk ();
   avr::core::A2DConvert::handle_sysclk ();
 
 
@@ -181,3 +182,6 @@ void SysClock::wait (uint16_t duration_ms)
   for (uint16_t i = 0; i < duration_ms; ++i)
   	_delay_ms (1);
 }
+
+/*-----------------------------------------------------------------------*/
+} // namespace ds

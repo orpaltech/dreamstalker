@@ -25,8 +25,6 @@
 #include "ds_remhints.h"
 
 
-using namespace ds::remd;
-
 /*-----------------------------------------------------------------------*/
 PROGMEM const uint16_t u_HintsPeriods[10] = {
     0,
@@ -41,41 +39,43 @@ PROGMEM const uint16_t u_HintsPeriods[10] = {
     300   // 9: Rapid Pulse
 };
 
-/*-----------------------------------------------------------------------*/
-REMHints *REMHints::get()
+namespace ds::remd
 {
-    static REMHints instance; 
+/*-----------------------------------------------------------------------*/
+Hints *Hints::get()
+{
+    static Hints instance; 
     return &instance;
 }
 
 /*-----------------------------------------------------------------------*/
-void REMHints::handle_sysclk (void) /* called every 1ms*/
+void Hints::handle_sysclk (void) /* called every 1ms*/
 {
   get()->update();
 }
 
 /*-----------------------------------------------------------------------*/
-uint16_t REMHints::level_to_hints_period (uint8_t lvl)
+uint16_t Hints::level_to_hints_period (uint8_t lvl)
 {
   return ((lvl > 0 && lvl < 10) ? pgm_read_word_far (u_HintsPeriods + lvl) : 0);
 }
 
 /*-----------------------------------------------------------------------*/
 
-void REMHints::start(uint8_t intensity_limit)
+void Hints::start(uint8_t intensity_limit)
 {
   if (fader.is_active()) 
     return;
 
   // 1. Get Durations (0 = Disabled)
-  light_count = config.is_light_hints_duration_invalid() ? 0 : config.get_light_hints_duration();
-  sound_count = config.is_sound_hints_duration_invalid() ? 0 : config.get_sound_hints_duration();
+  light_count = Config::get()->is_light_hints_duration_invalid() ? 0 : Config::get()->get_light_hints_duration();
+  sound_count = Config::get()->is_sound_hints_duration_invalid() ? 0 : Config::get()->get_sound_hints_duration();
   if (light_count == 0 && sound_count == 0) 
     return;
 
   // Map Config to physical Rhythmic parameters
-  uint32_t period_ms = level_to_hints_period (config.get_hints_frequency ());
-  uint8_t duty_cycle = Config::level_to_percent (config.get_hints_duty_cycle ());
+  uint32_t period_ms = level_to_hints_period (Config::get()->get_hints_frequency ());
+  uint8_t duty_cycle = Config::get()->level_to_percent (Config::get()->get_hints_duty_cycle ());
 
   // We add +1 to sound because it starts on the 2nd pulse.
   uint8_t sound_end_pulse = (sound_count > 0) ? (sound_count + 1) : 0;
@@ -103,14 +103,14 @@ void REMHints::start(uint8_t intensity_limit)
   }
 }
 
-void REMHints::update() 
+void Hints::update() 
 {
   if (!fader.is_active()) {
 
     if (light_count > 0) {
       // Just send the "Dark" value (TOP).
-      REMDLeds::get()->set_raw_ocr_top(LED1);
-      REMDLeds::get()->set_raw_ocr_top(LED2);
+      Lights::get()->set_raw_ocr_top(LED1);
+      Lights::get()->set_raw_ocr_top(LED2);
       light_count = 0;
     }
 
@@ -128,12 +128,12 @@ void REMHints::update()
   // --- Light Scenario Logic ---
   if (light_count > 0) {
     if (current_pulse <= light_count) {
-      REMDLeds::get()->set_raw_ocr(LED1, current_ocr);
-      REMDLeds::get()->set_raw_ocr(LED2, current_ocr);
+      Lights::get()->set_raw_ocr(LED1, current_ocr);
+      Lights::get()->set_raw_ocr(LED2, current_ocr);
     } else {
       // Light's time has run out
-      REMDLeds::get()->set_raw_ocr_top(LED1);
-      REMDLeds::get()->set_raw_ocr_top(LED2);
+      Lights::get()->set_raw_ocr_top(LED1);
+      Lights::get()->set_raw_ocr_top(LED2);
       light_count = 0;
     }
   }
@@ -153,3 +153,6 @@ void REMHints::update()
     }
   }
 }
+
+/*-----------------------------------------------------------------------*/
+} //namespace ds::remd

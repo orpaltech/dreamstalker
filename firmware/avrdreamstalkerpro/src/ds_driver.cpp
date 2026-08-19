@@ -40,7 +40,6 @@
 #include "ds_remhints.h"
 #include "ds_sdfat.h"
 
-using namespace ds;
 using namespace avr::core;
 
 /*-----------------------------------------------------------------------*/
@@ -50,11 +49,14 @@ using namespace avr::core;
  */
 #define KEY_EXIT_SLEEP  KEY_POWER
 
+namespace ds
+{
 /*-----------------------------------------------------------------------*/
 static void key_tone (bool wait = false)
 {
   uint16_t duration = 80;
-  Tonegen::get()->beep ( duration, 3, 6, config.get_volume_level ());
+  Tonegen::get()->beep ( duration, 3, 6, Config::get()->get_volume_level ());
+  
   if ( wait ) {
     SysClock::get()->wait (duration);
   }
@@ -92,7 +94,7 @@ void Driver::remd_callback (void *context, remd::remd_event_type_t event, uint16
     // REMD testing mode 
 
     if ( event == remd::REMD_EVENT_MOVE ) {
-      Tonegen::get()->beep(50, 4, 7, config.get_volume_level ());
+      Tonegen::get()->beep(50, 4, 7, Config::get()->get_volume_level ());
     }
 
   } else {
@@ -205,7 +207,7 @@ bool Driver::init (void)
   // Set member variables
   remd_check = false;
 
-  set_mode ( OPM_NONE );
+  set_mode ( OperationMode::None );
 
   // Initialize all subsystems
   SdFatEx::get()->init();
@@ -216,9 +218,9 @@ bool Driver::init (void)
   AppMenu::get()->init();
   SquareWave::get()->init();
   VibroMotor::get()->init();
-  remd::REMDLeds::get()->init();
+  remd::Lights::get()->init();
   Sound::get()->init ();
-  remd::REMDetect::get()->init();
+  remd::Detector::get()->init();
   Battery::get()->init();
   
 
@@ -243,7 +245,7 @@ bool Driver::start (void)
   char msg[ 5 ];
   auto disp = Display::get();
 
-  set_mode ( OPM_NORMAL );    /* Start in normal mode */
+  set_mode ( OperationMode::Normal );    /* Start in normal mode */
 
   interrupts();   /* Enable interrupts globally */
 
@@ -302,7 +304,7 @@ bool Driver::start (void)
     disp->message ( msg, 1000 );
 
 
-    if ( ! config.begin () ) {
+    if ( ! Config::get()->begin () ) {
 
       // initialization failed!
 
@@ -334,7 +336,7 @@ void Driver::stop (void)
 {
   noInterrupts();
 
-  set_mode ( OPM_NONE );
+  set_mode ( OperationMode::None );
 
   // TODO: implement, if needed
 }
@@ -454,7 +456,7 @@ void Driver::process (void)
    * Process different tasks
    */
   RTClock::get()->process_task ();
-  remd::REMDetect::get()->process_task ();
+  remd::Detector::get()->process_task ();
   AudioCodec::get()->process_task ();
 
 }
@@ -471,7 +473,7 @@ void Driver::reboot_on_key (void)
 
 void Driver::remd_start_check (void)
 {
-  auto remd = remd::REMDetect::get();
+  auto remd = remd::Detector::get();
 
   if ( remd_check )
     return;
@@ -485,7 +487,7 @@ void Driver::remd_start_check (void)
 
 void Driver::remd_stop_check (void)
 {
-  auto remd = remd::REMDetect::get();
+  auto remd = remd::Detector::get();
 
   if (! remd_check )
     return;
@@ -519,20 +521,20 @@ void Driver::on_remd_event_rem (uint8_t intensity)
   intensity = Config::level_to_percent (config.get_light_hints_brightness ());
 #endif
 
-  remd::REMHints::get()->start (intensity);
+  remd::Hints::get()->start (intensity);
 
 
   /* Сheck if alarm clock is enabled */
-  if (config.get_alarm_clock_enabled ()) {
+  if (Config::get()->get_alarm_clock_enabled ()) {
     
     clk->alarm_clock_set (alarm_clock_callback, this);
   }
 
 }
 
-void Driver::set_mode (operation_mode_t mode)
+void Driver::set_mode (OperationMode mode)
 {
-  opmode = mode;
+  opmode = static_cast<uint8_t>(mode);
 }
 
 void Driver::wakeup_timer_toggle (void)
@@ -565,11 +567,11 @@ void Driver::wakeup_timer_quick_set (keybrd_event_t key_event)
   disp->message ( __disp_msg_set__, 500 );
 
   if ( key_event & KEY_MINUS ) {
-    config.set_wakeup_timer_delay ( 20 );
+    Config::get()->set_wakeup_timer_delay ( 20 );
     disp->time ( 0, 20 );
 
   } else {
-    config.set_wakeup_timer_delay ( WAKEUP_TIMER_DELAY_DEFAULT );
+    Config::get()->set_wakeup_timer_delay ( WAKEUP_TIMER_DELAY_DEFAULT );
     disp->time ( 0, WAKEUP_TIMER_DELAY_DEFAULT );
   }
   SysClock::get()->wait ( 800 );
@@ -604,7 +606,7 @@ void Driver::handle_sysclk (void)
 
 void Driver::start_lucid_dream (void)
 {
-  auto remd = remd::REMDetect::get();
+  auto remd = remd::Detector::get();
 
   if ( !remd->start (remd_callback, this, false)) {
     return;
@@ -618,7 +620,7 @@ void Driver::start_lucid_dream (void)
 
 void Driver::stop_lucid_dream (void)
 {
-  auto remd = remd::REMDetect::get();
+  auto remd = remd::Detector::get();
 
   if (remd->get_state () != remd::REMD_STATE_ON)
     return;
@@ -632,7 +634,7 @@ void Driver::stop_lucid_dream (void)
 
 bool Driver::is_lucid_dreaming (void) const
 {
-  auto remd = remd::REMDetect::get();
+  auto remd = remd::Detector::get();
 
   return remd->get_state () == remd::REMD_STATE_ON;
 }
@@ -647,14 +649,14 @@ void Driver::power_off (void)
 
   AudioCodec::get()->stop ();
   Battery::get()->stop ();
-  remd::REMDetect::get()->stop();
+  remd::Detector::get()->stop();
   A2DConvert::get()->disable ();
 
   Sound::get()->stop();
 
   SysClock::get()->stop ();
 
-  set_mode( OPM_PWRSAVE );  /* Set power-save mode */
+  set_mode( OperationMode::PowerSave );  /* Set power-save mode */
 
   Keyboard::get()->enable_key_irq ( KEY_EXIT_SLEEP );
 
@@ -664,17 +666,16 @@ void Driver::power_off (void)
   set_sleep_mode ( SLEEP_MODE_IDLE );
 
   do {
-
 	  /*
 	   * ...Zzz...  
 	   */
 	  sleep_mode ();
-
-  } while (! (Keyboard::get()->get_irq_keys() & KEY_EXIT_SLEEP));
+  }
+  while (! (Keyboard::get()->get_irq_keys() & KEY_EXIT_SLEEP));
 
   Keyboard::get()->disable_key_irq ( KEY_EXIT_SLEEP );
 
-  set_mode( OPM_NORMAL );   /* Set normal power mode */
+  set_mode( OperationMode::Normal );   /* Set normal power mode */
 
   SysClock::get()->start ();  /* Start the system clock */
 
@@ -691,3 +692,6 @@ void Driver::power_off (void)
   /* Ignore keyboard events that might happen*/
   Keyboard::get()->clear_events ();
 }
+
+/*-----------------------------------------------------------------------*/
+} //namespace ds

@@ -28,7 +28,6 @@
 #include "ds_leds.h"
 #include "ds_rtclock.h"
 
-using namespace ds::remd;
 
 /*-----------------------------------------------------------------------*/
 /* Peripheral controls (Platform dependent) */
@@ -82,6 +81,8 @@ PROGMEM const uint16_t gamma_table[] = {
 #endif
 };
 
+namespace ds::remd
+{
 /*-----------------------------------------------------------------------*/
 
 static 
@@ -165,22 +166,22 @@ void led_pwm_set_ocr (led_id_t led, uint16_t ocr)
 }
 
 /*-----------------------------------------------------------------------*/
-void REMDLeds::sqw_transition_callback(void *context, uint8_t slot, sqw_transition_t trans)
+void Lights::sqw_transition_callback(void *context, uint8_t slot, sqw_transition_t trans)
 {
-  auto *pls = static_cast<REMDLeds *>(context);
+  Lights *pls = static_cast<Lights *>(context);
 
   pls->on_sqw_transition (slot, trans);
 }
 
 /*-----------------------------------------------------------------------*/
-REMDLeds *REMDLeds::get()
+Lights *Lights::get()
 {
-  static REMDLeds leds;
-  return &leds;
+  static Lights instance;
+  return &instance;
 }
 
 /*-----------------------------------------------------------------------*/
-void REMDLeds::on (led_id_t led, uint8_t brightness, uint16_t duration_ms)
+void Lights::on (led_id_t led, uint8_t brightness, uint16_t duration_ms)
 {
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
 
@@ -188,7 +189,7 @@ void REMDLeds::on (led_id_t led, uint8_t brightness, uint16_t duration_ms)
   }
 }
 
-void REMDLeds::stop (led_id_t led)
+void Lights::stop (led_id_t led)
 {
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
 
@@ -196,7 +197,7 @@ void REMDLeds::stop (led_id_t led)
   }
 }
 
-void REMDLeds::pulse (led_id_t led, uint8_t brightness, uint16_t duration_ms, uint16_t period_ms, uint8_t duty_cycle)
+void Lights::pulse (led_id_t led, uint8_t brightness, uint16_t duration_ms, uint16_t period_ms, uint8_t duty_cycle)
 {
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
 
@@ -204,7 +205,7 @@ void REMDLeds::pulse (led_id_t led, uint8_t brightness, uint16_t duration_ms, ui
   }
 }
 
-bool REMDLeds::is_led_busy (led_id_t led) const
+bool Lights::is_led_busy (led_id_t led) const
 {
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
 
@@ -213,12 +214,12 @@ bool REMDLeds::is_led_busy (led_id_t led) const
   __builtin_unreachable();
 }
 
-void REMDLeds::on_unsafe (led_id_t led, uint8_t brightness, uint16_t duration_ms)
+void Lights::on_unsafe (led_id_t led, uint8_t brightness, uint16_t duration_ms)
 {
   pulse_unsafe (led, brightness, duration_ms, 0, 0);
 }
 
-void REMDLeds::stop_unsafe (led_id_t led)
+void Lights::stop_unsafe (led_id_t led)
 {
   if (!(led == LED1 || led == LED2))
     return;
@@ -246,7 +247,7 @@ void REMDLeds::stop_unsafe (led_id_t led)
   Pins::set_in_highz(pin);
 }
 
-bool REMDLeds::is_led_busy_unsafe(led_id_t led) const
+bool Lights::is_led_busy_unsafe(led_id_t led) const
 {
   // Check if SquareWave is using this slot
   bool sqw_busy = SquareWave::get()->is_active_unsafe (led);
@@ -254,7 +255,7 @@ bool REMDLeds::is_led_busy_unsafe(led_id_t led) const
   return sqw_busy;
 }
 
-void REMDLeds::pulse_unsafe (led_id_t led, uint8_t brightness, uint16_t duration_ms, uint16_t period_ms, uint8_t duty_cycle)
+void Lights::pulse_unsafe (led_id_t led, uint8_t brightness, uint16_t duration_ms, uint16_t period_ms, uint8_t duty_cycle)
 {
   if (!(led==LED1 || led==LED2)) 
     return;
@@ -281,7 +282,7 @@ void REMDLeds::pulse_unsafe (led_id_t led, uint8_t brightness, uint16_t duration
                                 sqw_transition_callback, this);
 }
 
-bool REMDLeds::init (void)
+bool Lights::init (void)
 {
   // Set pins to input mode 
   Pins::set_in_pullup( PIN_LED1 );
@@ -312,7 +313,7 @@ bool REMDLeds::init (void)
   return true;
 }
 
-void REMDLeds::on_sqw_transition (uint8_t index, sqw_transition_t trans)
+void Lights::on_sqw_transition (uint8_t index, sqw_transition_t trans)
 {
   led_id_t led = (led_id_t)index;
   uint8_t pin = led_to_pin (led);
@@ -340,7 +341,7 @@ void REMDLeds::on_sqw_transition (uint8_t index, sqw_transition_t trans)
   }
 }
 
-void REMDLeds::set_raw_ocr(led_id_t led, uint16_t ocr)
+void Lights::set_raw_ocr(led_id_t led, uint16_t ocr)
 {
   uint8_t pin = led_to_pin(led);
 
@@ -390,7 +391,7 @@ void REMDLeds::set_raw_ocr(led_id_t led, uint16_t ocr)
   }
 }
 
-void REMDLeds::set_raw_ocr_top(led_id_t led)
+void Lights::set_raw_ocr_top(led_id_t led)
 {
   set_raw_ocr (led, LEDS_TMR3_OCR_TOP);
 }
@@ -527,3 +528,5 @@ uint16_t LedFader::update()
   return (LEDS_TMR3_OCR_TOP - current_ocr);
 }
 
+/*-----------------------------------------------------------------------*/
+} //namespace ds::remd

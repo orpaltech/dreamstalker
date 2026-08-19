@@ -27,18 +27,6 @@
 namespace ds
 {
 /*-----------------------------------------------------------------------*/
-
-typedef enum e_rtc_setup_mode {
-  RTC_SETUP_NONE	= 0,
-  RTC_SETUP_HOUR,
-  RTC_SETUP_MINUTE,
-  RTC_SETUP_YEAR,
-  RTC_SETUP_MONTH,
-  RTC_SETUP_MDAY
-} rtc_setup_mode_t;
-
-
-/*-----------------------------------------------------------------------*/
 typedef void (*RTClockCB_t)(void *context);
 
 
@@ -46,6 +34,16 @@ typedef void (*RTClockCB_t)(void *context);
 class RTClock {
 public:
   static RTClock *get();
+
+  enum class SetupMode : uint8_t {
+    None,
+    Hour,
+    Minute,
+    Year,
+    Month,
+    MonthDay
+  };
+
 public:
   bool init (void);
   void end (void);
@@ -56,9 +54,9 @@ public:
   void get_time(struct tm *ptm) const;
 
   /* Clock setup */
-  void set_setup (rtc_setup_mode_t mode);
-  rtc_setup_mode_t get_setup (void) const;
-  rtc_setup_mode_t next_setup (void);
+  void set_setup (SetupMode mode);
+  SetupMode get_setup (void) const;
+  SetupMode next_setup (void);
   bool is_setup (void) const;
   /* decrement if sign < 0, otherwise increment */
   void setup_inc (int sign);
@@ -120,7 +118,7 @@ private:
   void display_mday (struct tm *ptm);
 
 private:
-  typedef struct s_rtclk_context {
+  typedef struct s_rtc_context {
     /* Internal tick counters */
     uint16_t ticks_second;
     uint8_t ticks_setup;
@@ -135,9 +133,9 @@ private:
     uint16_t flags : 8;         /* Internal control flags */
     uint8_t setup_mode : 3;     /* Clock setup mode */
     uint8_t ticks_display : 6;
-  } rtclk_context_t;
+  } rtc_context_t;
 
-  volatile rtclk_context_t rtc;
+  volatile rtc_context_t rtc;
 
   unsigned long backup_stamp;
 };

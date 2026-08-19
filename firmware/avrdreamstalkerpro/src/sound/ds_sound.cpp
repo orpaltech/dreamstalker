@@ -2,7 +2,7 @@
  * This file is part of the AVR Dreamstalker software
  * (https://github.com/orpaltech/dreamstalker).
  *
- * Copyright (c) 2013-2025	ORPAL Technologies, Inc.
+ * Copyright (c) 2013-2026	ORPAL Technologies, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -74,7 +74,7 @@ void Sound::irq_handler (void)
   } else {
 
 	  // on loudspeaker (if enabled by config)
-	  if ( config.get_loud_speaker_enabled () && ! is_speaker_on () )
+	  if ( Config::get()->get_loud_speaker_enabled () && ! is_speaker_on () )
 		  speaker_on( );
   }
 }
@@ -161,10 +161,11 @@ bool Sound::init ( void )
 
 void Sound::start (void)
 {
-  if (config.get_loud_speaker_enabled ()) {
+  if (Config::get()->get_loud_speaker_enabled ()) {
 
 	  speaker_on ();
-  } else {
+  } 
+  else {
 
 	  speaker_off ();
   }
